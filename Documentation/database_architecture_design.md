@@ -26,6 +26,9 @@ Requested -> Negotiating -> Assigned -> Completed -> Reviewed
 4. Indexes support frequent search and dashboard queries.
 5. Queries must be written with prepared statements.
 
+UUID note: All primary and foreign keys use CHAR(36) UUID values in the schema.
+Primary key naming uses table-specific identifiers (user_id, category_id, request_id, offer_id, review_id, audit_id, status_history_id).
+
 ---
 
 ## 3. Core Entities
@@ -48,7 +51,8 @@ Stores all platform accounts: customer, provider, and admin.
 
 Key fields:
 
-1. email
+1. user_id
+2. email
 2. password_hash
 3. role
 4. name
@@ -76,14 +80,15 @@ Stores customer job posts and drives the state machine.
 
 Key fields:
 
-1. customer_id
-2. category_id
-3. description
-4. preferred_date
-5. status
-6. location
-7. accepted_offer_id
-8. completion_photo
+1. request_id
+2. customer_id
+3. category_id
+4. description
+5. preferred_date
+6. status
+7. location
+8. accepted_offer_id
+9. completion_photo
 
 ### 4.4 offers
 
@@ -91,13 +96,14 @@ Stores provider quotations for each request.
 
 Key fields:
 
-1. request_id
-2. provider_id
-3. price
-4. message
-5. status
-6. counter_price
-7. counter_message
+1. offer_id
+2. request_id
+3. provider_id
+4. price
+5. message
+6. status
+7. counter_price
+8. counter_message
 
 ### 4.5 reviews
 

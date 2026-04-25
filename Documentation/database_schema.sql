@@ -1,252 +1,259 @@
--- =====================================================
--- SECURE LOCAL SERVICE MARKETPLACE - DATABASE SCHEMA
--- Project: Handy-Thumbtack Model
--- =====================================================
+-- Secure Local Service Marketplace schema for PostgreSQL 13+
+-- Includes database setup, tables, constraints, functions, and views.
 
--- Drop existing tables (for clean setup)
-DROP TABLE IF EXISTS status_history;
-DROP TABLE IF EXISTS audit_logs;
-DROP TABLE IF EXISTS reviews;
-DROP TABLE IF EXISTS offers;
-DROP TABLE IF EXISTS service_requests;
-DROP TABLE IF EXISTS service_categories;
-DROP TABLE IF EXISTS users;
+-- Create application role and database.
+CREATE ROLE admin WITH LOGIN PASSWORD 'admin';
+CREATE DATABASE market_place OWNER admin;
 
--- =====================================================
--- TABLE: users
--- =====================================================
-CREATE TABLE users (
-    id INT AUTO_INCREMENT PRIMARY KEY,
+-- Connect to the database before running the remaining statements.
+-- In psql, run: \connect market_place
+
+-- Create a tablespace (update LOCATION to a valid directory on your server).
+CREATE TABLESPACE market_place OWNER admin LOCATION '/var/lib/postgresql/market_place';
+SET default_tablespace = market_place;
+
+-- Ensure UUID generation extension is installed
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
+-- Enum types for status and role fields.
+CREATE TYPE user_role AS ENUM ('Customer', 'Provider', 'Admin');
+CREATE TYPE request_status AS ENUM ('Requested', 'Negotiating', 'Assigned', 'Completed', 'Reviewed');
+CREATE TYPE offer_status AS ENUM ('Pending', 'Accepted', 'Rejected', 'Countered');
+
+-- Drop existing tables (for clean setup).
+DROP TABLE IF EXISTS marketplace.STATUS_HISTORY CASCADE;
+DROP TABLE IF EXISTS marketplace.AUDIT_LOGS CASCADE;
+DROP TABLE IF EXISTS marketplace.REVIEWS CASCADE;
+DROP TABLE IF EXISTS marketplace.OFFERS CASCADE;
+DROP TABLE IF EXISTS marketplace.SERVICE_REQUESTS CASCADE;
+DROP TABLE IF EXISTS marketplace.SERVICE_CATEGORIES CASCADE;
+DROP TABLE IF EXISTS marketplace.USERS CASCADE;
+
+-- users: all platform identities (customer, provider, admin).
+CREATE TABLE marketplace.USERS (
+    user_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     email VARCHAR(255) NOT NULL UNIQUE,
     password_hash VARCHAR(255) NOT NULL,
-    role ENUM('customer', 'provider', 'admin') NOT NULL,
+    role user_role NOT NULL,
     name VARCHAR(255) NOT NULL,
     phone VARCHAR(20),
-    location VARCHAR(255) COMMENT 'Sub-city in Addis Ababa',
-    rating_average DECIMAL(3,2) DEFAULT 0.00 COMMENT 'For providers only',
-    total_reviews INT DEFAULT 0 COMMENT 'For providers only',
-    is_verified BOOLEAN DEFAULT FALSE COMMENT 'For provider verification',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    
-    INDEX idx_role (role),
-    INDEX idx_location (location),
-    INDEX idx_rating (rating_average)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+    location VARCHAR(255),
+    rating_average DECIMAL(3,2) DEFAULT 0.00,
+    total_reviews INT DEFAULT 0,
+    is_verified BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
 
--- =====================================================
--- TABLE: service_categories
--- =====================================================
-CREATE TABLE service_categories (
-    id INT AUTO_INCREMENT PRIMARY KEY,
+CREATE INDEX idx_users_role ON users (role);
+CREATE INDEX idx_users_location ON users (location);
+CREATE INDEX idx_users_rating ON users (rating_average);
+
+-- service_categories: taxonomy for requests and browsing.
+CREATE TABLE marketplace.SERVICE_CATEGORIES (
+    category_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name VARCHAR(100) NOT NULL UNIQUE,
     description TEXT,
-    icon VARCHAR(50) COMMENT 'Icon identifier for UI',
+    icon VARCHAR(50),
     is_active BOOLEAN DEFAULT TRUE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
 
--- =====================================================
--- TABLE: service_requests
--- =====================================================
-CREATE TABLE service_requests (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    customer_id INT NOT NULL,
-    category_id INT NOT NULL,
+-- service_requests: customer jobs and workflow state machine.
+CREATE TABLE marketplace.SERVICE_REQUESTS (
+    request_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    customer_id UUID NOT NULL,
+    category_id UUID NOT NULL,
     description TEXT NOT NULL,
     preferred_date DATE,
-    status ENUM('Requested', 'Negotiating', 'Assigned', 'Completed', 'Reviewed') 
-        NOT NULL DEFAULT 'Requested',
+    status request_status NOT NULL DEFAULT 'Requested',
     location VARCHAR(255) NOT NULL,
-    accepted_offer_id INT DEFAULT NULL COMMENT 'Links to the accepted offer',
-    completion_photo VARCHAR(500) COMMENT 'Path to uploaded photo',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    
-    FOREIGN KEY (customer_id) REFERENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY (category_id) REFERENCES service_categories(id) ON DELETE RESTRICT,
-    
-    INDEX idx_customer (customer_id),
-    INDEX idx_status (status),
-    INDEX idx_category (category_id),
-    INDEX idx_preferred_date (preferred_date)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+    accepted_offer_id UUID,
+    completion_photo VARCHAR(500),
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
 
--- =====================================================
--- TABLE: offers
--- =====================================================
+    CONSTRAINT fk_service_requests_customer
+        FOREIGN KEY (customer_id) REFERENCES marketplace.USERS(user_id) ON DELETE CASCADE,
+    CONSTRAINT fk_service_requests_category
+        FOREIGN KEY (category_id) REFERENCES service_categories(category_id) ON DELETE RESTRICT
+);
+
+CREATE INDEX idx_service_requests_customer ON service_requests (customer_id);
+CREATE INDEX idx_service_requests_status ON service_requests (status);
+CREATE INDEX idx_service_requests_category ON service_requests (category_id);
+CREATE INDEX idx_service_requests_preferred_date ON service_requests (preferred_date);
+CREATE INDEX idx_service_requests_accepted_offer ON service_requests (accepted_offer_id);
+
+-- offers: provider quotations and negotiation.
 CREATE TABLE offers (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    request_id INT NOT NULL,
-    provider_id INT NOT NULL,
+    offer_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    request_id UUID NOT NULL,
+    provider_id UUID NOT NULL,
     price DECIMAL(10,2) NOT NULL,
-    message TEXT COMMENT 'Optional message from provider',
-    status ENUM('pending', 'accepted', 'rejected', 'countered') 
-        NOT NULL DEFAULT 'pending',
-    counter_price DECIMAL(10,2) DEFAULT NULL COMMENT 'Customer counter-offer',
-    counter_message TEXT COMMENT 'Customer counter-offer message',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    
-    FOREIGN KEY (request_id) REFERENCES service_requests(id) ON DELETE CASCADE,
-    FOREIGN KEY (provider_id) REFERENCES users(id) ON DELETE CASCADE,
-    
-    INDEX idx_request (request_id),
-    INDEX idx_provider (provider_id),
-    INDEX idx_status (status),
-    
-    -- Prevent duplicate offers from same provider to same request
-    UNIQUE KEY unique_provider_request (request_id, provider_id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+    message TEXT,
+    status offer_status NOT NULL DEFAULT 'Pending',
+    counter_price DECIMAL(10,2),
+    counter_message TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
 
--- =====================================================
--- TABLE: reviews
--- =====================================================
+    CONSTRAINT fk_offers_request
+        FOREIGN KEY (request_id) REFERENCES service_requests(request_id) ON DELETE CASCADE,
+    CONSTRAINT fk_offers_provider
+        FOREIGN KEY (provider_id) REFERENCES users(user_id) ON DELETE CASCADE,
+    CONSTRAINT unique_provider_request UNIQUE (request_id, provider_id)
+);
+
+CREATE INDEX idx_offers_request ON offers (request_id);
+CREATE INDEX idx_offers_provider ON offers (provider_id);
+CREATE INDEX idx_offers_status ON offers (status);
+
+-- Add accepted offer FK after offers table exists to avoid circular reference.
+ALTER TABLE service_requests
+    ADD CONSTRAINT fk_service_requests_accepted_offer
+    FOREIGN KEY (accepted_offer_id) REFERENCES offers(offer_id)
+    ON DELETE SET NULL;
+
+-- reviews: post-completion rating and feedback.
 CREATE TABLE reviews (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    request_id INT NOT NULL UNIQUE COMMENT 'One review per completed job',
-    customer_id INT NOT NULL,
-    provider_id INT NOT NULL,
+    review_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    request_id UUID NOT NULL UNIQUE,
+    customer_id UUID NOT NULL,
+    provider_id UUID NOT NULL,
     rating INT NOT NULL CHECK (rating BETWEEN 1 AND 5),
     comment TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    
-    FOREIGN KEY (request_id) REFERENCES service_requests(id) ON DELETE CASCADE,
-    FOREIGN KEY (customer_id) REFERENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY (provider_id) REFERENCES users(id) ON DELETE CASCADE,
-    
-    INDEX idx_provider (provider_id),
-    INDEX idx_rating (rating)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+    created_at TIMESTAMPTZ DEFAULT NOW(),
 
--- =====================================================
--- TABLE: audit_logs
--- =====================================================
+    CONSTRAINT fk_reviews_request
+        FOREIGN KEY (request_id) REFERENCES service_requests(request_id) ON DELETE CASCADE,
+    CONSTRAINT fk_reviews_customer
+        FOREIGN KEY (customer_id) REFERENCES users(user_id) ON DELETE CASCADE,
+    CONSTRAINT fk_reviews_provider
+        FOREIGN KEY (provider_id) REFERENCES users(user_id) ON DELETE CASCADE
+);
+
+CREATE INDEX idx_reviews_provider ON reviews (provider_id);
+CREATE INDEX idx_reviews_rating ON reviews (rating);
+
+-- audit_logs: security and business action tracking.
 CREATE TABLE audit_logs (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT,
-    action VARCHAR(100) NOT NULL COMMENT 'e.g., login, offer_accepted, status_changed',
-    entity_type VARCHAR(50) COMMENT 'e.g., service_request, offer, review',
-    entity_id INT COMMENT 'ID of the affected entity',
-    details TEXT COMMENT 'JSON or text with additional context',
-    ip_address VARCHAR(45) COMMENT 'User IP address',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL,
-    
-    INDEX idx_user (user_id),
-    INDEX idx_action (action),
-    INDEX idx_created (created_at)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+    audit_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID,
+    action VARCHAR(100) NOT NULL,
+    entity_type VARCHAR(50),
+    entity_id UUID,
+    details TEXT,
+    ip_address VARCHAR(45),
+    created_at TIMESTAMPTZ DEFAULT NOW(),
 
--- =====================================================
--- TABLE: status_history
--- =====================================================
+    CONSTRAINT fk_audit_logs_user
+        FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE SET NULL
+);
+
+CREATE INDEX idx_audit_logs_user ON audit_logs (user_id);
+CREATE INDEX idx_audit_logs_action ON audit_logs (action);
+CREATE INDEX idx_audit_logs_created ON audit_logs (created_at);
+
+-- status_history: request state transitions and timing analytics.
 CREATE TABLE status_history (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    request_id INT NOT NULL,
-    old_status VARCHAR(50),
-    new_status VARCHAR(50) NOT NULL,
-    duration_seconds INT COMMENT 'Time spent in old_status',
-    changed_by INT COMMENT 'User who triggered the change',
-    notes TEXT COMMENT 'Optional context about the change',
-    changed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    
-    FOREIGN KEY (request_id) REFERENCES service_requests(id) ON DELETE CASCADE,
-    FOREIGN KEY (changed_by) REFERENCES users(id) ON DELETE SET NULL,
-    
-    INDEX idx_request (request_id),
-    INDEX idx_new_status (new_status)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+    status_history_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    request_id UUID NOT NULL,
+    old_status request_status,
+    new_status request_status NOT NULL,
+    duration_seconds INT,
+    changed_by UUID,
+    notes TEXT,
+    changed_at TIMESTAMPTZ DEFAULT NOW(),
 
--- =====================================================
--- SAMPLE DATA FOR TESTING
--- =====================================================
+    CONSTRAINT fk_status_history_request
+        FOREIGN KEY (request_id) REFERENCES service_requests(request_id) ON DELETE CASCADE,
+    CONSTRAINT fk_status_history_changed_by
+        FOREIGN KEY (changed_by) REFERENCES users(user_id) ON DELETE SET NULL
+);
 
--- Insert service categories
-INSERT INTO service_categories (name, description, icon) VALUES
-('Electrician', 'Electrical repairs and installations', 'electric'),
-('Plumber', 'Plumbing repairs and installations', 'plumbing'),
-('Carpenter', 'Carpentry and furniture work', 'hammer'),
-('Painter', 'Interior and exterior painting', 'paint'),
-('Cleaner', 'House cleaning services', 'clean');
+CREATE INDEX idx_status_history_request ON status_history (request_id);
+CREATE INDEX idx_status_history_new_status ON status_history (new_status);
 
--- Insert test users (passwords are hashed with password_hash('password123', PASSWORD_DEFAULT))
-INSERT INTO users (email, password_hash, role, name, phone, location) VALUES
-('customer@test.com', '$2y$10$xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx', 'customer', 'Test Customer', '0911234567', 'Bole'),
-('provider@test.com', '$2y$10$xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx', 'provider', 'Test Provider', '0912345678', 'Kirkos'),
-('admin@test.com', '$2y$10$xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx', 'admin', 'Admin User', '0913456789', 'Addis Ketema');
+-- Sample data has been moved to:
+-- Documentation/seed.sql
+-- Documentation/sampledata.sql
 
--- =====================================================
--- STORED PROCEDURES FOR STATE MACHINE
--- =====================================================
-
-DELIMITER $$
-
--- Procedure: Log state changes automatically
-CREATE PROCEDURE log_status_change(
-    IN p_request_id INT,
-    IN p_old_status VARCHAR(50),
-    IN p_new_status VARCHAR(50),
-    IN p_changed_by INT
-)
+-- Maintain updated_at automatically.
+CREATE OR REPLACE FUNCTION marketplace.set_updated_at()
+RETURNS TRIGGER AS $$
 BEGIN
-    DECLARE v_duration INT;
-    
-    -- Calculate duration in old status
-    SELECT TIMESTAMPDIFF(SECOND, updated_at, NOW())
+    NEW.updated_at = NOW();
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_users_updated_at
+BEFORE UPDATE ON marketplace.USERS
+FOR EACH ROW EXECUTE FUNCTION marketplace.set_updated_at();
+
+CREATE TRIGGER trg_service_requests_updated_at
+BEFORE UPDATE ON marketplace.SERVICE_REQUESTS
+FOR EACH ROW EXECUTE FUNCTION marketplace.set_updated_at();
+
+CREATE TRIGGER trg_offers_updated_at
+BEFORE UPDATE ON offers
+FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+
+-- Functions for workflow transitions and logging.
+CREATE OR REPLACE FUNCTION log_status_change(
+    p_request_id UUID,
+    p_old_status request_status,
+    p_new_status request_status,
+    p_changed_by UUID
+)
+RETURNS void AS $$
+DECLARE
+    v_duration INT;
+BEGIN
+    SELECT EXTRACT(EPOCH FROM (NOW() - updated_at))::INT
     INTO v_duration
     FROM service_requests
-    WHERE id = p_request_id;
-    
-    -- Insert into status_history
+    WHERE request_id = p_request_id;
+
     INSERT INTO status_history (request_id, old_status, new_status, duration_seconds, changed_by)
     VALUES (p_request_id, p_old_status, p_new_status, v_duration, p_changed_by);
-END$$
+END;
+$$ LANGUAGE plpgsql;
 
--- Procedure: Accept an offer (trigger state change)
-CREATE PROCEDURE accept_offer(
-    IN p_offer_id INT,
-    IN p_customer_id INT
+CREATE OR REPLACE FUNCTION accept_offer(
+    p_offer_id UUID,
+    p_customer_id UUID
 )
+RETURNS void AS $$
+DECLARE
+    v_request_id UUID;
+    v_old_status request_status;
 BEGIN
-    DECLARE v_request_id INT;
-    DECLARE v_old_status VARCHAR(50);
-    
-    -- Get request details
     SELECT request_id INTO v_request_id
-    FROM offers WHERE id = p_offer_id;
-    
+    FROM offers WHERE offer_id = p_offer_id;
+
     SELECT status INTO v_old_status
-    FROM service_requests WHERE id = v_request_id;
-    
-    -- Update offer status
-    UPDATE offers SET status = 'accepted' WHERE id = p_offer_id;
-    
-    -- Update request status to Assigned
-    UPDATE service_requests 
-    SET status = 'Assigned', accepted_offer_id = p_offer_id 
-    WHERE id = v_request_id;
-    
-    -- Log the change
-    CALL log_status_change(v_request_id, v_old_status, 'Assigned', p_customer_id);
-    
-    -- Log audit
+    FROM service_requests WHERE request_id = v_request_id;
+
+    UPDATE offers SET status = 'Accepted' WHERE offer_id = p_offer_id;
+
+    UPDATE service_requests
+    SET status = 'Assigned', accepted_offer_id = p_offer_id
+    WHERE request_id = v_request_id;
+
+    PERFORM log_status_change(v_request_id, v_old_status, 'Assigned', p_customer_id);
+
     INSERT INTO audit_logs (user_id, action, entity_type, entity_id, details)
-    VALUES (p_customer_id, 'offer_accepted', 'offer', p_offer_id, 
-            CONCAT('Request #', v_request_id, ' moved to Assigned'));
-END$$
+    VALUES (p_customer_id, 'offer_accepted', 'offer', p_offer_id,
+            'Request #' || v_request_id || ' moved to Assigned');
+END;
+$$ LANGUAGE plpgsql;
 
-DELIMITER ;
-
--- =====================================================
--- VIEWS FOR COMMON QUERIES
--- =====================================================
-
--- View: Active service requests with category info
+-- Read-optimized views for dashboards and browsing.
 CREATE VIEW v_active_requests AS
-SELECT 
-    sr.id,
+SELECT
+    sr.request_id,
     sr.description,
     sr.preferred_date,
     sr.status,
@@ -256,21 +263,20 @@ SELECT
     u.phone AS customer_phone,
     sr.created_at
 FROM service_requests sr
-JOIN service_categories sc ON sr.category_id = sc.id
-JOIN users u ON sr.customer_id = u.id
+JOIN service_categories sc ON sr.category_id = sc.category_id
+JOIN users u ON sr.customer_id = u.user_id
 WHERE sr.status IN ('Requested', 'Negotiating');
 
--- View: Provider ratings summary
 CREATE VIEW v_provider_ratings AS
-SELECT 
-    u.id AS provider_id,
+SELECT
+    u.user_id AS provider_id,
     u.name AS provider_name,
     u.location,
-    COUNT(r.id) AS total_reviews,
+    COUNT(r.review_id) AS total_reviews,
     AVG(r.rating) AS average_rating,
     SUM(CASE WHEN r.rating = 5 THEN 1 ELSE 0 END) AS five_star_count,
     SUM(CASE WHEN r.rating >= 4 THEN 1 ELSE 0 END) AS four_star_plus_count
 FROM users u
-LEFT JOIN reviews r ON u.id = r.provider_id
-WHERE u.role = 'provider'
-GROUP BY u.id;
+LEFT JOIN reviews r ON u.user_id = r.provider_id
+WHERE u.role = 'Provider'
+GROUP BY u.user_id;

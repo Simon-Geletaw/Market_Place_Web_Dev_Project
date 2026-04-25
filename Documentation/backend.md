@@ -227,6 +227,8 @@ Existing helpers:
 6. `audit_logs`
 7. `status_history`
 
+All primary and foreign keys use UUID strings (CHAR(36)) in the current schema.
+
 ### 8.2 Important Constraints (Must Not Be Bypassed)
 
 1. **Unique email** in `users.email`

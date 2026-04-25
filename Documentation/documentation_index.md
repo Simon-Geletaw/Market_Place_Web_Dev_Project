@@ -14,7 +14,7 @@ Purpose: Single backend reference for architecture, project structure, database 
 Purpose: Explains the database structure, tables, relationships, stored procedures, views, indexing, and security rules.
 
 ### 2. [database_schema.sql](database_schema.sql)
-Purpose: Defines the MySQL database schema, constraints, indexes, sample data, stored procedures, and views.
+Purpose: Defines the MySQL database schema, constraints, indexes, stored procedures, and views. Sample data is separated into seed and sample files.
 
 ### 3. [database_relationships.md](database_relationships.md)
 Purpose: Describes entity relationships, cardinality, workflow links, and data integrity rules.

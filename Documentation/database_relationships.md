@@ -23,6 +23,8 @@ This document explains how the database tables relate to each other and how thos
 6. audit_logs
 7. status_history
 
+All primary and foreign keys are UUID strings (CHAR(36)).
+
 ---
 
 ## 3. Relationship Summary
@@ -42,16 +44,16 @@ This document explains how the database tables relate to each other and how thos
 
 ## 4. Key Foreign Key Links
 
-1. service_requests.customer_id -> users.id
-2. service_requests.category_id -> service_categories.id
-3. offers.request_id -> service_requests.id
-4. offers.provider_id -> users.id
-5. reviews.request_id -> service_requests.id
-6. reviews.customer_id -> users.id
-7. reviews.provider_id -> users.id
-8. audit_logs.user_id -> users.id
-9. status_history.request_id -> service_requests.id
-10. status_history.changed_by -> users.id
+1. service_requests.customer_id -> users.user_id
+2. service_requests.category_id -> service_categories.category_id
+3. offers.request_id -> service_requests.request_id
+4. offers.provider_id -> users.user_id
+5. reviews.request_id -> service_requests.request_id
+6. reviews.customer_id -> users.user_id
+7. reviews.provider_id -> users.user_id
+8. audit_logs.user_id -> users.user_id
+9. status_history.request_id -> service_requests.request_id
+10. status_history.changed_by -> users.user_id
 
 ---
 

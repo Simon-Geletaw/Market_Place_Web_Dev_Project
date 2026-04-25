@@ -3,8 +3,8 @@
 
 **Status:** Legacy (superseded by `Documentation/backend.md`). This file is kept for deeper table-by-table notes.
 
-Document Version: 1.0  
-Last Updated: April 24, 2026
+Document Version: 1.1
+Last Updated: April 25, 2026
 
 ---
 
@@ -16,8 +16,6 @@ This document is based strictly on the project schema and documentation:
 2. Documentation/database_architecture_design.md
 3. Documentation/database_relationships.md
 4. handy_marketplace_erd.html
-
-No additional entities or out-of-scope features are introduced.
 
 Core lifecycle:
 
@@ -49,10 +47,10 @@ Stores all platform identities and role information.
 
 Fields:
 
-1. id, INT, PK, AUTO_INCREMENT
+1. user_id, CHAR(36), PK, default UUID()
 2. email, VARCHAR(255), NOT NULL, UNIQUE
 3. password_hash, VARCHAR(255), NOT NULL
-4. role, ENUM(customer, provider, admin), NOT NULL
+4. role, ENUM(Customer, Provider, Admin), NOT NULL
 5. name, VARCHAR(255), NOT NULL
 6. phone, VARCHAR(20), nullable
 7. location, VARCHAR(255), nullable
@@ -82,7 +80,7 @@ Stores service taxonomy used by request posting and browsing.
 
 Fields:
 
-1. id, INT, PK, AUTO_INCREMENT
+1. category_id, CHAR(36), PK, default UUID()
 2. name, VARCHAR(100), NOT NULL, UNIQUE
 3. description, TEXT, nullable
 4. icon, VARCHAR(50), nullable
@@ -103,14 +101,14 @@ Stores customer job requests and drives lifecycle state.
 
 Fields:
 
-1. id, INT, PK, AUTO_INCREMENT
-2. customer_id, INT, FK -> users.id, NOT NULL
-3. category_id, INT, FK -> service_categories.id, NOT NULL
+1. request_id, CHAR(36), PK, default UUID()
+2. customer_id, CHAR(36), FK -> users.user_id, NOT NULL
+3. category_id, CHAR(36), FK -> service_categories.category_id, NOT NULL
 4. description, TEXT, NOT NULL
 5. preferred_date, DATE, nullable
 6. status, ENUM(Requested, Negotiating, Assigned, Completed, Reviewed), default Requested
 7. location, VARCHAR(255), NOT NULL
-8. accepted_offer_id, INT, nullable
+8. accepted_offer_id, CHAR(36), nullable
 9. completion_photo, VARCHAR(500), nullable
 10. created_at, TIMESTAMP, default current timestamp
 11. updated_at, TIMESTAMP, auto update
@@ -119,6 +117,7 @@ Foreign key behavior:
 
 1. customer_id ON DELETE CASCADE
 2. category_id ON DELETE RESTRICT
+3. accepted_offer_id ON DELETE SET NULL
 
 Indexes:
 
@@ -126,6 +125,7 @@ Indexes:
 2. idx_status
 3. idx_category
 4. idx_preferred_date
+5. idx_accepted_offer
 
 Design decisions:
 
@@ -141,12 +141,12 @@ Stores provider quotations and negotiation data.
 
 Fields:
 
-1. id, INT, PK, AUTO_INCREMENT
-2. request_id, INT, FK -> service_requests.id, NOT NULL
-3. provider_id, INT, FK -> users.id, NOT NULL
+1. offer_id, CHAR(36), PK, default UUID()
+2. request_id, CHAR(36), FK -> service_requests.request_id, NOT NULL
+3. provider_id, CHAR(36), FK -> users.user_id, NOT NULL
 4. price, DECIMAL(10,2), NOT NULL
 5. message, TEXT, nullable
-6. status, ENUM(pending, accepted, rejected, countered), default pending
+6. status, ENUM(Pending, Accepted, Rejected, Countered), default Pending
 7. counter_price, DECIMAL(10,2), nullable
 8. counter_message, TEXT, nullable
 9. created_at, TIMESTAMP, default current timestamp
@@ -176,10 +176,10 @@ Stores customer feedback after completion.
 
 Fields:
 
-1. id, INT, PK, AUTO_INCREMENT
-2. request_id, INT, FK -> service_requests.id, NOT NULL, UNIQUE
-3. customer_id, INT, FK -> users.id, NOT NULL
-4. provider_id, INT, FK -> users.id, NOT NULL
+1. review_id, CHAR(36), PK, default UUID()
+2. request_id, CHAR(36), FK -> service_requests.request_id, NOT NULL, UNIQUE
+3. customer_id, CHAR(36), FK -> users.user_id, NOT NULL
+4. provider_id, CHAR(36), FK -> users.user_id, NOT NULL
 5. rating, INT, NOT NULL, CHECK 1 to 5
 6. comment, TEXT, nullable
 7. created_at, TIMESTAMP, default current timestamp
@@ -203,11 +203,11 @@ Tracks security and business-critical actions.
 
 Fields:
 
-1. id, INT, PK, AUTO_INCREMENT
-2. user_id, INT, FK -> users.id, nullable
+1. audit_id, CHAR(36), PK, default UUID()
+2. user_id, CHAR(36), FK -> users.user_id, nullable
 3. action, VARCHAR(100), NOT NULL
 4. entity_type, VARCHAR(50), nullable
-5. entity_id, INT, nullable
+5. entity_id, CHAR(36), nullable
 6. details, TEXT, nullable
 7. ip_address, VARCHAR(45), nullable
 8. created_at, TIMESTAMP, default current timestamp
@@ -235,12 +235,12 @@ Tracks request state transitions and timing analytics.
 
 Fields:
 
-1. id, INT, PK, AUTO_INCREMENT
-2. request_id, INT, FK -> service_requests.id, NOT NULL
+1. status_history_id, CHAR(36), PK, default UUID()
+2. request_id, CHAR(36), FK -> service_requests.request_id, NOT NULL
 3. old_status, VARCHAR(50), nullable
 4. new_status, VARCHAR(50), NOT NULL
 5. duration_seconds, INT, nullable
-6. changed_by, INT, FK -> users.id, nullable
+6. changed_by, CHAR(36), FK -> users.user_id, nullable
 7. notes, TEXT, nullable
 8. changed_at, TIMESTAMP, default current timestamp
 
@@ -287,7 +287,7 @@ Lifecycle constraints:
 Offer constraints:
 
 1. One offer per provider per request.
-2. Offer status can be pending, accepted, rejected, or countered.
+2. Offer status can be Pending, Accepted, Rejected, or Countered.
 
 Review constraints:
 
@@ -297,9 +297,9 @@ Review constraints:
 
 Role constraints:
 
-1. customer creates requests and reviews.
-2. provider submits offers and marks completion.
-3. admin verifies providers and monitors logs.
+1. Customer creates requests and reviews.
+2. Provider submits offers and marks completion.
+3. Admin verifies providers and monitors logs.
 
 ---
 
