@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="ServiceLink — Find trusted local service providers for plumbing, electrical, carpentry, cleaning and more. Post a request and get competitive offers in minutes.">
+  <meta name="keywords" content="local services, marketplace, plumber, electrician, carpenter, handyman, home services">
+  <title>ServiceLink — Find Trusted Local Services</title>
+
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="navbar" id="navbar" role="banner">
+    <div class="container navbar__inner">
+
+      <!-- Logo -->
+      <a href="#" class="navbar__logo" aria-label="ServiceLink Home">
+        <svg class="navbar__logo-icon" width="32" height="32" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+          <rect width="32" height="32" rx="8" fill="#0066CC"/>
+          <path d="M10 16L14.5 20.5L22 11" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span class="navbar__logo-text">Service<span class="navbar__logo-accent">Link</span></span>
+      </a>
+
+      <!-- Desktop Navigation Links -->
+      <nav class="navbar__nav" id="navbarMenu" role="navigation" aria-label="Main navigation">
+        <ul class="navbar__list">
+          <li><a href="#hero" class="navbar__link navbar__link--active">Home</a></li>
+          <li><a href="#categories" class="navbar__link">Services</a></li>
+          <li><a href="#how-it-works" class="navbar__link">How It Works</a></li>
+          <li><a href="#testimonials" class="navbar__link">Testimonials</a></li>
+        </ul>
+      </nav>
+
+      <!-- Auth Buttons -->
+      <div class="navbar__actions">
+        <a href="#" class="btn btn--ghost" id="loginBtn">Log In</a>
+        <a href="#" class="btn btn--primary" id="signupBtn">Sign Up Free</a>
+      </div>
+
+      <!-- Mobile Hamburger Toggle -->
+      <button class="navbar__toggle" id="navToggle" aria-label="Toggle navigation menu" aria-expanded="false" aria-controls="navbarMenu">
+        <span class="navbar__toggle-bar"></span>
+        <span class="navbar__toggle-bar"></span>
+        <span class="navbar__toggle-bar"></span>
+      </button>
+    </div>
+  </header>
+
+
+  <main id="main-content">
+
+    <!-- ═══════════════════════════════════════════════════════════
+         SECTION 2 — HERO
+         ═══════════════════════════════════════════════════════════ -->
+    <section class="hero" id="hero" aria-labelledby="hero-heading">
+      <div class="container hero__inner">
+
+        <div class="hero__content">
+          <span class="hero__badge"> Trusted by 2,000+ Homeowners</span>
+          <h1 class="hero__title" id="hero-heading">
+            Find Local Services,<br>
+            <span class="hero__title-accent">Get It Done Fast.</span>
+          </h1>
+          <p class="hero__subtitle">
+            Post your service request and receive competitive offers from verified local
+            professionals — electricians, plumbers, carpenters, cleaners and more.
+          </p>
+          <div class="hero__cta-group">
+            <a href="#" class="btn btn--primary btn--lg" id="heroCtaBtn">
+              Post a Request — It's Free
+              <svg class="btn__icon" width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                <path d="M4 10H16M16 10L11 5M16 10L11 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </a>
+            <a href="#how-it-works" class="btn btn--ghost btn--lg" id="heroLearnBtn">Learn How It Works</a>
+          </div>
+          <div class="hero__trust">
+            <div class="hero__trust-avatars">
+              <span class="hero__avatar" style="background-color:#0066CC;" aria-hidden="true">A</span>
+              <span class="hero__avatar" style="background-color:#28A745;" aria-hidden="true">M</span>
+              <span class="hero__avatar" style="background-color:#FFA500;" aria-hidden="true">S</span>
+              <span class="hero__avatar" style="background-color:#4C7CFF;" aria-hidden="true">T</span>
+            </div>
+            <p class="hero__trust-text"><strong>4.8★</strong> average rating from 500+ reviews</p>
+          </div>
+        </div>
+
+        <div class="hero__visual" aria-hidden="true">
+          <div class="hero__card hero__card--1">
+            <div class="hero__card-icon"></div>
+            <div class="hero__card-content">
+              <span class="hero__card-title">Plumbing Repair</span>
+              <span class="hero__card-meta">3 offers received</span>
+            </div>
+            <span class="badge badge--success">Assigned</span>
+          </div>
+          <div class="hero__card hero__card--2">
+            <div class="hero__card-icon">⚡</div>
+            <div class="hero__card-content">
+              <span class="hero__card-title">Electrical Fix</span>
+              <span class="hero__card-meta">New request</span>
+            </div>
+            <span class="badge badge--info">Requested</span>
+          </div>
+          <div class="hero__card hero__card--3">
+            <div class="hero__card-icon">🎨</div>
+            <div class="hero__card-content">
+              <span class="hero__card-title">House Painting</span>
+              <span class="hero__card-meta">Review submitted</span>
+            </div>
+            <span class="badge badge--reviewed">Reviewed</span>
+          </div>
+          <!-- Decorative background shapes -->
+          <div class="hero__shape hero__shape--circle"></div>
+          <div class="hero__shape hero__shape--dots"></div>
+        </div>
+      </div>
+
+      <!-- Decorative wave divider -->
+      <div class="hero__wave" aria-hidden="true">
+        <svg viewBox="0 0 1440 120" preserveAspectRatio="none">
+          <path d="M0,64 C288,120 720,0 1440,64 L1440,120 L0,120 Z" fill="#ffffff"/>
+        </svg>
+      </div>
+    </section>
+
+
+    <!-- ═══════════════════════════════════════════════════════════
+         SECTION 3 — SERVICE CATEGORIES
+         ═══════════════════════════════════════════════════════════ -->
+    <section class="categories" id="categories" aria-labelledby="categories-heading">
+      <div class="container">
+
+        <div class="section-header">
+          <span class="section-header__tag">Our Services</span>
+          <h2 class="section-header__title" id="categories-heading">Browse by Category</h2>
+          <p class="section-header__subtitle">Find the right professional for any job around your home or office.</p>
+        </div>
+
+        <div class="categories__grid">
+          <article class="category-card" tabindex="0" data-category="electrician">
+            <div class="category-card__icon-wrap">
+              <span class="category-card__icon">⚡</span>
+            </div>
+            <h3 class="category-card__title">Electrician</h3>
+            <p class="category-card__desc">Wiring, outlets, lighting fixtures, and electrical repairs.</p>
+            <span class="category-card__count">42 providers</span>
+          </article>
+
+          <article class="category-card" tabindex="0" data-category="plumber">
+            <div class="category-card__icon-wrap">
+              <span class="category-card__icon">🔧</span>
+            </div>
+            <h3 class="category-card__title">Plumber</h3>
+            <p class="category-card__desc">Pipe repair, drain cleaning, fixture installation.</p>
+            <span class="category-card__count">38 providers</span>
+          </article>
+
+          <article class="category-card" tabindex="0" data-category="carpenter">
+            <div class="category-card__icon-wrap">
+              <span class="category-card__icon">🪚</span>
+            </div>
+            <h3 class="category-card__title">Carpenter</h3>
+            <p class="category-card__desc">Furniture, cabinets, doors, and woodwork.</p>
+            <span class="category-card__count">27 providers</span>
+          </article>
+
+          <article class="category-card" tabindex="0" data-category="painter">
+            <div class="category-card__icon-wrap">
+              <span class="category-card__icon">🎨</span>
+            </div>
+            <h3 class="category-card__title">Painter</h3>
+            <p class="category-card__desc">Interior, exterior, decorative painting and finishing.</p>
+            <span class="category-card__count">31 providers</span>
+          </article>
+
+          <article class="category-card" tabindex="0" data-category="cleaner">
+            <div class="category-card__icon-wrap">
+              <span class="category-card__icon">🧹</span>
+            </div>
+            <h3 class="category-card__title">Cleaner</h3>
+            <p class="category-card__desc">Deep cleaning, regular maintenance, move-in/out cleaning.</p>
+            <span class="category-card__count">55 providers</span>
+          </article>
+
+          <article class="category-card" tabindex="0" data-category="general">
+            <div class="category-card__icon-wrap">
+              <span class="category-card__icon">🏠</span>
+            </div>
+            <h3 class="category-card__title">General Handyman</h3>
+            <p class="category-card__desc">Mounting, assembly, minor repairs, and odd jobs.</p>
+            <span class="category-card__count">63 providers</span>
+          </article>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ═══════════════════════════════════════════════════════════
+         SECTION 4 — HOW IT WORKS
+         ═══════════════════════════════════════════════════════════ -->
+    <section class="how-it-works" id="how-it-works" aria-labelledby="hiw-heading">
+      <div class="container">
+
+        <div class="section-header">
+          <span class="section-header__tag">Simple Process</span>
+          <h2 class="section-header__title" id="hiw-heading">How It Works</h2>
+          <p class="section-header__subtitle">From posting your request to getting the job done — it's seamless.</p>
+        </div>
+
+        <div class="hiw__steps">
+          <div class="hiw__step">
+            <div class="hiw__step-number">1</div>
+            <div class="hiw__step-icon">
+              <svg width="40" height="40" viewBox="0 0 40 40" fill="none" aria-hidden="true">
+                <rect x="8" y="6" width="24" height="28" rx="3" stroke="#0066CC" stroke-width="2"/>
+                <path d="M14 14H26M14 20H22M14 26H18" stroke="#0066CC" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <h3 class="hiw__step-title">Post Your Request</h3>
+            <p class="hiw__step-desc">Describe the service you need, set your budget, and choose your preferred date and location.</p>
+          </div>
+
+          <div class="hiw__connector" aria-hidden="true">
+            <svg width="60" height="24" viewBox="0 0 60 24">
+              <path d="M0 12H52M52 12L44 4M52 12L44 20" stroke="#0066CC" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="4 4"/>
+            </svg>
+          </div>
+
+          <div class="hiw__step">
+            <div class="hiw__step-number">2</div>
+            <div class="hiw__step-icon">
+              <svg width="40" height="40" viewBox="0 0 40 40" fill="none" aria-hidden="true">
+                <path d="M20 8L24 16H32L26 22L28 30L20 25L12 30L14 22L8 16H16L20 8Z" stroke="#0066CC" stroke-width="2" stroke-linejoin="round"/>
+              </svg>
+            </div>
+            <h3 class="hiw__step-title">Receive Offers</h3>
+            <p class="hiw__step-desc">Verified providers in your area see your request and submit competitive offers with their best price.</p>
+          </div>
+
+          <div class="hiw__connector" aria-hidden="true">
+            <svg width="60" height="24" viewBox="0 0 60 24">
+              <path d="M0 12H52M52 12L44 4M52 12L44 20" stroke="#0066CC" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="4 4"/>
+            </svg>
+          </div>
+
+          <div class="hiw__step">
+            <div class="hiw__step-number">3</div>
+            <div class="hiw__step-icon">
+              <svg width="40" height="40" viewBox="0 0 40 40" fill="none" aria-hidden="true">
+                <circle cx="20" cy="16" r="8" stroke="#0066CC" stroke-width="2"/>
+                <path d="M8 34C8 28 13 24 20 24C27 24 32 28 32 34" stroke="#0066CC" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <h3 class="hiw__step-title">Choose a Provider</h3>
+            <p class="hiw__step-desc">Compare ratings, reviews, and prices. Accept the offer that fits your needs and budget best.</p>
+          </div>
+
+          <div class="hiw__connector" aria-hidden="true">
+            <svg width="60" height="24" viewBox="0 0 60 24">
+              <path d="M0 12H52M52 12L44 4M52 12L44 20" stroke="#0066CC" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="4 4"/>
+            </svg>
+          </div>
+
+          <div class="hiw__step">
+            <div class="hiw__step-number">4</div>
+            <div class="hiw__step-icon">
+              <svg width="40" height="40" viewBox="0 0 40 40" fill="none" aria-hidden="true">
+                <circle cx="20" cy="20" r="12" stroke="#28A745" stroke-width="2"/>
+                <path d="M14 20L18 24L26 16" stroke="#28A745" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+            <h3 class="hiw__step-title">Get It Done & Review</h3>
+            <p class="hiw__step-desc">Your provider completes the job. Confirm completion and leave a review to help the community.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ═══════════════════════════════════════════════════════════
+         SECTION 5 — STATS BAR
+         ═══════════════════════════════════════════════════════════ -->
+    <section class="stats" aria-label="Platform statistics">
+      <div class="container stats__inner">
+        <div class="stats__item">
+          <span class="stats__number" data-target="2000">0</span><span class="stats__suffix">+</span>
+          <span class="stats__label">Requests Posted</span>
+        </div>
+        <div class="stats__divider" aria-hidden="true"></div>
+        <div class="stats__item">
+          <span class="stats__number" data-target="350">0</span><span class="stats__suffix">+</span>
+          <span class="stats__label">Verified Providers</span>
+        </div>
+        <div class="stats__divider" aria-hidden="true"></div>
+        <div class="stats__item">
+          <span class="stats__number" data-target="1500">0</span><span class="stats__suffix">+</span>
+          <span class="stats__label">Jobs Completed</span>
+        </div>
+        <div class="stats__divider" aria-hidden="true"></div>
+        <div class="stats__item">
+          <span class="stats__number" data-target="4.8">0</span>
+          <span class="stats__label">Average Rating ★</span>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ═══════════════════════════════════════════════════════════
+         SECTION 6 — TESTIMONIALS
+         ═══════════════════════════════════════════════════════════ -->
+    <section class="testimonials" id="testimonials" aria-labelledby="testimonials-heading">
+      <div class="container">
+
+        <div class="section-header">
+          <span class="section-header__tag">What People Say</span>
+          <h2 class="section-header__title" id="testimonials-heading">Trusted by Homeowners & Providers</h2>
+          <p class="section-header__subtitle">Real stories from our community members.</p>
+        </div>
+
+        <div class="testimonials__carousel" id="testimonialCarousel" role="region" aria-label="Testimonials carousel">
+          <div class="testimonials__track" id="testimonialTrack">
+
+            <article class="testimonial-card">
+              <div class="testimonial-card__stars" aria-label="5 out of 5 stars">★★★★★</div>
+              <blockquote class="testimonial-card__quote">
+                "I posted a request for an electrician and within an hour I had three offers. The process was incredibly smooth. My provider fixed everything same day!"
+              </blockquote>
+              <div class="testimonial-card__author">
+                <div class="testimonial-card__avatar" style="background-color:#0066CC;">A</div>
+                <div class="testimonial-card__info">
+                  <cite class="testimonial-card__name">Ahmed Hassan</cite>
+                  <span class="testimonial-card__role">Homeowner, Bole</span>
+                </div>
+              </div>
+            </article>
+
+            <article class="testimonial-card">
+              <div class="testimonial-card__stars" aria-label="5 out of 5 stars">★★★★★</div>
+              <blockquote class="testimonial-card__quote">
+                "As a plumber, ServiceLink has been a game-changer. I get consistent job leads in my area and the offer system is fair. My business grew 40% in three months."
+              </blockquote>
+              <div class="testimonial-card__author">
+                <div class="testimonial-card__avatar" style="background-color:#28A745;">A</div>
+                <div class="testimonial-card__info">
+                  <cite class="testimonial-card__name">Abebe Kebede</cite>
+                  <span class="testimonial-card__role">Verified Plumber, Kirkos</span>
+                </div>
+              </div>
+            </article>
+
+            <article class="testimonial-card">
+              <div class="testimonial-card__stars" aria-label="4 out of 5 stars">★★★★☆</div>
+              <blockquote class="testimonial-card__quote">
+                "The transparency is what I love most. I can see ratings, compare prices, and communicate with providers before accepting any offer. No surprises."
+              </blockquote>
+              <div class="testimonial-card__author">
+                <div class="testimonial-card__avatar" style="background-color:#FFA500;">S</div>
+                <div class="testimonial-card__info">
+                  <cite class="testimonial-card__name">Sara Tesfaye</cite>
+                  <span class="testimonial-card__role">Homeowner, Addis Ketema</span>
+                </div>
+              </div>
+            </article>
+
+            <article class="testimonial-card">
+              <div class="testimonial-card__stars" aria-label="5 out of 5 stars">★★★★★</div>
+              <blockquote class="testimonial-card__quote">
+                "I needed my entire house repainted before a family event. Found an amazing painter through ServiceLink who finished ahead of schedule. Highly recommend!"
+              </blockquote>
+              <div class="testimonial-card__author">
+                <div class="testimonial-card__avatar" style="background-color:#4C7CFF;">T</div>
+                <div class="testimonial-card__info">
+                  <cite class="testimonial-card__name">Tigist Worku</cite>
+                  <span class="testimonial-card__role">Homeowner, Yeka</span>
+                </div>
+              </div>
+            </article>
+
+          </div>
+
+          <!-- Carousel Controls -->
+          <div class="testimonials__controls">
+            <button class="testimonials__btn testimonials__btn--prev" id="testimonialPrev" aria-label="Previous testimonial">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M13 4L7 10L13 16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+            <div class="testimonials__dots" id="testimonialDots" role="tablist" aria-label="Testimonial slide indicators"></div>
+            <button class="testimonials__btn testimonials__btn--next" id="testimonialNext" aria-label="Next testimonial">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M7 4L13 10L7 16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ═══════════════════════════════════════════════════════════
+         SECTION 7 — CTA BANNER
+         ═══════════════════════════════════════════════════════════ -->
+    <section class="cta" id="cta" aria-labelledby="cta-heading">
+      <div class="container cta__inner">
+        <h2 class="cta__title" id="cta-heading">Ready to Get Started?</h2>
+        <p class="cta__subtitle">Join thousands of homeowners and providers already using ServiceLink. Post your first request in under 2 minutes.</p>
+        <div class="cta__buttons">
+          <a href="#" class="btn btn--white btn--lg" id="ctaPostBtn">Post a Request</a>
+          <a href="#" class="btn btn--outline-white btn--lg" id="ctaProviderBtn">Become a Provider</a>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+
+  <!-- ═══════════════════════════════════════════════════════════
+       SECTION 8 — FOOTER
+       ═══════════════════════════════════════════════════════════ -->
+  <footer class="footer" id="footer" role="contentinfo">
+    <div class="container footer__inner">
+
+      <div class="footer__col footer__col--brand">
+        <a href="#" class="footer__logo" aria-label="ServiceLink Home">
+          <svg class="footer__logo-icon" width="28" height="28" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+            <rect width="32" height="32" rx="8" fill="#0066CC"/>
+            <path d="M10 16L14.5 20.5L22 11" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <span class="footer__logo-text">Service<span class="footer__logo-accent">Link</span></span>
+        </a>
+        <p class="footer__tagline">Connecting you with trusted local service professionals — fast, transparent, and reliable.</p>
+      </div>
+
+      <div class="footer__col">
+        <h4 class="footer__col-title">Platform</h4>
+        <ul class="footer__links">
+          <li><a href="#" class="footer__link">Browse Services</a></li>
+          <li><a href="#" class="footer__link">Post a Request</a></li>
+          <li><a href="#" class="footer__link">Become a Provider</a></li>
+          <li><a href="#" class="footer__link">Pricing</a></li>
+        </ul>
+      </div>
+
+      <div class="footer__col">
+        <h4 class="footer__col-title">Support</h4>
+        <ul class="footer__links">
+          <li><a href="#" class="footer__link">Help Center</a></li>
+          <li><a href="#" class="footer__link">Safety Guidelines</a></li>
+          <li><a href="#" class="footer__link">Contact Us</a></li>
+          <li><a href="#" class="footer__link">FAQ</a></li>
+        </ul>
+      </div>
+
+      <div class="footer__col">
+        <h4 class="footer__col-title">Legal</h4>
+        <ul class="footer__links">
+          <li><a href="#" class="footer__link">Terms of Service</a></li>
+          <li><a href="#" class="footer__link">Privacy Policy</a></li>
+          <li><a href="#" class="footer__link">Cookie Policy</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="footer__bottom">
+      <div class="container footer__bottom-inner">
+        <p class="footer__copyright">&copy; 2026 ServiceLink. All rights reserved.</p>
+        <div class="footer__social">
+          <a href="#" class="footer__social-link" aria-label="Facebook">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/></svg>
+          </a>
+          <a href="#" class="footer__social-link" aria-label="Twitter">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M23 3a10.9 10.9 0 01-3.14 1.53 4.48 4.48 0 00-7.86 3v1A10.66 10.66 0 013 4s-4 9 5 13a11.64 11.64 0 01-7 2c9 5 20 0 20-11.5a4.5 4.5 0 00-.08-.83A7.72 7.72 0 0023 3z"/></svg>
+          </a>
+          <a href="#" class="footer__social-link" aria-label="LinkedIn">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6zM2 9h4v12H2zM4 6a2 2 0 100-4 2 2 0 000 4z"/></svg>
+          </a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Back to Top Button -->
+  <button class="back-to-top" id="backToTop" aria-label="Back to top">
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M10 16V4M10 4L5 9M10 4L15 9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </button>
+
+  <script src="script.js"></script>
+</body>
+</html>
