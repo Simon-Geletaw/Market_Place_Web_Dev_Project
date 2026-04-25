@@ -1,0 +1,27 @@
+:root {
+  --color-primary: #0066cc;
+  --color-primary-hover: #0052a3;
+  --color-success: #28a745;
+  --color-warning: #ffa500;
+  --color-surface: #ffffff;
+  --color-muted: #f8f9fa;
+  --color-border: #e0e0e0;
+  --color-text: #1a1a1a;
+  --color-text-secondary: #666666;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  color: var(--color-text);
+  background: var(--color-muted);
+}
+
+.container {
+  width: min(1120px, calc(100% - 32px));
+  margin: 0 auto;
+}
