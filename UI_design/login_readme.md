@@ -384,3 +384,181 @@ CSS  Bytes → Tokens → CSSOM Tree
 | `backdrop-filter: blur(8px)` | Applies a blur to everything behind the element. | GPU-intensive — use sparingly. Creates a "glassmorphism" effect. Requires a semi-transparent background on the element. Not supported in Firefox <103. |
 | `appearance: none` | Removes the browser's native styling for form controls. | Essential for cross-browser consistent form styling. Without it, iOS Safari adds rounded corners and shadows to inputs. |
 | `@keyframes` | Defines named animation sequences. | Each keyframe is a snapshot of property values at a point in the animation timeline. The browser interpolates between keyframes. |
+
+---
+
+## Part III — The JS Textbook: Logic, Security & The Event Loop
+
+### Chapter Overview
+
+JavaScript transforms our static HTML+CSS page into an **interactive application**. But to use JS effectively, you must understand the **Event Loop** — the engine that powers every click handler, every animation, and every API call in your browser.
+
+Our login `script.js` follows a strict **Module Pattern** that separates concerns into five layers:
+
+```
+┌──────────────────────────────────────┐
+│         Event Listeners              │  ← Thin wrappers (wire events)
+├──────────────────────────────────────┤
+│         Event Handlers               │  ← Orchestrate validators + UI
+├──────────────────────────────────────┤
+│   Validators    │    Sanitizer       │  ← Pure functions (no DOM access)
+├──────────────────────────────────────┤
+│         UI Controller                │  ← All DOM mutations
+├──────────────────────────────────────┤
+│         DOM Cache                    │  ← Single-query element references
+└──────────────────────────────────────┘
+```
+
+**Why this separation?** Each layer has exactly one reason to change:
+- Validation logic changes → only `Validators` module changes.
+- Visual feedback changes → only `UI` module changes.
+- New fields added → only `DOM` cache and `Handlers` change.
+
+This is the **Single Responsibility Principle** applied to frontend JavaScript.
+
+---
+
+### The Event Loop
+
+Every time a user types, clicks, or blurs an input, this is what happens inside the browser:
+
+```
+1. User clicks "Log In"
+2. Browser creates a Click Event object
+3. Event enters the Task Queue
+4. Event Loop checks: "Is the Call Stack empty?"
+5. If yes → moves event to Call Stack
+6. Call Stack executes: Handlers.onSubmit(event)
+7. Inside onSubmit: Validators.email() runs → returns → pops off stack
+8. UI.showError() runs → mutates DOM → pops off stack
+9. setTimeout(callback, 1500) → sends callback to Web API
+10. Call Stack is empty → Event Loop checks Task Queue again
+11. After 1500ms → setTimeout callback enters Task Queue
+12. Event Loop moves callback to Call Stack → executes
+```
+
+**Key insight:** `setTimeout` does NOT guarantee execution after exactly 1500ms. It guarantees the callback enters the Task Queue *at least* 1500ms later. If the Call Stack is busy, the callback waits. This is why heavy computation in JS can freeze the UI.
+
+---
+
+### Step-by-Step Construction Guide
+
+#### Step 1: The IIFE (Immediately Invoked Function Expression)
+
+```javascript
+'use strict';
+
+(function () {
+  // All code lives here
+})();
+```
+
+**Why `'use strict'`?** Enables strict mode, which catches common bugs:
+- Prevents accidental global variables (`x = 10` throws an error instead of creating `window.x`).
+- Disallows duplicate parameter names.
+- Makes `this` inside functions `undefined` instead of `window`.
+
+**Why an IIFE?** It creates a private scope. Without it, all variables would be global, risking name collisions with other scripts on the page. The IIFE pattern is the pre-ES6 equivalent of ES modules.
+
+#### Step 2: DOM Cache Pattern
+
+```javascript
+const DOM = {
+  form: document.getElementById('loginForm'),
+  emailInput: document.getElementById('loginEmail'),
+  emailError: document.getElementById('emailError'),
+  // ...
+};
+```
+
+**Why cache DOM elements?** Every call to `document.getElementById()` triggers a DOM tree traversal — the browser walks the tree to find the matching node. Caching the result in a variable means we traverse once and reuse the reference. In forms with real-time validation (events firing on every keystroke), this prevents thousands of unnecessary traversals.
+
+#### Step 3: Pure Validator Functions
+
+```javascript
+const Validators = {
+  email(value) {
+    const trimmed = value.trim();
+    if (!trimmed) return { valid: false, message: 'Email address is required.' };
+    const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9]...$/;
+    if (!emailRegex.test(trimmed)) return { valid: false, message: 'Please enter a valid email.' };
+    return { valid: true, message: '' };
+  },
+};
+```
+
+**Why return `{ valid, message }` instead of throwing?** Throwing exceptions for expected failures (like invalid input) is an anti-pattern. Exceptions should be reserved for *unexpected* errors (network failure, null references). Returning a result object makes the calling code simpler and avoids try/catch overhead.
+
+**Why `value.trim()`?** Users frequently copy-paste text with trailing spaces. `" user@test.com "` would fail the regex without trimming. Always sanitize input before validation.
+
+#### Step 4: The Submission Handler
+
+```javascript
+onSubmit(event) {
+  event.preventDefault();
+  
+  // 1. Sanitize
+  const email = Sanitizer.stripTags(DOM.emailInput.value.trim());
+  
+  // 2. Validate
+  const emailResult = Validators.email(email);
+  
+  // 3. Update UI
+  if (!emailResult.valid) {
+    UI.showError(...);
+  }
+  
+  // 4. Submit if valid
+  UI.setLoading(true);
+  setTimeout(() => { /* API call */ }, 1500);
+}
+```
+
+**Why `event.preventDefault()`?** Without it, the browser performs a full page navigation to the form's `action` URL. We want to handle submission in JavaScript (validate first, then AJAX), so we prevent the default behavior.
+
+---
+
+### Security Deep-Dive
+
+#### XSS Prevention
+
+```javascript
+const Sanitizer = {
+  stripTags(input) {
+    return input.replace(/<[^>]*>/g, '');
+  },
+};
+```
+
+**What is XSS?** Cross-Site Scripting occurs when an attacker injects `<script>` tags or event handlers into your page. If a user enters `<img onerror="alert('hacked')">` as their email and we display it via `innerHTML`, the script executes.
+
+**Our defense:** We strip all HTML tags before processing. But **client-side sanitization is NOT a security boundary** — it's a UX improvement. A malicious user can bypass JavaScript entirely by sending requests directly to the API. The server MUST also sanitize all input.
+
+#### Why We Don't Sanitize Passwords
+
+```javascript
+const password = DOM.passwordInput.value; // No sanitization
+```
+
+Passwords may legitimately contain `<`, `>`, `&`, and other characters. Sanitizing them would change the password the user intended to set. Password security comes from hashing on the server (bcrypt), not from character restrictions.
+
+---
+
+### Textbook Glossary — JavaScript APIs
+
+| API / Pattern | Mechanics | Security/Performance Implication |
+|---|---|---|
+| `document.getElementById()` | Returns the first element with the matching ID. | O(1) in modern browsers (ID lookup table). Cache the result to avoid repeated calls. |
+| `addEventListener('blur', fn)` | Fires when the element loses focus. | `blur` does NOT bubble. Use `focusout` if you need event delegation. |
+| `addEventListener('input', fn)` | Fires on every keystroke/paste/autofill. | High-frequency event — keep handlers lightweight. Never do DOM queries inside. |
+| `event.preventDefault()` | Cancels the default browser action for the event. | For `submit` events, prevents page navigation. For `click` on `<a>`, prevents URL change. |
+| `element.classList.add()` | Adds a CSS class to the element's class list. | Triggers a style recalculation. Batching multiple class changes (or using `className`) is faster. |
+| `element.textContent` | Sets or gets the text content of an element. | Safer than `innerHTML` because it doesn't parse HTML. Always use `textContent` for user-generated content. |
+| `void element.offsetWidth` | Forces a synchronous reflow. | Used to restart CSS animations by creating a layout "break" between removing and re-adding a class. |
+| `setTimeout(fn, ms)` | Schedules a function to run after ≥ ms milliseconds. | The callback enters the Task Queue, not the Call Stack. If the stack is busy, it waits. Not suitable for precise timing. |
+| `'use strict'` | Enables strict mode for the script. | Catches silent errors (accidental globals, duplicate params). Always use in production code. |
+| `IIFE (function(){})()` | Creates a private scope, executes immediately. | Prevents global namespace pollution. All variables inside are inaccessible from outside. |
+| `RegExp.test(string)` | Tests if a string matches the regular expression. | Returns `true`/`false`. For complex patterns, consider named capture groups for readability. |
+| `String.trim()` | Removes whitespace from both ends of a string. | Essential before validation. Users frequently paste text with trailing spaces or newlines. |
+| `input.validity` | The browser's native `ValidityState` object. | Contains properties like `valueMissing`, `typeMismatch`, `tooShort`. Available even with `novalidate` on the form. |
+

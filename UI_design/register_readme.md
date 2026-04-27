@@ -388,3 +388,166 @@ The Registration form has ~150+ DOM nodes vs Login's ~60. This impacts rendering
 | `pointer-events: none` | Makes the element non-interactive (clicks pass through). | Used on decorative overlays (icons, chevrons) that shouldn't capture mouse events meant for the input underneath. |
 | `will-change: transform` | Hints to the browser that a property will animate soon. | Creates a compositor layer in advance, preventing jank on first frame. Overuse wastes GPU memory. Only apply to elements that actually animate. |
 
+---
+
+## Part III — The JS Textbook: Logic, Security & The Event Loop
+
+### Chapter Overview
+
+The Registration page's JavaScript extends the Login page's architecture with three new patterns:
+
+1. **Password Strength Analyzer** — A real-time scoring engine that evaluates password complexity.
+2. **Cross-Field Validation** — The confirm-password field depends on the password field's value (inter-dependent state).
+3. **Multi-Field Sequential Validation** — Seven fields must be validated in order on submit, with error focus management.
+
+The same Module Pattern applies, but with an additional `PasswordStrength` module and significantly more complex event wiring.
+
+---
+
+### Password Strength: A State Machine
+
+The password strength indicator is effectively a simple **state machine** with three states:
+
+```
+                    ┌──────────────────┐
+         0 reqs    │   (empty)        │
+         met       │   No indicator   │
+                    └────────┬─────────┘
+                             │ user types
+                    ┌────────▼─────────┐
+         1 req     │   WEAK           │  → red bar (33%)
+         met       │   Score: 1       │
+                    └────────┬─────────┘
+                             │ more reqs met
+                    ┌────────▼─────────┐
+         2 reqs    │   FAIR           │  → amber bar (66%)
+         met       │   Score: 2       │
+                    └────────┬─────────┘
+                             │ all reqs met
+                    ┌────────▼─────────┐
+         3 reqs    │   STRONG         │  → green bar (100%)
+         met       │   Score: 3       │
+                    └──────────────────┘
+```
+
+**Implementation:**
+
+```javascript
+const PasswordStrength = {
+  analyze(password) {
+    const requirements = {
+      length:    password.length >= 8,
+      uppercase: /[A-Z]/.test(password),
+      number:    /\d/.test(password),
+    };
+    
+    const metCount = Object.values(requirements).filter(Boolean).length;
+    const levels = ['weak', 'weak', 'fair', 'strong'];
+    
+    return {
+      score: metCount,
+      level: levels[metCount],
+      requirements,
+    };
+  },
+};
+```
+
+**Why `Object.values().filter(Boolean).length`?** This is a functional programming pattern:
+1. `Object.values(requirements)` → `[true, false, true]`
+2. `.filter(Boolean)` → `[true, true]` (removes falsy values)
+3. `.length` → `2`
+
+This is more maintainable than counting manually with if/else chains. When we add a new requirement (e.g., "one special character"), we just add it to the `requirements` object — the scoring logic adapts automatically.
+
+---
+
+### Cross-Field Validation
+
+```javascript
+onPasswordInput() {
+  const password = DOM.passwordInput.value;
+  UI.updatePasswordStrength(password);
+  
+  // Also re-validate confirm password if it has a value
+  if (DOM.confirmInput && DOM.confirmInput.value) {
+    const confirmResult = Validators.confirmPassword(password, DOM.confirmInput.value);
+    if (confirmResult.valid) {
+      UI.clearError(DOM.confirmGroup, DOM.confirmInput, DOM.confirmError);
+      UI.setSuccess(DOM.confirmInput);
+    } else if (DOM.confirmInput.classList.contains('form-input--error')) {
+      UI.showError(DOM.confirmGroup, DOM.confirmInput, DOM.confirmError, confirmResult.message);
+    }
+  }
+},
+```
+
+**Why re-validate confirm password when the password changes?** If the user types password "Hello123", then types "Hello123" in confirm (✅ match), then changes password to "Hello456" — the confirm field is now WRONG but wouldn't update without this cross-field check. This is a common UX bug in poorly implemented forms.
+
+---
+
+### Ethiopian Phone Number Validation
+
+```javascript
+phone(value) {
+  const phoneRegex = /^(?:\+251|0)(?:9|7)\d{8}$/;
+  const digitsOnly = trimmed.replace(/[\s\-()]/g, '');
+  if (!phoneRegex.test(digitsOnly)) {
+    return { valid: false, message: 'Enter a valid Ethiopian phone number.' };
+  }
+}
+```
+
+**Regex breakdown:**
+- `^(?:\+251|0)` — Starts with country code `+251` or local `0`
+- `(?:9|7)` — Mobile prefix (Ethio Telecom: 9xx, Safaricom: 7xx)
+- `\d{8}$` — Followed by exactly 8 digits
+
+**Why strip formatting characters first?** Users enter phone numbers in many formats: `+251 911 234 567`, `0911-234-567`, `(0911) 234567`. Stripping spaces, hyphens, and parentheses normalizes them all to the same format for regex validation.
+
+---
+
+### Multi-Field Submit Pipeline
+
+```javascript
+onSubmit(event) {
+  event.preventDefault();
+  const errors = [];
+
+  // Validate each field in order
+  const nameResult = Validators.name(data.name);
+  if (!nameResult.valid) {
+    UI.showError(DOM.nameGroup, DOM.nameInput, DOM.nameError, nameResult.message);
+    errors.push(nameResult.message);
+  }
+  // ... repeat for all 7 fields ...
+
+  if (errors.length > 0) {
+    UI.announceStatus(`Form has ${errors.length} errors. ${errors[0]}`);
+    const firstError = DOM.form.querySelector('.form-input--error');
+    if (firstError) firstError.focus();
+    return;
+  }
+}
+```
+
+**Why validate ALL fields before stopping?** Unlike some forms that stop at the first error, we validate everything and show ALL errors simultaneously. This respects the user's time — they can fix all issues in one pass instead of playing "whack-a-mole" with sequential errors.
+
+**Why focus the first errored input?** Accessibility requirement. Screen reader users can't see the red error highlights. Focusing the first errored input causes the screen reader to announce: "Full name, edit text, required. Full name is required."
+
+---
+
+### Textbook Glossary — JavaScript APIs (Registration-Specific)
+
+| API / Pattern | Mechanics | Expert Expansion |
+|---|---|---|
+| `Object.values(obj)` | Returns an array of the object's own enumerable property values. | Used in password strength to extract `[true, false, true]` from the requirements object. ES2017 — polyfill for IE11. |
+| `Array.filter(Boolean)` | Removes all falsy values from an array. | `Boolean` is a constructor function that returns `true`/`false`. Passing it to `.filter()` removes `false`, `0`, `''`, `null`, `undefined`, `NaN`. |
+| `String.replace(/regex/g, '')` | Replaces all matches of a regex with empty string. | The `g` flag is required for replacing all occurrences. Without it, only the first match is replaced. |
+| `document.querySelector('.class')` | Returns the first element matching a CSS selector. | Slower than `getElementById` (selector parsing + tree traversal). Use for one-off queries, not in hot paths. |
+| `?.` (Optional Chaining) | Returns `undefined` instead of throwing if the left side is `null`/`undefined`. | `document.querySelector(...)?.value` is safer than assuming the element exists. Prevents "Cannot read property of null" errors. |
+| `element.dataset.met` | Accesses the `data-met` custom attribute as a JS property. | All `data-*` attributes are accessible via `element.dataset`. Kebab-case attributes become camelCase: `data-my-val` → `dataset.myVal`. |
+| `input.checked` | Boolean property for checkbox/radio state. | Unlike `input.value` (always a string), `checked` is a true boolean. Use for conditional logic without string comparison. |
+| `new Event('submit', { cancelable: true })` | Programmatically creates and dispatches a DOM event. | `cancelable: true` allows `preventDefault()` to work on the synthetic event. Without it, `preventDefault()` is silently ignored. |
+
+
