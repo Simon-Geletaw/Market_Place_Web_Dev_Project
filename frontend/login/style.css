@@ -1,0 +1,723 @@
+/* ============================================================
+   ServiceLink — Login Page Styles
+   Design System: Secure Local Service Marketplace
+   Font: Inter | Primary: #0066CC | 8px spacing scale
+   Architecture: Mobile-First, Split-Panel Auth Layout
+   ============================================================ */
+
+/* --- CSS Custom Properties (Design Tokens) --- */
+:root {
+  /* ---- Colors ---- */
+  --color-primary: #0066CC;
+  --color-primary-hover: #0052A3;
+  --color-primary-light: #d7e3ff;
+  --color-primary-subtle: rgba(0, 102, 204, 0.08);
+  --color-secondary: #1b5eaf;
+
+  --color-success: #28A745;
+  --color-danger: #DC3545;
+  --color-danger-light: #fdeaea;
+  --color-warning: #FFA500;
+
+  --color-text-primary: #1A1A1A;
+  --color-text-secondary: #666666;
+  --color-text-muted: #999999;
+  --color-bg: #f9f9ff;
+  --color-bg-white: #FFFFFF;
+  --color-border: #E0E0E0;
+  --color-border-light: #ecedf6;
+  --color-border-focus: var(--color-primary);
+
+  /* ---- Typography ---- */
+  --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+  /* ---- Shadows ---- */
+  --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.08);
+  --shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.12);
+  --shadow-focus: 0 0 0 3px rgba(0, 102, 204, 0.15);
+  --shadow-input: 0 1px 3px rgba(0, 0, 0, 0.06);
+  --shadow-brand: 0 4px 24px rgba(0, 0, 0, 0.15);
+
+  /* ---- Borders ---- */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-full: 9999px;
+
+  /* ---- Spacing ---- */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+  --space-xxl: 48px;
+  --space-3xl: 64px;
+
+  /* ---- Transitions ---- */
+  --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-fast: 0.15s ease;
+}
+
+/* ============================================================
+   GLOBAL RESET & BASE
+   ============================================================ */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  font-family: var(--font-family);
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.6;
+  color: var(--color-text-primary);
+  background-color: var(--color-bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  background: none;
+  font-family: inherit;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* Screen reader only utility */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Focus outline for accessibility */
+:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* ============================================================
+   MOBILE-FIRST LAYOUT (Default: single column, stacked)
+   ============================================================ */
+
+/* --- Branding Panel: Hidden on mobile, decorative sidebar on desktop --- */
+.auth-brand {
+  display: none; /* Hidden on mobile */
+}
+
+/* --- Main Content: Full screen on mobile --- */
+.auth-main {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding: var(--space-lg);
+  padding-top: var(--space-xl);
+  padding-bottom: var(--space-xl);
+}
+
+/* --- Form Container --- */
+.auth-form-container {
+  width: 100%;
+  max-width: 420px;
+  margin: 0 auto;
+}
+
+/* ============================================================
+   MOBILE LOGO (visible only on mobile)
+   ============================================================ */
+.auth-mobile-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: var(--space-xl);
+  text-decoration: none;
+}
+
+.auth-mobile-logo__text {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.auth-mobile-logo__accent {
+  color: var(--color-primary);
+}
+
+/* ============================================================
+   FORM HEADER
+   ============================================================ */
+.auth-form__header {
+  margin-bottom: var(--space-xl);
+}
+
+.auth-form__title {
+  font-size: 1.75rem;
+  font-weight: 800;
+  line-height: 1.2;
+  color: var(--color-text-primary);
+  margin-bottom: var(--space-sm);
+}
+
+.auth-form__subtitle {
+  font-size: 0.95rem;
+  color: var(--color-text-secondary);
+  line-height: 1.6;
+}
+
+/* ============================================================
+   FORM STRUCTURE
+   ============================================================ */
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+/* --- Form Group --- */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+/* --- Label --- */
+.form-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  letter-spacing: 0.01em;
+}
+
+.form-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* --- Form Link (Forgot Password) --- */
+.form-link {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--color-primary);
+  transition: color var(--transition-fast);
+}
+
+.form-link:hover {
+  color: var(--color-primary-hover);
+  text-decoration: underline;
+}
+
+/* --- Input Wrapper (icon + input + optional toggle) --- */
+.input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-icon {
+  position: absolute;
+  left: 14px;
+  color: var(--color-text-muted);
+  pointer-events: none;
+  transition: color var(--transition-fast);
+  flex-shrink: 0;
+  z-index: 1;
+}
+
+/* --- Form Input --- */
+.form-input {
+  width: 100%;
+  padding: 12px 14px 12px 44px;
+  font-family: var(--font-family);
+  font-size: 0.9rem;
+  font-weight: 400;
+  color: var(--color-text-primary);
+  background: var(--color-bg-white);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-md);
+  transition: all var(--transition-fast);
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.form-input::placeholder {
+  color: var(--color-text-muted);
+  font-weight: 400;
+}
+
+/* Focus State */
+.form-input:focus {
+  outline: none;
+  border-color: var(--color-border-focus);
+  box-shadow: var(--shadow-focus);
+}
+
+.form-input:focus ~ .input-icon,
+.form-input:focus + .input-icon,
+.input-wrapper:focus-within .input-icon {
+  color: var(--color-primary);
+}
+
+/* Error State */
+.form-input--error {
+  border-color: var(--color-danger);
+  background: var(--color-danger-light);
+}
+
+.form-input--error:focus {
+  box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.15);
+  border-color: var(--color-danger);
+}
+
+/* Success State */
+.form-input--success {
+  border-color: var(--color-success);
+}
+
+/* Password field extra padding for toggle button */
+.form-input--password {
+  padding-right: 48px;
+}
+
+/* --- Form Error Message --- */
+.form-error {
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--color-danger);
+  min-height: 0;
+  overflow: hidden;
+  transition: all var(--transition-fast);
+  line-height: 1.4;
+}
+
+.form-error:empty {
+  display: none;
+}
+
+/* --- Form Hint --- */
+.form-hint {
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+  line-height: 1.4;
+}
+
+/* ============================================================
+   PASSWORD TOGGLE BUTTON
+   ============================================================ */
+.password-toggle {
+  position: absolute;
+  right: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  color: var(--color-text-muted);
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-fast);
+  z-index: 1;
+}
+
+.password-toggle:hover {
+  color: var(--color-text-secondary);
+  background: var(--color-bg);
+}
+
+.password-toggle:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 1px;
+}
+
+.password-toggle__icon {
+  display: block;
+}
+
+/* ============================================================
+   PRIMARY BUTTON
+   ============================================================ */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: var(--font-family);
+  font-size: 0.95rem;
+  font-weight: 600;
+  line-height: 1.5;
+  padding: 12px 24px;
+  border-radius: var(--radius-md);
+  border: none;
+  cursor: pointer;
+  transition: all var(--transition);
+  white-space: nowrap;
+  position: relative;
+}
+
+.btn--primary {
+  background: var(--color-primary);
+  color: #fff;
+}
+
+.btn--primary:hover {
+  background: var(--color-primary-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 102, 204, 0.35);
+}
+
+.btn--primary:active {
+  transform: translateY(0);
+  box-shadow: none;
+}
+
+.btn--full {
+  width: 100%;
+}
+
+.btn:disabled,
+.btn--loading {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+/* --- Spinner --- */
+.btn__spinner {
+  display: inline-flex;
+  align-items: center;
+}
+
+.spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* ============================================================
+   FORM FOOTER
+   ============================================================ */
+.auth-form__footer {
+  text-align: center;
+  margin-top: var(--space-lg);
+  font-size: 0.85rem;
+  color: var(--color-text-secondary);
+}
+
+.auth-form__footer-link {
+  font-weight: 600;
+  color: var(--color-primary);
+  transition: color var(--transition-fast);
+}
+
+.auth-form__footer-link:hover {
+  color: var(--color-primary-hover);
+  text-decoration: underline;
+}
+
+/* ============================================================
+   DESKTOP LAYOUT (min-width: 992px) — Split Panel
+   ============================================================ */
+@media (min-width: 992px) {
+
+  body {
+    display: flex;
+    flex-direction: row;
+  }
+
+  /* --- Show Branding Panel --- */
+  .auth-brand {
+    display: flex;
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 50%;
+    height: 100vh;
+    height: 100dvh;
+    background: linear-gradient(145deg, #001d3d 0%, #003566 40%, #0066CC 100%);
+    color: #fff;
+    overflow: hidden;
+  }
+
+  .auth-brand__inner {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: var(--space-3xl);
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 560px;
+    margin: 0 auto;
+  }
+
+  /* Logo */
+  .auth-brand__logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: var(--space-3xl);
+    text-decoration: none;
+    color: #fff;
+  }
+
+  .auth-brand__logo-text {
+    font-size: 1.5rem;
+    font-weight: 700;
+  }
+
+  .auth-brand__logo-accent {
+    opacity: 0.85;
+  }
+
+  /* Content */
+  .auth-brand__headline {
+    font-size: 2.25rem;
+    font-weight: 800;
+    line-height: 1.2;
+    margin-bottom: var(--space-md);
+  }
+
+  .auth-brand__subtext {
+    font-size: 1rem;
+    line-height: 1.7;
+    opacity: 0.8;
+    margin-bottom: var(--space-xxl);
+    max-width: 420px;
+  }
+
+  /* Feature Cards */
+  .auth-brand__features {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+  }
+
+  .auth-brand__feature-card {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    padding: var(--space-md) var(--space-lg);
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: var(--radius-lg);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: all var(--transition);
+  }
+
+  .auth-brand__feature-card:hover {
+    background: rgba(255, 255, 255, 0.12);
+    transform: translateX(4px);
+  }
+
+  .auth-brand__feature-icon {
+    font-size: 1.5rem;
+    flex-shrink: 0;
+    width: 40px;
+    text-align: center;
+  }
+
+  .auth-brand__feature-title {
+    display: block;
+    font-size: 0.9rem;
+    font-weight: 600;
+  }
+
+  .auth-brand__feature-desc {
+    display: block;
+    font-size: 0.78rem;
+    opacity: 0.65;
+  }
+
+  /* Decorative shapes */
+  .auth-brand__shape {
+    position: absolute;
+    border-radius: 50%;
+    z-index: 0;
+  }
+
+  .auth-brand__shape--circle {
+    width: 400px;
+    height: 400px;
+    top: -100px;
+    right: -120px;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.05) 0%, transparent 70%);
+  }
+
+  .auth-brand__shape--dots {
+    width: 250px;
+    height: 250px;
+    bottom: 40px;
+    left: -60px;
+    background-image: radial-gradient(circle, rgba(255, 255, 255, 0.15) 1px, transparent 1px);
+    background-size: 20px 20px;
+    opacity: 0.3;
+  }
+
+  /* --- Hide mobile logo on desktop --- */
+  .auth-mobile-logo {
+    display: none;
+  }
+
+  /* --- Main: Right half --- */
+  .auth-main {
+    margin-left: 50%;
+    width: 50%;
+    min-height: 100vh;
+    min-height: 100dvh;
+    padding: var(--space-xxl) var(--space-3xl);
+    background: var(--color-bg-white);
+  }
+
+  .auth-form-container {
+    max-width: 400px;
+  }
+
+  .auth-form__title {
+    font-size: 2rem;
+  }
+}
+
+/* ============================================================
+   TABLET ADJUSTMENTS (641px — 991px)
+   ============================================================ */
+@media (min-width: 641px) and (max-width: 991px) {
+  .auth-main {
+    padding: var(--space-xxl);
+  }
+
+  .auth-form-container {
+    max-width: 440px;
+    background: var(--color-bg-white);
+    padding: var(--space-xl);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-card);
+  }
+}
+
+/* ============================================================
+   SMALL MOBILE (max-width: 380px) — extra compact
+   ============================================================ */
+@media (max-width: 380px) {
+  .auth-main {
+    padding: var(--space-md);
+    padding-top: var(--space-lg);
+  }
+
+  .auth-form__title {
+    font-size: 1.5rem;
+  }
+
+  .form-input {
+    padding: 10px 12px 10px 40px;
+    font-size: 0.85rem;
+  }
+
+  .btn {
+    padding: 11px 20px;
+    font-size: 0.9rem;
+  }
+}
+
+/* ============================================================
+   ANIMATIONS
+   ============================================================ */
+
+/* Gentle fade-in for form on page load */
+.auth-form-container {
+  animation: fadeInUp 0.5s ease-out both;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Branding panel slide-in on desktop */
+@media (min-width: 992px) {
+  .auth-brand {
+    animation: slideInLeft 0.6s ease-out both;
+  }
+
+  @keyframes slideInLeft {
+    from {
+      opacity: 0;
+      transform: translateX(-20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  .auth-brand__feature-card {
+    opacity: 0;
+    animation: fadeInUp 0.4s ease-out both;
+  }
+
+  .auth-brand__feature-card:nth-child(1) { animation-delay: 0.3s; }
+  .auth-brand__feature-card:nth-child(2) { animation-delay: 0.45s; }
+  .auth-brand__feature-card:nth-child(3) { animation-delay: 0.6s; }
+}
+
+/* Error shake animation */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-6px); }
+  40% { transform: translateX(6px); }
+  60% { transform: translateX(-4px); }
+  80% { transform: translateX(4px); }
+}
+
+.form-group--error {
+  animation: shake 0.4s ease;
+}
+
+/* Success pulse on input */
+@keyframes successPulse {
+  0% { box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.3); }
+  70% { box-shadow: 0 0 0 6px rgba(40, 167, 69, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(40, 167, 69, 0); }
+}
+
+.form-input--success {
+  animation: successPulse 0.6s ease;
+}

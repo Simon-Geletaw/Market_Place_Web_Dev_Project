@@ -226,3 +226,165 @@ This gives us pixel-perfect control while maintaining full keyboard accessibilit
 | `autocomplete="new-password"` | Hints that this is a new password. | On the registration password field. | Triggers browser password generation suggestions. Chrome shows "Suggest strong password." This is different from `current-password` used on Login. |
 | `role="radiogroup"` | ARIA role for a group of radios. | On the `<div>` wrapping the radio cards. | Provides the same semantics as `<fieldset>` for custom-styled radio groups. Used as a backup when `<fieldset>` styles are overridden. |
 | `data-met` | Custom data attribute. | On password requirement `<li>` items. | Stores boolean state ("true"/"false"). Accessed via JS: `element.dataset.met`. Targetable in CSS: `[data-met="true"]`. |
+
+---
+
+## Part II — The CSS Textbook: Styling & The CSSOM
+
+### Chapter Overview
+
+The Registration page shares the same layout architecture as the Login page (mobile-first, split-panel on desktop), but introduces **four new component patterns** that require dedicated CSS:
+
+1. **Radio Card Group** — Transforming native radio buttons into tappable cards.
+2. **Select Dropdown** — Replacing the browser's default dropdown with a custom-styled element.
+3. **Custom Checkbox** — Pixel-perfect checkbox with animated checkmark.
+4. **Password Strength Indicator** — A dynamic progress bar with color-coded strength levels.
+
+These patterns demonstrate a core CSS principle: **styling form controls requires hiding the native element and building a visual replacement**, while keeping the native element in the DOM for accessibility and form data.
+
+---
+
+### The Render Tree — Registration-Specific Considerations
+
+The Registration form has ~150+ DOM nodes vs Login's ~60. This impacts rendering performance:
+
+- **More paint operations** — Each form group, input, label, and error span triggers a paint.
+- **More layout recalculations** — When password requirements update (showing/hiding checkmarks), the browser recalculates the layout of everything below.
+- **More composite layers** — Animated elements (strength bar fill, feature cards) create compositor layers.
+
+**Our mitigation strategy:**
+- Use `transform` and `opacity` for animations (GPU-accelerated, no reflow).
+- Use `gap` in flexbox/grid instead of margins (fewer layout properties to resolve).
+- Use `will-change` sparingly and only on known-animated elements.
+
+---
+
+### Step-by-Step Construction Guide: New Components
+
+#### Step 1: Radio Card Group
+
+```css
+.radio-group {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-sm);
+}
+
+.radio-card__input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.radio-card__body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--space-md);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  transition: all var(--transition);
+}
+
+.radio-card__input:checked + .radio-card__body {
+  border-color: var(--color-primary);
+  background: var(--color-primary-subtle);
+  box-shadow: 0 0 0 1px var(--color-primary);
+}
+```
+
+**Why hide the native radio with `opacity: 0` instead of `display: none`?** An element with `display: none` is removed from the accessibility tree — screen readers can't find it. `opacity: 0` + `position: absolute` keeps the radio in the tab order and accessible to screen readers while being visually hidden. The `+` adjacent sibling combinator then styles the visual `.radio-card__body` based on the hidden input's `:checked` state.
+
+**Mobile adaptation:** On screens smaller than 380px, the grid switches to `grid-template-columns: 1fr` and the card body becomes `flex-direction: row` for a compact horizontal layout.
+
+#### Step 2: Custom Select Dropdown
+
+```css
+.form-select {
+  cursor: pointer;
+  padding-right: 40px;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.select-chevron {
+  position: absolute;
+  right: 14px;
+  pointer-events: none;
+  transition: transform var(--transition-fast);
+}
+
+.form-select:focus ~ .select-chevron {
+  transform: rotate(180deg);
+  color: var(--color-primary);
+}
+```
+
+**Why `appearance: none`?** Native `<select>` elements have OS-specific styling (Chrome adds a dropdown arrow, Safari rounds the corners). `appearance: none` strips all of this, giving us a blank canvas. We then add our own SVG chevron icon, positioned absolutely inside the input wrapper.
+
+**The `~` general sibling combinator** — Unlike `+` (adjacent sibling), `~` targets *any* sibling that comes after the select. This lets us style the chevron based on the select's focus state, even if there are other elements between them.
+
+#### Step 3: Password Strength Bar
+
+```css
+.password-strength__fill {
+  height: 100%;
+  width: 0%;
+  border-radius: var(--radius-full);
+  transition: width var(--transition), background var(--transition);
+}
+
+.password-strength__fill--weak   { width: 33%;  background: var(--color-danger); }
+.password-strength__fill--fair   { width: 66%;  background: var(--color-warning); }
+.password-strength__fill--strong { width: 100%; background: var(--color-success); }
+```
+
+**The modifier class pattern (BEM):** The base class `.password-strength__fill` defines the shape and transition. The modifier classes (`--weak`, `--fair`, `--strong`) only change `width` and `background`. JavaScript swaps these modifier classes dynamically as the user types, and the CSS `transition` property handles the smooth animation.
+
+**Performance consideration:** Animating `width` triggers a *reflow* (the browser recalculates the layout of the bar and its container). In this case it's acceptable because the element is small and isolated. For larger elements, prefer `transform: scaleX()` which only triggers *compositing*.
+
+#### Step 4: Custom Checkbox
+
+```css
+.checkbox-input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.checkbox-custom {
+  width: 20px;
+  height: 20px;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color: transparent;
+  transition: all var(--transition-fast);
+}
+
+.checkbox-input:checked + .checkbox-custom {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #fff;
+}
+```
+
+**The same hide-and-replace pattern as radio cards.** The native checkbox is visually hidden but remains functional. The custom `<span>` uses `color: transparent` to hide the SVG checkmark by default, and `color: #fff` when checked to reveal it. This is more performant than toggling `display` or `visibility` on the SVG.
+
+---
+
+### Textbook Glossary — Selectors & Properties (Registration-Specific)
+
+| Selector / Property | Mechanics | Expert Expansion |
+|---|---|---|
+| `grid-template-columns: 1fr 1fr` | Creates two equal-width columns in CSS Grid. | `1fr` = one fraction of available space. Grid is ideal for 2D layouts (rows AND columns), while Flexbox is for 1D (single axis). |
+| `.radio-card__input:checked + .radio-card__body` | Styles the sibling element when the radio is checked. | The `+` combinator requires the elements to be adjacent siblings. This is the foundation of the "hidden input" pattern for custom form controls. |
+| `opacity: 0` + `position: absolute` | Visually hides while preserving accessibility. | Unlike `display: none` (removes from accessibility tree) or `visibility: hidden` (takes space), this combo is invisible, takes no space, but remains accessible. |
+| `appearance: none` | Strips browser default form control styling. | Required for cross-browser consistency. Safari, Chrome, and Firefox all render `<select>`, `<checkbox>`, and `<radio>` differently. |
+| `.form-select:focus ~ .select-chevron` | Styles a sibling based on the select's focus state. | The `~` general sibling combinator works across non-adjacent siblings. Use `+` for adjacent only. |
+| `transition: width 0.3s, background 0.3s` | Animates multiple properties simultaneously. | Comma-separated transitions allow different durations per property. `width` causes reflow; `transform`/`opacity` are GPU-accelerated alternatives. |
+| `[data-met="true"]` | Attribute selector targeting a custom data attribute. | CSS attribute selectors can match exact values (`=`), prefixes (`^=`), suffixes (`$=`), or contains (`*=`). More semantic than class-based state. |
+| `pointer-events: none` | Makes the element non-interactive (clicks pass through). | Used on decorative overlays (icons, chevrons) that shouldn't capture mouse events meant for the input underneath. |
+| `will-change: transform` | Hints to the browser that a property will animate soon. | Creates a compositor layer in advance, preventing jank on first frame. Overuse wastes GPU memory. Only apply to elements that actually animate. |
+

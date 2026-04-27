@@ -199,3 +199,188 @@ This guide walks through how to build the Login HTML from an empty file, explain
 | `aria-pressed` | Toggle button state. | On the password toggle button. | Screen readers announce "Show password, toggle button, not pressed" vs "Hide password, toggle button, pressed." Conveys the current state without visual cues. |
 | `<button type="button">` | Non-submitting button. | The password show/hide toggle. | `type="button"` prevents the button from triggering form submission. The default type for `<button>` inside a `<form>` is `submit`, which is a common source of bugs. |
 | `<button type="submit">` | Form submission trigger. | The "Log In" button. | Clicking it (or pressing Enter in any input) fires the form's `submit` event. The event object provides the form data and can be cancelled with `preventDefault()`. |
+
+---
+
+## Part II — The CSS Textbook: Styling & The CSSOM
+
+### Chapter Overview
+
+With the DOM tree constructed, the browser now needs to know *how to paint it*. This is the role of CSS — but CSS is not simply "making things pretty." CSS constructs a parallel data structure called the **CSS Object Model (CSSOM)**, which the browser merges with the DOM to create the **Render Tree** — the actual set of instructions for painting pixels on screen.
+
+Our login page uses a **mobile-first layout strategy**: the default CSS targets mobile devices (single-column, full-width form), and we use `@media (min-width: ...)` queries to progressively enhance the layout for tablets and desktops. This approach ensures the smallest, slowest devices receive the lightest CSS workload.
+
+**The visual hierarchy** of our login page has three layers:
+1. **Layout Layer** — The split-panel architecture (branding left, form right on desktop).
+2. **Component Layer** — Form inputs, buttons, labels, error states.
+3. **Polish Layer** — Animations, transitions, hover effects, focus rings.
+
+---
+
+### The Render Tree & CSSOM
+
+When the browser encounters `<link rel="stylesheet" href="style.css">`, it begins constructing the CSSOM. Here is how the full rendering pipeline works:
+
+```
+HTML Bytes → Tokens → DOM Tree
+                                  ↘
+                                   Render Tree → Layout → Paint → Composite
+                                  ↗
+CSS  Bytes → Tokens → CSSOM Tree
+```
+
+**Key concepts:**
+
+1. **The CSSOM is render-blocking.** The browser will NOT paint anything until the entire CSSOM is constructed. This is why we keep our CSS lean and specific.
+
+2. **The Render Tree ≠ The DOM Tree.** Elements with `display: none` (like our `.auth-brand` on mobile) exist in the DOM but are *excluded* from the Render Tree. The browser doesn't waste time calculating their layout.
+
+3. **Cascade, Specificity, Inheritance.** When multiple CSS rules target the same element, the browser resolves conflicts using:
+   - **Cascade:** Later rules override earlier ones (at equal specificity).
+   - **Specificity:** `.auth-form__title` (class = 10 points) beats `h1` (element = 1 point).
+   - **Inheritance:** Properties like `font-family` and `color` cascade down from parent to child. Properties like `padding` and `border` do NOT inherit.
+
+---
+
+### Step-by-Step Construction Guide
+
+#### Step 1: CSS Custom Properties (Design Tokens)
+
+```css
+:root {
+  --color-primary: #0066CC;
+  --color-primary-hover: #0052A3;
+  --color-danger: #DC3545;
+  --color-border: #E0E0E0;
+  --radius-md: 8px;
+  --space-lg: 24px;
+  --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+```
+
+**Why custom properties?** They create a single source of truth for design decisions. Changing `--color-primary` updates every element that references it. In enterprise codebases, this is how teams enforce brand consistency across thousands of components.
+
+**Why on `:root`?** The `:root` pseudo-class targets `<html>`, the highest node in the DOM. Custom properties *inherit*, so every descendant element can access them. This is cascade-based configuration.
+
+#### Step 2: Global Reset
+
+```css
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+```
+
+**Why `box-sizing: border-box`?** By default, CSS uses `content-box` — meaning `width: 100px` + `padding: 20px` = 140px rendered width. `border-box` makes the total width stay at 100px, with padding calculated *inside*. This prevents layout math from breaking on every element.
+
+**Why reset margin/padding?** Every browser has a default "user agent stylesheet" that adds margins and padding to elements (e.g., `<body>` has 8px margin). Resetting to zero gives us complete control.
+
+#### Step 3: Mobile-First Base Layout
+
+```css
+.auth-brand {
+  display: none; /* Hidden on mobile — zero render cost */
+}
+
+.auth-main {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding: var(--space-lg);
+}
+```
+
+**Why `display: none` for the brand panel?** On mobile, the decorative branding panel wastes valuable screen space. Setting `display: none` does more than hide it — it completely removes it from the Render Tree, so the browser doesn't even calculate its layout. This is a performance optimization.
+
+**Why `100dvh` after `100vh`?** On mobile browsers, `100vh` includes the area behind the browser's address bar, causing content to overflow. `100dvh` (dynamic viewport height) accounts for the visible area only. We declare `100vh` first as a fallback for browsers that don't support `dvh`.
+
+#### Step 4: Form Input Styling
+
+```css
+.form-input {
+  width: 100%;
+  padding: 12px 14px 12px 44px;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-md);
+  transition: all var(--transition-fast);
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: var(--color-border-focus);
+  box-shadow: var(--shadow-focus);
+}
+```
+
+**Why `padding-left: 44px`?** This leaves room for the icon that is absolutely positioned inside the input wrapper. The icon overlays the input visually, but the padding prevents text from overlapping with it.
+
+**Why `outline: none` with `box-shadow`?** The browser's default focus outline is ugly and inconsistent. We replace it with a `box-shadow` that looks like a softer "glow" ring. This provides a *better* visual indicator while maintaining WCAG compliance.
+
+#### Step 5: Desktop Split-Panel Layout
+
+```css
+@media (min-width: 992px) {
+  body {
+    display: flex;
+    flex-direction: row;
+  }
+
+  .auth-brand {
+    display: flex;
+    position: fixed;
+    width: 50%;
+    height: 100vh;
+  }
+
+  .auth-main {
+    margin-left: 50%;
+    width: 50%;
+  }
+}
+```
+
+**Why `position: fixed` on the brand panel?** On desktop, the brand panel stays in place while the form scrolls if needed. This creates a "sticky sidebar" effect that is visually grounding and prevents the branding from disappearing on tall screens.
+
+**Why `margin-left: 50%`?** Since the brand panel is `fixed` (removed from document flow), we push the main content over with a margin equal to the panel width. This prevents the form from rendering underneath the fixed panel.
+
+#### Step 6: Micro-Animations
+
+```css
+.auth-form-container {
+  animation: fadeInUp 0.5s ease-out both;
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+```
+
+**Why `both` in `animation-fill-mode`?** The `both` keyword applies the animation's starting state before it begins (`backwards`) AND keeps the ending state after it finishes (`forwards`). Without `both`, the element would flash to its pre-animation state for a frame.
+
+**Performance note:** `transform` and `opacity` are the only CSS properties that can be animated on the GPU compositor layer (no repaint/reflow). Animating `top`, `left`, or `height` triggers expensive layout recalculations.
+
+---
+
+### Textbook Glossary — Selectors & Properties
+
+| Selector / Property | Mechanics | Expert Expansion |
+|---|---|---|
+| `:root` | Targets the `<html>` element. Used for global CSS custom properties. | Custom properties on `:root` are inherited by all descendants. In large codebases, this is the design token layer. Component-level overrides use class selectors. |
+| `display: none` | Removes the element from the Render Tree entirely. | Zero rendering cost — no layout, paint, or composite. Compare with `visibility: hidden` (invisible but still takes space) and `opacity: 0` (invisible but interactive). |
+| `display: flex` | Enables the Flexbox layout model on the container. | Flexbox operates on a single axis (main/cross). Use `justify-content` for main axis, `align-items` for cross axis. All direct children become flex items. |
+| `min-height: 100dvh` | Sets minimum height to the dynamic viewport height. | `dvh` accounts for mobile browser chrome (address bar). Falls back to `100vh` for unsupported browsers. Always declare `vh` before `dvh`. |
+| `position: fixed` | Positions relative to the viewport, removed from document flow. | Creates a new stacking context. The element doesn't participate in the normal layout, so siblings need `margin` or `padding` to avoid overlap. |
+| `box-sizing: border-box` | Includes padding and border in the element's total width/height. | Without this, `width: 100% + padding: 20px` causes horizontal overflow. This is the single most important CSS reset for predictable layouts. |
+| `transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1)` | Animates property changes over 300ms with a Material Design easing curve. | The cubic-bezier curve `(0.4, 0, 0.2, 1)` is the "standard" Material easing — starts fast, decelerates. Avoid `transition: all` in production for performance; specify exact properties. |
+| `var(--custom-property)` | References a CSS custom property value. | Custom properties participate in the cascade and can be overridden at any specificity level. They are resolved at computed-value time, not parse time. |
+| `@media (min-width: 992px)` | Applies rules only when the viewport is ≥992px. | Mobile-first means default styles target small screens. `min-width` queries *add* complexity for larger screens. This is the opposite of `max-width` (desktop-first). |
+| `animation: fadeInUp 0.5s ease-out both` | Shorthand for animation-name, duration, timing, and fill-mode. | `both` = `forwards + backwards`. The element holds its final state after the animation. GPU-accelerated when animating `transform`/`opacity` only. |
+| `box-shadow: 0 0 0 3px rgba(0,102,204,0.15)` | A "focus ring" using spread-radius-only shadow. | Better than `outline` for rounded elements (outlines don't follow border-radius in older browsers). Doesn't affect layout. Multiple shadows can be comma-separated. |
+| `backdrop-filter: blur(8px)` | Applies a blur to everything behind the element. | GPU-intensive — use sparingly. Creates a "glassmorphism" effect. Requires a semi-transparent background on the element. Not supported in Firefox <103. |
+| `appearance: none` | Removes the browser's native styling for form controls. | Essential for cross-browser consistent form styling. Without it, iOS Safari adds rounded corners and shadows to inputs. |
+| `@keyframes` | Defines named animation sequences. | Each keyframe is a snapshot of property values at a point in the animation timeline. The browser interpolates between keyframes. |
