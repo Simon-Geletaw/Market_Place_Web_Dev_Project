@@ -23,9 +23,9 @@
 (function () {
 
   /* ==========================================================
-     MODULE 1 — DOM CACHE
+     MODULE 1 - DOM CACHE
      Query all elements once at boot. Never query inside loops
-     or event handlers — that forces a DOM lookup on every call.
+     or event handlers -- that forces a DOM lookup on every call.
      ========================================================== */
   const DOM = {
     form: document.getElementById('loginForm'),
@@ -67,7 +67,7 @@
 
 
   /* ==========================================================
-     MODULE 2 — VALIDATORS
+     MODULE 2 - VALIDATORS
      Pure functions. No DOM access. Easy to unit test.
      Each returns { valid: boolean, message: string }
      ========================================================== */
@@ -106,9 +106,9 @@
 
 
   /* ==========================================================
-     MODULE 3 — SANITIZER
+     MODULE 3 - SANITIZER
      Strips HTML tags and dangerous characters to prevent XSS.
-     This is a client-side layer only — server MUST also sanitize.
+     This is a client-side layer only -- server MUST also sanitize.
      ========================================================== */
   const Sanitizer = {
     /**
@@ -132,7 +132,7 @@
 
 
   /* ==========================================================
-     MODULE 4 — UI CONTROLLER
+     MODULE 4 - UI CONTROLLER
      All DOM mutations live here. Keeps event handlers thin.
      ========================================================== */
   const UI = {
@@ -228,7 +228,7 @@
 
 
   /* ==========================================================
-     MODULE 5 — EVENT HANDLERS
+     MODULE 5 - EVENT HANDLERS
      Thin functions that wire events to Validators + UI.
      ========================================================== */
   const Handlers = {
@@ -311,7 +311,7 @@
         return;
       }
 
-      // ✅ All valid — submit
+      // All valid -- submit
       UI.setLoading(true);
       UI.announceStatus('Logging in, please wait...');
 
@@ -338,7 +338,7 @@
 
 
   /* ==========================================================
-     MODULE 6 — INITIALIZATION
+     MODULE 6 - INITIALIZATION
      Boots the application: populates DOM cache, wires events.
      ========================================================== */
   function init() {

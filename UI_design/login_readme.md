@@ -1,6 +1,6 @@
-# ServiceLink — Login Page: A Full-Stack Textbook
+﻿# ServiceLink — Login Page: A Full-Stack Textbook
 
-> **Audience:** Junior → Senior Developer  
+> **Audience:** Junior -> Senior Developer  
 > **Scope:** This document is a progressive masterclass. It deconstructs the Login page from raw HTML semantics, through CSS visual architecture, to JavaScript interactivity and security. Each chapter builds on the last, mirroring how a browser itself processes a web page.
 
 ---
@@ -222,11 +222,11 @@ Our login page uses a **mobile-first layout strategy**: the default CSS targets 
 When the browser encounters `<link rel="stylesheet" href="style.css">`, it begins constructing the CSSOM. Here is how the full rendering pipeline works:
 
 ```
-HTML Bytes → Tokens → DOM Tree
+HTML Bytes -> Tokens -> DOM Tree
                                   ↘
-                                   Render Tree → Layout → Paint → Composite
+                                   Render Tree -> Layout -> Paint -> Composite
                                   ↗
-CSS  Bytes → Tokens → CSSOM Tree
+CSS  Bytes -> Tokens -> CSSOM Tree
 ```
 
 **Key concepts:**
@@ -410,9 +410,9 @@ Our login `script.js` follows a strict **Module Pattern** that separates concern
 ```
 
 **Why this separation?** Each layer has exactly one reason to change:
-- Validation logic changes → only `Validators` module changes.
-- Visual feedback changes → only `UI` module changes.
-- New fields added → only `DOM` cache and `Handlers` change.
+- Validation logic changes -> only `Validators` module changes.
+- Visual feedback changes -> only `UI` module changes.
+- New fields added -> only `DOM` cache and `Handlers` change.
 
 This is the **Single Responsibility Principle** applied to frontend JavaScript.
 
@@ -427,14 +427,14 @@ Every time a user types, clicks, or blurs an input, this is what happens inside 
 2. Browser creates a Click Event object
 3. Event enters the Task Queue
 4. Event Loop checks: "Is the Call Stack empty?"
-5. If yes → moves event to Call Stack
+5. If yes -> moves event to Call Stack
 6. Call Stack executes: Handlers.onSubmit(event)
-7. Inside onSubmit: Validators.email() runs → returns → pops off stack
-8. UI.showError() runs → mutates DOM → pops off stack
-9. setTimeout(callback, 1500) → sends callback to Web API
-10. Call Stack is empty → Event Loop checks Task Queue again
-11. After 1500ms → setTimeout callback enters Task Queue
-12. Event Loop moves callback to Call Stack → executes
+7. Inside onSubmit: Validators.email() runs -> returns -> pops off stack
+8. UI.showError() runs -> mutates DOM -> pops off stack
+9. setTimeout(callback, 1500) -> sends callback to Web API
+10. Call Stack is empty -> Event Loop checks Task Queue again
+11. After 1500ms -> setTimeout callback enters Task Queue
+12. Event Loop moves callback to Call Stack -> executes
 ```
 
 **Key insight:** `setTimeout` does NOT guarantee execution after exactly 1500ms. It guarantees the callback enters the Task Queue *at least* 1500ms later. If the Call Stack is busy, the callback waits. This is why heavy computation in JS can freeze the UI.

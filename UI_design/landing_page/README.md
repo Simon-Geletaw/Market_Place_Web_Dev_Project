@@ -1,4 +1,4 @@
-# ServiceLink Landing Page — Builder's Textbook
+﻿# ServiceLink Landing Page — Builder's Textbook
 
 > **A step-by-step guide to building a production-quality landing page with HTML, CSS, and JavaScript.**
 
@@ -39,11 +39,11 @@ frontend/landing_page/
 
 When a browser loads a page:
 
-1. **Parse HTML** → builds the **DOM** (Document Object Model) tree
-2. **Parse CSS** → builds the **CSSOM** (CSS Object Model)
-3. **Combine** → creates the **Render Tree**
-4. **Layout** → calculates positions and sizes
-5. **Paint** → draws pixels to screen
+1. **Parse HTML** -> builds the **DOM** (Document Object Model) tree
+2. **Parse CSS** -> builds the **CSSOM** (CSS Object Model)
+3. **Combine** -> creates the **Render Tree**
+4. **Layout** -> calculates positions and sizes
+5. **Paint** -> draws pixels to screen
 
 This is why we separate concerns:
 - **HTML** = What content exists (structure)
@@ -71,7 +71,7 @@ Our design system uses CSS Custom Properties as tokens:
 }
 ```
 
-**Why tokens?** Change `--color-primary` once → every button, link, and accent updates automatically.
+**Why tokens?** Change `--color-primary` once -> every button, link, and accent updates automatically.
 
 ---
 
@@ -247,7 +247,7 @@ The hero is the first thing users see. It must communicate the value proposition
     <span class="hero__avatar" style="background:#0066CC;">A</span>
     <!-- more avatars -->
   </div>
-  <p>4.8★ average rating from 500+ reviews</p>
+   <p>4.8 average rating from 500+ reviews</p>
 </div>
 ```
 
@@ -342,7 +342,7 @@ Six cards showing service types. Each card is clickable and leads to the marketp
 ### Chapter 4: How It Works
 
 #### A. Feature Overview
-A 4-step horizontal flow: Post → Receive Offers → Choose Provider → Done.
+A 4-step horizontal flow: Post -> Receive Offers -> Choose Provider -> Done.
 
 **UX Purpose:** Reduces anxiety by showing the process is simple and predictable.
 
@@ -578,7 +578,7 @@ The alternating backgrounds create **visual rhythm** — the eye naturally flows
 
 1. **Navbar** — Fixed glassmorphism bar with logo, 4 section links, and auth buttons. Hamburger on mobile.
 2. **Hero** — Gradient background, bold headline with gradient text accent, trust badge with avatar stack, floating animated cards showing real platform states.
-3. **Categories** — 6-card grid with emoji icons, hover lift effects, provider counts. 3→2→1 column responsive.
+3. **Categories** -- 6-card grid with category icons, hover lift effects, provider counts. 3 to 2 to 1 column responsive.
 4. **How It Works** — 4-step horizontal flow with numbered circles, SVG icons, and dashed arrow connectors.
 5. **Stats** — Blue gradient bar with animated counters triggered on scroll.
 6. **Testimonials** — 3-card carousel with auto-rotation, prev/next buttons, dot indicators, pause on hover.
@@ -586,7 +586,7 @@ The alternating backgrounds create **visual rhythm** — the eye naturally flows
 8. **Footer** — 4-column grid with brand, links, and social icons. Dark background for visual closure.
 
 ### UX Reasoning
-- **Visual hierarchy:** Hero title (2.75rem, 800 weight) → Section titles (2rem) → Card titles (1.25rem) → Body text (0.9rem)
+- **Visual hierarchy:** Hero title (2.75rem, 800 weight) -> Section titles (2rem) -> Card titles (1.25rem) -> Body text (0.9rem)
 - **Color strategy:** Blue accent for all CTAs creates consistent "action" association
 - **Spacing consistency:** All spacing uses the 8px scale, creating mathematical harmony
 - **Trust signals:** Rating badge, avatars, stats bar, and testimonials all reinforce credibility
@@ -603,7 +603,7 @@ The alternating backgrounds create **visual rhythm** — the eye naturally flows
 ### API Integration
 - Replace static category counts with `fetch('/api/providers/count?category=...')`
 - Load testimonials dynamically from `/api/reviews?featured=true`
-- Wire "Post a Request" button to open a modal with form → `POST /api/requests`
+- Wire "Post a Request" button to open a modal with form -> `POST /api/requests`
 
 ### Forms
 - Add search bar to hero section with live autocomplete

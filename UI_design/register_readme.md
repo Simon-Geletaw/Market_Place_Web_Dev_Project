@@ -1,6 +1,6 @@
 # ServiceLink — Registration Page: A Full-Stack Textbook
 
-> **Audience:** Junior → Senior Developer  
+> **Audience:** Junior -> Senior Developer  
 > **Scope:** This document deconstructs the Registration page through the same progressive lens — HTML structure, CSS styling, and JavaScript logic — turning each layer into a deep-dive educational chapter.
 
 ---
@@ -70,7 +70,7 @@ Document
         │       │   │   ├── input#registerConfirmPassword [type="password"]
         │       │   │   └── span.form-error#confirmPasswordError
         │       │   │
-        │       │   ├── fieldset.form-group#roleGroup ★ NEW PATTERN
+        │       │   ├── fieldset.form-group#roleGroup  NEW PATTERN
         │       │   │   ├── legend "I am a..."
         │       │   │   └── div.radio-group [role="radiogroup"]
         │       │   │       ├── label.radio-card > input[type="radio"] "Customer"
@@ -181,7 +181,7 @@ The registration page shares the same document shell as the login page. This sec
 </ul>
 ```
 
-**Why `aria-hidden="true"` on the strength bar?** The visual bar (Weak → Strong with colors) is redundant with the text label and the requirements checklist. Screen readers should read the checklist items, not try to interpret a progress bar. The checklist items use `data-met="false"` — a custom data attribute that our CSS and JS toggle to `"true"` to provide both visual and semantic feedback.
+**Why `aria-hidden="true"` on the strength bar?** The visual bar (Weak -> Strong with colors) is redundant with the text label and the requirements checklist. Screen readers should read the checklist items, not try to interpret a progress bar. The checklist items use `data-met="false"` — a custom data attribute that our CSS and JS toggle to `"true"` to provide both visual and semantic feedback.
 
 **Why `data-met` instead of a CSS class?** Custom data attributes (`data-*`) are designed for storing state in HTML. Using `data-met="true"` is more self-documenting than a class like `is-met`. It also allows CSS attribute selectors (`[data-met="true"]`) and easy JS access (`element.dataset.met`).
 
@@ -415,17 +415,17 @@ The password strength indicator is effectively a simple **state machine** with t
                     └────────┬─────────┘
                              │ user types
                     ┌────────▼─────────┐
-         1 req     │   WEAK           │  → red bar (33%)
+         1 req     │   WEAK           │  -> red bar (33%)
          met       │   Score: 1       │
                     └────────┬─────────┘
                              │ more reqs met
                     ┌────────▼─────────┐
-         2 reqs    │   FAIR           │  → amber bar (66%)
+         2 reqs    │   FAIR           │  -> amber bar (66%)
          met       │   Score: 2       │
                     └────────┬─────────┘
                              │ all reqs met
                     ┌────────▼─────────┐
-         3 reqs    │   STRONG         │  → green bar (100%)
+         3 reqs    │   STRONG         │  -> green bar (100%)
          met       │   Score: 3       │
                     └──────────────────┘
 ```
@@ -454,9 +454,9 @@ const PasswordStrength = {
 ```
 
 **Why `Object.values().filter(Boolean).length`?** This is a functional programming pattern:
-1. `Object.values(requirements)` → `[true, false, true]`
-2. `.filter(Boolean)` → `[true, true]` (removes falsy values)
-3. `.length` → `2`
+1. `Object.values(requirements)` -> `[true, false, true]`
+2. `.filter(Boolean)` -> `[true, true]` (removes falsy values)
+3. `.length` -> `2`
 
 This is more maintainable than counting manually with if/else chains. When we add a new requirement (e.g., "one special character"), we just add it to the `requirements` object — the scoring logic adapts automatically.
 
@@ -482,7 +482,7 @@ onPasswordInput() {
 },
 ```
 
-**Why re-validate confirm password when the password changes?** If the user types password "Hello123", then types "Hello123" in confirm (✅ match), then changes password to "Hello456" — the confirm field is now WRONG but wouldn't update without this cross-field check. This is a common UX bug in poorly implemented forms.
+**Why re-validate confirm password when the password changes?** If the user types password "Hello123", then types "Hello123" in confirm (valid match), then changes password to "Hello456" -- the confirm field is now WRONG but would not update without this cross-field check. This is a common UX bug in poorly implemented forms.
 
 ---
 
@@ -546,7 +546,7 @@ onSubmit(event) {
 | `String.replace(/regex/g, '')` | Replaces all matches of a regex with empty string. | The `g` flag is required for replacing all occurrences. Without it, only the first match is replaced. |
 | `document.querySelector('.class')` | Returns the first element matching a CSS selector. | Slower than `getElementById` (selector parsing + tree traversal). Use for one-off queries, not in hot paths. |
 | `?.` (Optional Chaining) | Returns `undefined` instead of throwing if the left side is `null`/`undefined`. | `document.querySelector(...)?.value` is safer than assuming the element exists. Prevents "Cannot read property of null" errors. |
-| `element.dataset.met` | Accesses the `data-met` custom attribute as a JS property. | All `data-*` attributes are accessible via `element.dataset`. Kebab-case attributes become camelCase: `data-my-val` → `dataset.myVal`. |
+| `element.dataset.met` | Accesses the `data-met` custom attribute as a JS property. | All `data-*` attributes are accessible via `element.dataset`. Kebab-case attributes become camelCase: `data-my-val` -> `dataset.myVal`. |
 | `input.checked` | Boolean property for checkbox/radio state. | Unlike `input.value` (always a string), `checked` is a true boolean. Use for conditional logic without string comparison. |
 | `new Event('submit', { cancelable: true })` | Programmatically creates and dispatches a DOM event. | `cancelable: true` allows `preventDefault()` to work on the synthetic event. Without it, `preventDefault()` is silently ignored. |
 

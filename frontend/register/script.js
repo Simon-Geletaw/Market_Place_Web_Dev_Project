@@ -1,18 +1,18 @@
 /**
  * ============================================================
- * ServiceLink — Registration Page Controller
+ * ServiceLink - Registration Page Controller
  * ============================================================
  * 
  * Architecture: Module pattern with strict separation of concerns.
  * 
  * Modules:
- *   1. DOM Cache          — All element references
- *   2. Validators         — Pure functions for each field
- *   3. Password Strength  — Real-time strength analysis
- *   4. Sanitizer          — Input cleaning (XSS prevention)
- *   5. UI Controller      — State & DOM manipulation
- *   6. Event Handlers     — Thin event→logic wrappers
- *   7. Initialization     — Boot sequence
+ *   1. DOM Cache          - All element references
+ *   2. Validators         - Pure functions for each field
+ *   3. Password Strength  - Real-time strength analysis
+ *   4. Sanitizer          - Input cleaning (XSS prevention)
+ *   5. UI Controller      - State & DOM manipulation
+ *   6. Event Handlers     - Thin event -> logic wrappers
+ *   7. Initialization     - Boot sequence
  * 
  * Fields validated:
  *   - Full Name (min 2 chars, letters/spaces only)
@@ -29,7 +29,7 @@
 (function () {
 
   /* ==========================================================
-     MODULE 1 — DOM CACHE
+     MODULE 1 - DOM CACHE
      ========================================================== */
   const DOM = {
     form: document.getElementById('registerForm'),
@@ -109,7 +109,7 @@
 
 
   /* ==========================================================
-     MODULE 2 — VALIDATORS
+     MODULE 2 - VALIDATORS
      Pure functions. No DOM access. Return { valid, message }.
      ========================================================== */
   const Validators = {
@@ -198,7 +198,7 @@
 
 
   /* ==========================================================
-     MODULE 3 — PASSWORD STRENGTH ANALYZER
+     MODULE 3 - PASSWORD STRENGTH ANALYZER
      Returns a score (0-3) and updates the requirements checklist.
      ========================================================== */
   const PasswordStrength = {
@@ -235,7 +235,7 @@
 
 
   /* ==========================================================
-     MODULE 4 — SANITIZER
+     MODULE 4 - SANITIZER
      ========================================================== */
   const Sanitizer = {
     stripTags(input) {
@@ -252,7 +252,7 @@
 
 
   /* ==========================================================
-     MODULE 5 — UI CONTROLLER
+     MODULE 5 - UI CONTROLLER
      ========================================================== */
   const UI = {
     showError(groupEl, inputEl, errorEl, message) {
@@ -361,7 +361,7 @@
 
 
   /* ==========================================================
-     MODULE 6 — EVENT HANDLERS
+     MODULE 6 - EVENT HANDLERS
      ========================================================== */
   const Handlers = {
     // --- Name ---
@@ -596,7 +596,7 @@
         return;
       }
 
-      // ✅ All valid — submit
+      // All valid -- submit
       UI.setLoading(true);
       UI.announceStatus('Creating your account, please wait...');
 
@@ -635,7 +635,7 @@
 
 
   /* ==========================================================
-     MODULE 7 — INITIALIZATION
+     MODULE 7 - INITIALIZATION
      ========================================================== */
   function init() {
     if (!DOM.form) {
