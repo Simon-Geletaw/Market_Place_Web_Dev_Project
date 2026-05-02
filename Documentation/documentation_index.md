@@ -22,7 +22,10 @@ Purpose: Describes entity relationships, cardinality, workflow links, and data i
 ### 4. [implementation_roadmap.md](implementation_roadmap.md)
 Purpose: Organizes the delivery phases, remaining documentation, coding plan, best practices, and next steps.
 
-### 5. [ui_ux_design_specification.md](ui_ux_design_specification.md)
+### 5. [phase_3_backend_structure_master_readme.md](phase_3_backend_structure_master_readme.md)
+Purpose: Phase 3 master guide for backend structure, routing, controllers, services, repositories, middleware, validation, response handling, and workflow enforcement.
+
+### 6. [ui_ux_design_specification.md](ui_ux_design_specification.md)
 Purpose: Defines the complete role-based UI/UX system, including Stitch-ready guidance, screen flows, components, and interaction standards.
 
 ---

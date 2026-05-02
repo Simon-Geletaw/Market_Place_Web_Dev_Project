@@ -47,5 +47,24 @@ function request_input(): array
 
 function route_key(): string
 {
-    return request_method() . ' ' . request_path();
+    $key = request_method() . ' ' . request_path();
+    error_log("Generated route key: $key"); // Log the generated route key for debugging
+    return $key;
+}
+
+function set_route_params(array $params): void
+{
+    $GLOBALS['route_params'] = $params;
+}
+
+function route_params(): array
+{
+    return $GLOBALS['route_params'] ?? [];
+}
+
+function route_param(string $name, mixed $default = null): mixed
+{
+    $params = route_params();
+
+    return $params[$name] ?? $default;
 }
