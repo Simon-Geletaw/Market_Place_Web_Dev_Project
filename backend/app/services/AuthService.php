@@ -6,6 +6,7 @@ final class AuthService
 {
     public function authenticate(array $credentials): array
     {
+        
         return [];
     }
 }
