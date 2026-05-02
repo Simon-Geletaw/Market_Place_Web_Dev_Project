@@ -70,6 +70,24 @@ return [
         'middleware' => ['auth'],
     ],
 
+    // Role dashboards: users are sent here after successful registration or login.
+    [
+        'group' => 'customer',
+        'method' => 'GET',
+        'path' => '/customer/dashboard',
+        'controller' => DashboardController::class,
+        'action' => 'customer',
+        'middleware' => ['auth', 'role:customer'],
+    ],
+    [
+        'group' => 'provider',
+        'method' => 'GET',
+        'path' => '/provider/dashboard',
+        'controller' => DashboardController::class,
+        'action' => 'provider',
+        'middleware' => ['auth', 'role:provider'],
+    ],
+
     // Request routes: customer request creation, browsing, detail, and provider completion.
     [
         'group' => 'requests',

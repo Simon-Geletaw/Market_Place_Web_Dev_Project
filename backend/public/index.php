@@ -15,6 +15,8 @@ require_once __DIR__ . '/../app/controllers/RequestController.php';
 require_once __DIR__ . '/../app/controllers/OfferController.php';
 require_once __DIR__ . '/../app/controllers/ReviewController.php';
 require_once __DIR__ . '/../app/controllers/AdminController.php';
+require_once __DIR__ . '/../app/controllers/DashboardController.php';
+require_once __DIR__ . '/../app/repositories/DatabaseConnector.php';
 
 $routes = require __DIR__ . '/../app/routes/api.php'; //load this files exactly one's
 
@@ -46,10 +48,11 @@ try {
             require_role(substr($middleware, 5));
         }
     }
-
+    $DB = new DatabaseConnector();
+    $DBConnection=$DB->getConnection();
     $className = $route['controller'];
     $methodName = $route['action'];
-    $controller = new $className();
+    $controller = new $className(PDO: $DBConnection);
 
     send_json($controller->$methodName());
     exit;
