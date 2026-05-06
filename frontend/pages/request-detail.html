@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Request Detail — ServiceLink</title>
+  <link rel="stylesheet" href="../assets/css/main.css">
+  <link rel="stylesheet" href="../assets/css/components.css">
+</head>
+<body>
+<header class="app-navbar">
+  <div class="navbar">
+    <a href="../landing_page/index.html" class="navbar__logo">
+      <div class="navbar__logo-icon">S</div>
+      Service<span class="navbar__logo-accent">Link</span>
+    </a>
+    <nav class="navbar__nav">
+      <a href="marketplace.html" class="navbar__link">Browse</a>
+      <a href="dashboard/customer.html" class="navbar__link">Dashboard</a>
+    </nav>
+    <div class="navbar__actions">
+      <div class="navbar__user" id="navUser"></div>
+      <button class="btn btn--secondary btn--sm" onclick="Auth.logout()">Logout</button>
+    </div>
+  </div>
+</header>
+
+<div style="padding-top:var(--navbar-height)">
+  <div class="container" style="padding-top:var(--space-xl);padding-bottom:var(--space-xxl)">
+
+    <div class="breadcrumb">
+      <a href="dashboard/customer.html">Dashboard</a>
+      <span class="breadcrumb__sep">›</span>
+      <a href="customer/my-requests.html">My Requests</a>
+      <span class="breadcrumb__sep">›</span>
+      <span id="breadTitle">Request Detail</span>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 360px;gap:var(--space-xl);align-items:start">
+      <!-- Left: Request content -->
+      <div>
+        <div id="requestContent">
+          <div class="empty-state"><div class="spinner spinner--dark"></div></div>
+        </div>
+      </div>
+
+      <!-- Right: Action panel -->
+      <div style="position:sticky;top:calc(var(--navbar-height) + var(--space-lg))">
+        <div id="actionPanel"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Review Modal -->
+<div class="modal-overlay" id="reviewModal">
+  <div class="modal">
+    <div class="modal__header">
+      <h2 class="modal__title">Leave a Review</h2>
+      <button class="modal__close" onclick="closeModal('reviewModal')">✕</button>
+    </div>
+    <div class="modal__body">
+      <p class="text-muted mb-md" id="reviewFor">Rate your provider</p>
+      <div class="form-group">
+        <label class="form-label">Rating *</label>
+        <div class="star-rating" id="starRating">
+          <span class="star" data-v="1">★</span>
+          <span class="star" data-v="2">★</span>
+          <span class="star" data-v="3">★</span>
+          <span class="star" data-v="4">★</span>
+          <span class="star" data-v="5">★</span>
+        </div>
+        <input type="hidden" id="ratingVal" value="0">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Feedback (optional)</label>
+        <textarea class="form-textarea" id="reviewComment" placeholder="Share your experience..." maxlength="500"></textarea>
+        <div class="char-count" id="reviewCharCount">0/500</div>
+      </div>
+    </div>
+    <div class="modal__footer">
+      <button class="btn btn--secondary" onclick="closeModal('reviewModal')">Cancel</button>
+      <button class="btn btn--primary" id="submitReviewBtn" onclick="submitReview()">Submit Review</button>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/modules/api.js"></script>
+<script src="../assets/js/modules/auth.js"></script>
+<script src="../assets/js/modules/toast.js"></script>
+<script>
+const BADGE = { Requested:'badge--requested', Negotiating:'badge--negotiating', Assigned:'badge--assigned', Completed:'badge--completed', Reviewed:'badge--reviewed' };
+const TIMELINE = ['Requested','Negotiating','Assigned','Completed','Reviewed'];
+let request = null;
+function esc(s){const d=document.createElement('div');d.textContent=s||'';return d.innerHTML}
+
+const requestId = new URLSearchParams(location.search).get('id');
+
+async function init() {
+  await Auth.load();
+  if (!Auth.requireAuth()) return;
+  Auth.renderNavUser(document.getElementById('navUser'));
+  loadRequest();
+}
+
+async function loadRequest() {
+  try {
+    const res = await api.get(`/requests/${requestId}`);
+    request = res.data;
+    document.getElementById('breadTitle').textContent = request.title;
+    renderContent();
+    renderActionPanel();
+  } catch {
+    document.getElementById('requestContent').innerHTML = '<div class="empty-state"><p class="text-muted">Request not found.</p></div>';
+  }
+}
+
+function renderContent() {
+  const r = request;
+  const statusIdx = TIMELINE.indexOf(r.status);
+  document.getElementById('requestContent').innerHTML = `
+    <div class="flex-between mb-md" style="flex-wrap:wrap;gap:var(--space-sm)">
+      <span class="badge" style="background:#f0f0f0;color:#666;font-size:11px">${esc(r.category_name||r.category)}</span>
+      <span class="badge ${BADGE[r.status]||''}">${r.status}</span>
+    </div>
+    <h1 style="font-size:22px;margin-bottom:var(--space-lg)">${esc(r.title)}</h1>
+
+    <div class="card mb-md">
+      <div class="card__header"><h3 style="font-size:15px">Request Details</h3></div>
+      <div class="card__body">
+        <div class="info-row"><span class="info-row__label">Posted by</span><span class="info-row__val">${esc(r.customer_name||'Customer')}</span></div>
+        <div class="info-row"><span class="info-row__label">Location</span><span class="info-row__val">${esc(r.location)}</span></div>
+        <div class="info-row"><span class="info-row__label">Preferred Date</span><span class="info-row__val">${r.preferred_date||'Flexible'}</span></div>
+        <div class="info-row"><span class="info-row__label">Budget</span><span class="info-row__val">${r.budget ? r.budget + ' ETB' : 'Open'}</span></div>
+        <div class="info-row"><span class="info-row__label">Posted</span><span class="info-row__val">${new Date(r.created_at).toLocaleString()}</span></div>
+      </div>
+    </div>
+
+    <div class="card mb-md">
+      <div class="card__header"><h3 style="font-size:15px">Description</h3></div>
+      <div class="card__body" style="line-height:1.7">${esc(r.description)}</div>
+    </div>
+
+    <div class="card">
+      <div class="card__header"><h3 style="font-size:15px">Status Timeline</h3></div>
+      <div class="card__body">
+        <ul class="timeline">
+          ${TIMELINE.map((s,i) => `
+            <li class="timeline__item ${i < statusIdx ? 'done' : i === statusIdx ? 'active' : ''}">
+              <div class="timeline__dot">${i < statusIdx ? '✓' : i+1}</div>
+              <div class="timeline__body">
+                <div class="timeline__label">${s}</div>
+                ${i <= statusIdx ? `<div class="timeline__time">${i===statusIdx ? 'Current state' : 'Completed'}</div>` : ''}
+              </div>
+            </li>`).join('')}
+        </ul>
+      </div>
+    </div>`;
+}
+
+function renderActionPanel() {
+  const r = request;
+  const panel = document.getElementById('actionPanel');
+  const isOwner = r.customer_id === Auth.user?.id;
+
+  if (r.status === 'Completed' && isOwner) {
+    panel.innerHTML = `
+      <div class="card">
+        <div class="card__header"><h3 style="font-size:15px">Job Complete 🎉</h3></div>
+        <div class="card__body">
+          <p class="text-muted mb-md">The provider has marked this job as complete. Please leave a review.</p>
+          <button class="btn btn--primary btn--full" onclick="openReviewModal()">Leave a Review</button>
+        </div>
+      </div>`;
+    return;
+  }
+
+  if (r.status === 'Reviewed') {
+    panel.innerHTML = `<div class="card"><div class="card__body"><div class="empty-state"><div class="empty-state__icon">✅</div><div class="empty-state__title">Completed & Reviewed</div></div></div></div>`;
+    return;
+  }
+
+  if (['Negotiating','Requested'].includes(r.status) && isOwner) {
+    const offers = r.offers || [];
+    panel.innerHTML = `
+      <div class="card">
+        <div class="card__header">
+          <h3 style="font-size:15px">Offers Received (${offers.length})</h3>
+        </div>
+        <div class="card__body">
+          ${!offers.length ? '<p class="text-muted text-sm">No offers yet. Providers will submit offers soon.</p>' :
+            offers.map(o => `
+            <div class="offer-card">
+              <div class="offer-card__header">
+                <div class="offer-card__provider">
+                  <div class="navbar__avatar" style="width:32px;height:32px;font-size:12px">${(o.provider_name||'P')[0]}</div>
+                  <div>
+                    <div style="font-weight:600;font-size:13px">${esc(o.provider_name||'Provider')}</div>
+                    <div class="text-sm text-muted">⭐ ${o.provider_rating||'N/A'}</div>
+                  </div>
+                </div>
+                <div class="offer-card__price">${parseFloat(o.price_offered).toLocaleString()} ETB</div>
+              </div>
+              ${o.message ? `<p class="text-sm text-muted" style="margin-top:4px">${esc(o.message)}</p>` : ''}
+              <div class="offer-card__actions">
+                <button class="btn btn--primary btn--sm" onclick="acceptOffer('${o.id}','${esc(o.provider_name||'Provider')}',${o.price_offered})">Accept</button>
+                <button class="btn btn--secondary btn--sm" onclick="rejectOffer('${o.id}')">Reject</button>
+              </div>
+            </div>`).join('')
+          }
+        </div>
+      </div>`;
+    return;
+  }
+
+  panel.innerHTML = `<div class="card"><div class="card__body"><p class="text-muted text-sm">Status: <strong>${r.status}</strong></p></div></div>`;
+}
+
+async function acceptOffer(offerId, providerName, price) {
+  if (!confirm(`Accept offer from ${providerName} for ${price} ETB?`)) return;
+  try {
+    await api.post(`/offers/${offerId}/accept`);
+    Toast.success('Offer accepted! Job assigned.');
+    loadRequest();
+  } catch (err) { Toast.error(err.message || 'Failed to accept offer.'); }
+}
+
+async function rejectOffer(offerId) {
+  if (!confirm('Reject this offer?')) return;
+  try {
+    await api.post(`/offers/${offerId}/reject`);
+    Toast.success('Offer rejected.');
+    loadRequest();
+  } catch (err) { Toast.error(err.message || 'Failed.'); }
+}
+
+// Review modal
+let ratingSelected = 0;
+function openReviewModal() {
+  document.getElementById('reviewFor').textContent = `Rate your experience for: ${request?.title}`;
+  document.getElementById('reviewModal').classList.add('open');
+}
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+document.getElementById('starRating').addEventListener('click', e => {
+  const star = e.target.closest('.star');
+  if (!star) return;
+  ratingSelected = parseInt(star.dataset.v);
+  document.getElementById('ratingVal').value = ratingSelected;
+  document.querySelectorAll('#starRating .star').forEach((s,i) => s.classList.toggle('active', i < ratingSelected));
+});
+
+document.getElementById('reviewComment').addEventListener('input', function() {
+  document.getElementById('reviewCharCount').textContent = `${this.value.length}/500`;
+});
+
+async function submitReview() {
+  if (ratingSelected < 1) { Toast.error('Please select a rating.'); return; }
+  const btn = document.getElementById('submitReviewBtn');
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Submitting...';
+  try {
+    await api.post(`/requests/${requestId}/review`, { rating: ratingSelected, comment: document.getElementById('reviewComment').value });
+    Toast.success('Review submitted! Thank you.');
+    closeModal('reviewModal');
+    loadRequest();
+  } catch (err) {
+    Toast.error(err.message || 'Failed to submit review.');
+    btn.disabled = false; btn.textContent = 'Submit Review';
+  }
+}
+
+init();
+</script>
+</body>
+</html>
