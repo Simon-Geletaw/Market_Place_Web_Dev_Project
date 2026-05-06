@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Customer Dashboard — ServiceLink</title>
+  <link rel="stylesheet" href="../../assets/css/main.css">
+  <link rel="stylesheet" href="../../assets/css/components.css">
+</head>
+<body>
+
+<!-- Navbar -->
+<header class="app-navbar">
+  <div class="navbar">
+    <a href="../../landing_page/index.html" class="navbar__logo">
+      <div class="navbar__logo-icon">S</div>
+      Service<span class="navbar__logo-accent">Link</span>
+    </a>
+    <nav class="navbar__nav">
+      <a href="../marketplace.html" class="navbar__link">Browse</a>
+      <a href="customer.html" class="navbar__link navbar__link--active">Dashboard</a>
+      <a href="../notifications.html" class="navbar__link">Notifications</a>
+    </nav>
+    <div class="navbar__actions">
+      <div class="navbar__user" id="navUser"></div>
+      <button class="btn btn--secondary btn--sm" onclick="Auth.logout()">Logout</button>
+    </div>
+  </div>
+</header>
+
+<div class="app-shell">
+  <!-- Sidebar -->
+  <aside class="app-sidebar">
+    <div class="sidebar">
+      <div class="sidebar__label">Menu</div>
+      <a href="customer.html" class="sidebar__item active">
+        <svg class="sidebar__icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        Dashboard
+      </a>
+      <a href="../customer/my-requests.html" class="sidebar__item">
+        <svg class="sidebar__icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/></svg>
+        My Requests
+      </a>
+      <a href="../marketplace.html" class="sidebar__item">
+        <svg class="sidebar__icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+        Browse Services
+      </a>
+      <a href="../customer/reviews-given.html" class="sidebar__item">
+        <svg class="sidebar__icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg>
+        Reviews Given
+      </a>
+      <a href="../settings.html" class="sidebar__item">
+        <svg class="sidebar__icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+        Settings
+      </a>
+      <div class="sidebar__footer">
+        <button class="btn btn--secondary btn--sm btn--full" onclick="Auth.logout()">Sign Out</button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="app-content">
+    <div class="page-header">
+      <div>
+        <div class="page-header__title" id="welcomeMsg">My Dashboard</div>
+        <div class="page-header__subtitle">Track your service requests and offers</div>
+      </div>
+      <button class="btn btn--primary" onclick="openCreateModal()">+ Post New Request</button>
+    </div>
+
+    <!-- Stat Cards -->
+    <div class="grid-4 mb-lg" id="statCards">
+      <div class="stat-card stat-card--requested" onclick="filterRequests('Requested')">
+        <div class="stat-card__icon" style="background:#e8f4ff">📋</div>
+        <div class="stat-card__value" id="cntRequested">—</div>
+        <div class="stat-card__label">Requested</div>
+      </div>
+      <div class="stat-card stat-card--negotiating" onclick="filterRequests('Negotiating')">
+        <div class="stat-card__icon" style="background:#fff4e0">💬</div>
+        <div class="stat-card__value" id="cntNegotiating">—</div>
+        <div class="stat-card__label">Negotiating</div>
+      </div>
+      <div class="stat-card stat-card--assigned" onclick="filterRequests('Assigned')">
+        <div class="stat-card__icon" style="background:#e8f5eb">✅</div>
+        <div class="stat-card__value" id="cntAssigned">—</div>
+        <div class="stat-card__label">Assigned</div>
+      </div>
+      <div class="stat-card stat-card--completed" onclick="filterRequests('Completed')">
+        <div class="stat-card__icon" style="background:#e0faf4">🎉</div>
+        <div class="stat-card__value" id="cntCompleted">—</div>
+        <div class="stat-card__label">Completed</div>
+      </div>
+    </div>
+
+    <!-- Filter Bar -->
+    <div class="filter-bar">
+      <select class="form-select" id="statusFilter" onchange="loadRequests()">
+        <option value="">All Statuses</option>
+        <option value="Requested">Requested</option>
+        <option value="Negotiating">Negotiating</option>
+        <option value="Assigned">Assigned</option>
+        <option value="Completed">Completed</option>
+        <option value="Reviewed">Reviewed</option>
+      </select>
+      <select class="form-select" id="sortFilter" onchange="loadRequests()">
+        <option value="desc">Newest First</option>
+        <option value="asc">Oldest First</option>
+      </select>
+      <button class="btn btn--secondary btn--sm" onclick="loadRequests()">Refresh</button>
+    </div>
+
+    <!-- Requests List -->
+    <div id="requestsList"></div>
+  </main>
+</div>
+
+<!-- Create Request Modal -->
+<div class="modal-overlay" id="createModal">
+  <div class="modal">
+    <div class="modal__header">
+      <h2 class="modal__title">Post a New Request</h2>
+      <button class="modal__close" onclick="closeCreateModal()">✕</button>
+    </div>
+    <div class="modal__body">
+      <form id="createForm" novalidate>
+        <div class="form-group">
+          <label class="form-label">Category</label>
+          <select class="form-select" id="crCategory">
+            <option value="">Select category...</option>
+            <option>Electrician</option><option>Plumber</option><option>Carpenter</option>
+            <option>Painter</option><option>Cleaner</option><option>General Handyman</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Title</label>
+          <input class="form-input" id="crTitle" placeholder="e.g., Fix electrical wiring in bedroom">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Description</label>
+          <textarea class="form-textarea" id="crDesc" placeholder="Describe the problem in detail..."></textarea>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Location</label>
+            <select class="form-select" id="crLocation">
+              <option value="">Sub-city...</option>
+              <option>Bole</option><option>Kirkos</option><option>Addis Ketema</option>
+              <option>Akaki Kaliti</option><option>Arada</option><option>Yeka</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Preferred Date</label>
+            <input class="form-input" type="date" id="crDate">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Budget (ETB) — optional</label>
+          <input class="form-input" type="number" id="crBudget" placeholder="e.g., 500">
+        </div>
+      </form>
+    </div>
+    <div class="modal__footer">
+      <button class="btn btn--secondary" onclick="closeCreateModal()">Cancel</button>
+      <button class="btn btn--primary" id="createBtn" onclick="submitRequest()">Post Request</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<script src="../../assets/js/modules/api.js"></script>
+<script src="../../assets/js/modules/auth.js"></script>
+<script src="../../assets/js/modules/toast.js"></script>
+<script src="../../assets/js/modules/validate.js"></script>
+<script>
+const BADGE = { Requested:'badge--requested', Negotiating:'badge--negotiating', Assigned:'badge--assigned', Completed:'badge--completed', Reviewed:'badge--reviewed' };
+
+async function init() {
+  await Auth.load();
+  if (!Auth.requireAuth()) return;
+  Auth.renderNavUser(document.getElementById('navUser'));
+  document.getElementById('welcomeMsg').textContent = `Welcome, ${Auth.user.full_name}`;
+  loadRequests();
+}
+
+async function loadRequests() {
+  const status = document.getElementById('statusFilter').value;
+  const sort   = document.getElementById('sortFilter').value;
+  const list   = document.getElementById('requestsList');
+  list.innerHTML = '<div class="empty-state"><div class="spinner spinner--dark"></div><p>Loading...</p></div>';
+  try {
+    const res = await api.get(`/requests?status=${status}&sort=${sort}`);
+    const requests = res.data || [];
+    updateStats(requests);
+    if (!requests.length) {
+      list.innerHTML = `<div class="empty-state"><div class="empty-state__icon">📋</div><div class="empty-state__title">No requests found</div><p class="empty-state__text">Post your first service request to get started.</p><button class="btn btn--primary" onclick="openCreateModal()">Post a Request</button></div>`;
+      return;
+    }
+    list.innerHTML = requests.map(r => renderCard(r)).join('');
+  } catch {
+    list.innerHTML = '<div class="empty-state"><p class="text-muted">Could not load requests. Check your connection.</p></div>';
+  }
+}
+
+function updateStats(requests) {
+  const count = s => requests.filter(r => r.status === s).length;
+  document.getElementById('cntRequested').textContent  = count('Requested');
+  document.getElementById('cntNegotiating').textContent = count('Negotiating');
+  document.getElementById('cntAssigned').textContent   = count('Assigned');
+  document.getElementById('cntCompleted').textContent  = count('Completed');
+}
+
+function renderCard(r) {
+  const actions = {
+    Negotiating: `<a href="../request-detail.html?id=${r.id}" class="btn btn--ghost btn--sm">Manage Offers</a>`,
+    Assigned:    `<a href="../request-detail.html?id=${r.id}" class="btn btn--ghost btn--sm">Track Progress</a>`,
+    Completed:   `<a href="../request-detail.html?id=${r.id}" class="btn btn--secondary btn--sm">Leave Review</a>`,
+  };
+  return `
+  <div class="request-card mb-md">
+    <div class="request-card__header">
+      <div>
+        <div class="request-card__title">${esc(r.title)}</div>
+        <div class="request-card__meta">
+          <span>📍 ${esc(r.location)}</span>
+          <span>🗂 ${esc(r.category_name || r.category)}</span>
+          <span>📅 ${new Date(r.created_at).toLocaleDateString()}</span>
+          ${r.offer_count ? `<span>💬 ${r.offer_count} offer${r.offer_count>1?'s':''}</span>` : ''}
+        </div>
+      </div>
+      <span class="badge ${BADGE[r.status]||''}">${r.status}</span>
+    </div>
+    <p class="request-card__desc">${esc(r.description)}</p>
+    <div class="request-card__footer">
+      <div class="request-card__actions">
+        <a href="../request-detail.html?id=${r.id}" class="btn btn--primary btn--sm">View Details</a>
+        ${actions[r.status] || ''}
+      </div>
+    </div>
+  </div>`;
+}
+
+function esc(s) { const d = document.createElement('div'); d.textContent = s||''; return d.innerHTML; }
+function filterRequests(s) { document.getElementById('statusFilter').value = s; loadRequests(); }
+function openCreateModal()  { document.getElementById('createModal').classList.add('open'); }
+function closeCreateModal() { document.getElementById('createModal').classList.remove('open'); }
+
+async function submitRequest() {
+  const btn = document.getElementById('createBtn');
+  const body = {
+    category: document.getElementById('crCategory').value,
+    title: document.getElementById('crTitle').value,
+    description: document.getElementById('crDesc').value,
+    location: document.getElementById('crLocation').value,
+    preferred_date: document.getElementById('crDate').value,
+    budget: document.getElementById('crBudget').value || null,
+  };
+  if (!body.category || !body.title || !body.description || !body.location) {
+    Toast.error('Please fill all required fields.'); return;
+  }
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Posting...';
+  try {
+    await api.post('/requests', body);
+    Toast.success('Request posted successfully!');
+    closeCreateModal();
+    document.getElementById('createForm').reset();
+    loadRequests();
+  } catch (err) {
+    Toast.error(err.message || 'Failed to post request.');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Post Request';
+  }
+}
+
+init();
+</script>
+</body>
+</html>
