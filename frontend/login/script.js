@@ -315,24 +315,44 @@
       UI.setLoading(true);
       UI.announceStatus('Logging in, please wait...');
 
-      // Simulate API call (replace with fetch() in production)
-      setTimeout(() => {
+      // Actual API call to the backend
+      fetch('http://localhost:8000/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ email, password })
+      })
+      .then(response => response.json())
+      .then(data => {
         UI.setLoading(false);
-        UI.announceStatus('Login successful! Redirecting...');
+        if (data.success) {
+          UI.announceStatus('Login successful! Redirecting...');
+          
+          // Store user session info in localStorage for frontend use
+          localStorage.setItem('user', JSON.stringify(data.data));
 
-        // In production: window.location.href = '/dashboard';
-        // For demo: show success state
-        DOM.form.innerHTML = `
-          <div style="text-align:center; padding: 32px 0;">
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" style="margin: 0 auto 16px;">
-              <circle cx="12" cy="12" r="10" stroke="#28A745" stroke-width="2"/>
-              <path d="M8 12l3 3 5-5" stroke="#28A745" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-            <h2 style="font-size:1.25rem; font-weight:700; color:#1A1A1A; margin-bottom:8px;">Welcome Back!</h2>
-            <p style="font-size:0.9rem; color:#666;">Redirecting to your dashboard...</p>
-          </div>
-        `;
-      }, 1500);
+          // Redirect based on role
+          const role = data.data.ROLE.toLowerCase();
+          if (role === 'admin') {
+            window.location.href = '../pages/admin/dashboard.html';
+          } else if (role === 'provider') {
+            window.location.href = '../pages/provider/dashboard.html';
+          } else {
+            window.location.href = '../pages/customer/dashboard.html';
+          }
+        } else {
+          // Show error from backend (e.g., "Invalid email or password")
+          UI.showError(DOM.passwordGroup, DOM.passwordInput, DOM.passwordError, data.message || 'Login failed');
+          UI.announceStatus(data.message || 'Login failed');
+        }
+      })
+      .catch(error => {
+        UI.setLoading(false);
+        console.error('Login error:', error);
+        UI.showError(DOM.passwordGroup, DOM.passwordInput, DOM.passwordError, 'Unable to connect to service. Please try again later.');
+        UI.announceStatus('Unable to connect to service.');
+      });
     },
   };
 
