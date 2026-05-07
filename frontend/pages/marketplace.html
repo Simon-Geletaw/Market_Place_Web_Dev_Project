@@ -8,22 +8,7 @@
   <link rel="stylesheet" href="../assets/css/components.css">
 </head>
 <body>
-<header class="app-navbar">
-  <div class="navbar">
-    <a href="../landing_page/index.html" class="navbar__logo">
-      <div class="navbar__logo-icon">S</div>
-      Service<span class="navbar__logo-accent">Link</span>
-    </a>
-    <nav class="navbar__nav">
-      <a href="marketplace.html" class="navbar__link navbar__link--active">Browse</a>
-      <a href="#" class="navbar__link" id="dashLink">Dashboard</a>
-    </nav>
-    <div class="navbar__actions" id="navActions">
-      <a href="auth/login.html" class="btn btn--secondary btn--sm">Login</a>
-      <a href="auth/register.html" class="btn btn--primary btn--sm">Sign Up</a>
-    </div>
-  </div>
-</header>
+<header id="app-header"></header>
 
 <div style="padding-top:var(--navbar-height)">
   <div class="container" style="padding-top:var(--space-xl);padding-bottom:var(--space-xl)">
@@ -31,8 +16,8 @@
     <!-- Search -->
     <div style="max-width:640px;margin:0 auto var(--space-xl)">
       <div class="search-bar">
-        <input type="text" id="searchInput" placeholder="What service do you need?" oninput="debounceLoad()">
-        <button class="search-bar__btn" onclick="loadRequests()">Search</button>
+        <input type="text" id="searchInput" placeholder="What service do you need?">
+        <button class="search-bar__btn" id="searchBtn">Search</button>
       </div>
     </div>
 
@@ -45,7 +30,7 @@
           <div class="card__body" style="display:flex;flex-direction:column;gap:var(--space-md)">
             <div class="form-group" style="margin-bottom:0">
               <label class="form-label">Category</label>
-              <select class="form-select" id="fCategory" onchange="loadRequests()">
+              <select class="form-select" id="fCategory">
                 <option value="">All</option>
                 <option>Electrician</option><option>Plumber</option><option>Carpenter</option>
                 <option>Painter</option><option>Cleaner</option><option>General Handyman</option>
@@ -53,7 +38,7 @@
             </div>
             <div class="form-group" style="margin-bottom:0">
               <label class="form-label">Location</label>
-              <select class="form-select" id="fLocation" onchange="loadRequests()">
+              <select class="form-select" id="fLocation">
                 <option value="">All Sub-cities</option>
                 <option>Bole</option><option>Kirkos</option><option>Addis Ketema</option>
                 <option>Akaki Kaliti</option><option>Arada</option><option>Yeka</option>
@@ -61,12 +46,12 @@
             </div>
             <div class="form-group" style="margin-bottom:0">
               <label class="form-label">Sort By</label>
-              <select class="form-select" id="fSort" onchange="loadRequests()">
+              <select class="form-select" id="fSort">
                 <option value="desc">Newest First</option>
                 <option value="asc">Oldest First</option>
               </select>
             </div>
-            <button class="btn btn--secondary btn--sm" onclick="clearFilters()">Clear Filters</button>
+            <button class="btn btn--secondary btn--sm" id="clearFiltersBtn">Clear Filters</button>
           </div>
         </div>
       </aside>
@@ -83,27 +68,14 @@
   </div>
 </div>
 
-<script src="../assets/js/modules/api.js"></script>
-<script src="../assets/js/modules/auth.js"></script>
-<script>
+<script type="module">
+import Api from '../core/api.js';
+import Auth from '../core/auth.js';
+import Layout from '../core/layout.js';
+
 const BADGE = { Requested:'badge--requested', Negotiating:'badge--negotiating', Assigned:'badge--assigned', Completed:'badge--completed' };
 let debounceTimer;
 function esc(s){const d=document.createElement('div');d.textContent=s||'';return d.innerHTML}
-
-async function init() {
-  await Auth.load();
-  if (Auth.isLoggedIn()) {
-    const map = { customer:'dashboard/customer.html', provider:'dashboard/provider.html', admin:'dashboard/admin.html' };
-    document.getElementById('dashLink').href = map[Auth.role()] || '#';
-    document.getElementById('navActions').innerHTML = `
-      <div class="navbar__user">
-        <div class="navbar__avatar">${Auth.user.full_name?.[0]||'U'}</div>
-        <span style="font-size:13px;font-weight:500">${Auth.user.full_name}</span>
-      </div>
-      <button class="btn btn--secondary btn--sm" onclick="Auth.logout()">Logout</button>`;
-  }
-  loadRequests();
-}
 
 function debounceLoad() { clearTimeout(debounceTimer); debounceTimer = setTimeout(loadRequests, 400); }
 
@@ -116,15 +88,16 @@ async function loadRequests() {
   grid.innerHTML = '<div class="empty-state"><div class="spinner spinner--dark"></div></div>';
 
   try {
-    const res = await api.get(`/marketplace/requests?search=${encodeURIComponent(search)}&category=${encodeURIComponent(category)}&location=${encodeURIComponent(location)}&sort=${sort}`);
+    const res = await Api.get(`/marketplace/requests?search=${encodeURIComponent(search)}&category=${encodeURIComponent(category)}&location=${encodeURIComponent(location)}&sort=${sort}`);
     const requests = res.data || [];
     document.getElementById('resultsCount').textContent = `${requests.length} request${requests.length!==1?'s':''} found`;
     if (!requests.length) {
       grid.innerHTML = `<div class="empty-state"><div class="empty-state__icon">🔍</div><div class="empty-state__title">No results found</div><p class="empty-state__text">Try adjusting your filters or search terms.</p></div>`;
       return;
     }
+    const role = Auth.isLoggedIn() ? Auth.getUser().role : null;
     grid.innerHTML = '<div class="grid-2">' + requests.map(r => {
-      const detailPage = Auth.role() === 'provider' ? `request-detail-provider.html?id=${r.id}` : `request-detail.html?id=${r.id}`;
+      const detailPage = role === 'provider' ? `request-detail-provider.html?id=${r.id}` : `request-detail.html?id=${r.id}`;
       return `<div class="request-card">
         <div class="request-card__header">
           <div>
@@ -162,7 +135,25 @@ function timeAgo(ts) {
   return `${Math.floor(diff/86400)}d ago`;
 }
 
-init();
+async function init() {
+  await Auth.load();
+  Layout.renderNavbar('app-header', 'browse');
+  
+  document.getElementById('searchInput').addEventListener('input', debounceLoad);
+  document.getElementById('searchBtn').addEventListener('click', loadRequests);
+  document.getElementById('fCategory').addEventListener('change', loadRequests);
+  document.getElementById('fLocation').addEventListener('change', loadRequests);
+  document.getElementById('fSort').addEventListener('change', loadRequests);
+  document.getElementById('clearFiltersBtn').addEventListener('click', clearFilters);
+
+  loadRequests();
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', init);
+} else {
+  init();
+}
 </script>
 </body>
 </html>

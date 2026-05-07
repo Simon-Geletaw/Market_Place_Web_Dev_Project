@@ -135,14 +135,18 @@
       if (!Validate.field(full_name, Validate.minLen(full_name.value, 2), 'Full name required (min 2 chars)')) valid = false;
       if (!Validate.field(email, Validate.email(email.value), 'Enter a valid email address')) valid = false;
       if (!Validate.field(password, Validate.minLen(password.value, 8), 'Password must be at least 8 characters')) valid = false;
+      if (!Validate.field(phone, Validate.required(phone.value), 'Phone number is required')) valid = false;
       if (!Validate.field(location, Validate.required(location.value), 'Please select your location')) valid = false;
       if (!valid) return;
 
       btn.disabled = true;
       btn.innerHTML = '<span class="spinner"></span> Creating account...';
       try {
-        await api.post('/auth/register', { full_name: full_name.value, email: email.value, password: password.value, phone: phone.value, location: location.value, role });
-        window.location.href = 'login.html?registered=1';
+        await api.post('/auth/register', { name: full_name.value, email: email.value, password: password.value, phone: phone.value, location: location.value, role });
+        const loginRes = await api.post('/auth/login', { email: email.value, password: password.value });
+        const roleValue = String(loginRes.data?.role || role).toLowerCase();
+        const map = { customer: '../dashboard/customer.html', provider: '../dashboard/provider.html', admin: '../dashboard/admin.html' };
+        window.location.href = map[roleValue] || '../dashboard/customer.html';
       } catch (err) {
         banner.textContent = err.message || 'Registration failed. Please try again.';
         banner.style.display = 'flex';

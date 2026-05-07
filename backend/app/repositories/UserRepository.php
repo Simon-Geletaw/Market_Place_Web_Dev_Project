@@ -19,10 +19,12 @@ final class UserRepository
 
     public function createUser(string $email, string $passwordHash, UserRole $Role, string $Name, string $location, string $phone): int
     {
-        $sql = "INSERT INTO users (EMAIL, PASSWORD_HASH, ROLE, LOCATION, NAME, PHONE) VALUES (:email, :password_hash, :ROLE, :location, :Name, :PHONE)";
+        $uuid=bin2hex(random_bytes(16)); // Generate a random UUID
+        $sql = "INSERT INTO users (USER_ID,EMAIL, PASSWORD_HASH, ROLE, LOCATION, NAME, PHONE) VALUES (:uuid,:email, :password_hash, :ROLE, :location, :Name, :PHONE)";
         $stmt = $this->DBConnection->prepare($sql);
         
         $roleValue = $Role->value;
+        $stmt->bindParam(':uuid',$uuid);
         $stmt->bindParam(':email', $email);
         $stmt->bindParam(':password_hash', $passwordHash);
         $stmt->bindParam(':ROLE', $roleValue);
@@ -68,5 +70,4 @@ final class UserRepository
             throw new Exception('Failed to find user by phone');
         }
     }
-
 }

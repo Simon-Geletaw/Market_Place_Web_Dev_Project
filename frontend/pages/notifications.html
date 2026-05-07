@@ -5,39 +5,48 @@
   <title>Notifications — ServiceLink</title>
   <link rel="stylesheet" href="../assets/css/main.css">
   <link rel="stylesheet" href="../assets/css/components.css">
+  <script src="../core/guard.js"></script>
 </head>
 <body>
-<header class="app-navbar">
-  <div class="navbar">
-    <a href="../landing_page/index.html" class="navbar__logo"><div class="navbar__logo-icon">S</div>Service<span class="navbar__logo-accent">Link</span></a>
-    <div class="navbar__actions"><div class="navbar__user" id="navUser"></div><button class="btn btn--secondary btn--sm" onclick="Auth.logout()">Logout</button></div>
-  </div>
-</header>
-<div style="padding-top:var(--navbar-height)">
-  <div class="container" style="padding-top:var(--space-xl);max-width:700px">
-    <div class="page-header">
-      <div><div class="page-header__title">Notifications</div><div class="page-header__subtitle">Your recent activity alerts</div></div>
-      <button class="btn btn--secondary btn--sm" id="markAllBtn" onclick="markAllRead()">Mark all read</button>
+
+<header id="app-header"></header>
+
+<div class="app-shell">
+  <aside id="app-sidebar"></aside>
+
+  <main class="app-content">
+    <div class="container" style="max-width:700px">
+      <div class="page-header">
+        <div><div class="page-header__title">Notifications</div><div class="page-header__subtitle">Your recent activity alerts</div></div>
+        <button class="btn btn--secondary btn--sm" id="markAllBtn">Mark all read</button>
+      </div>
+      <div id="list"></div>
     </div>
-    <div id="list"></div>
-  </div>
+  </main>
 </div>
-<script src="../assets/js/modules/api.js"></script>
-<script src="../assets/js/modules/auth.js"></script>
-<script src="../assets/js/modules/toast.js"></script>
-<script>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<script type="module">
+import Api from '../core/api.js';
+import Auth from '../core/auth.js';
+import Toast from '../core/toast.js';
+import Layout from '../core/layout.js';
+
 const ICON = { offer_received:'💬', offer_accepted:'✅', offer_rejected:'❌', job_completed:'🎉', review_received:'⭐', job_assigned:'🔧' };
 function esc(s){const d=document.createElement('div');d.textContent=s||'';return d.innerHTML}
-async function init(){
-  await Auth.load();if(!Auth.requireAuth())return;
-  Auth.renderNavUser(document.getElementById('navUser'));load();
-}
-async function load(){
-  const el=document.getElementById('list');el.innerHTML='<div class="empty-state"><div class="spinner spinner--dark"></div></div>';
-  try{
-    const res=await api.get('/notifications');const notifs=res.data||[];
-    if(!notifs.length){el.innerHTML='<div class="empty-state"><div class="empty-state__icon">🔔</div><div class="empty-state__title">All caught up!</div><p class="empty-state__text">No notifications yet.</p></div>';return;}
-    el.innerHTML=notifs.map(n=>`
+
+async function load() {
+  const el = document.getElementById('list');
+  el.innerHTML='<div class="empty-state"><div class="spinner spinner--dark"></div></div>';
+  try {
+    const res = await Api.get('/notifications');
+    const notifs = res.data || [];
+    if (!notifs.length) {
+      el.innerHTML='<div class="empty-state"><div class="empty-state__icon">🔔</div><div class="empty-state__title">All caught up!</div><p class="empty-state__text">No notifications yet.</p></div>';
+      return;
+    }
+    el.innerHTML = notifs.map(n => `
       <div class="card mb-sm" style="border-left:4px solid ${n.is_read?'var(--color-border)':'var(--color-primary)'}">
         <div class="card__body" style="display:flex;gap:var(--space-md);align-items:flex-start">
           <div style="font-size:24px;flex-shrink:0">${ICON[n.type]||'🔔'}</div>
@@ -45,16 +54,40 @@ async function load(){
             <div style="font-weight:${n.is_read?'400':'600'};font-size:14px">${esc(n.message)}</div>
             <div class="text-sm text-muted mt-sm">${new Date(n.created_at).toLocaleString()}</div>
           </div>
-          ${n.link?`<a href="${esc(n.link)}" class="btn btn--secondary btn--sm">View</a>`:''}
+          ${n.link ? `<a href="${esc(n.link)}" class="btn btn--secondary btn--sm">View</a>` : ''}
         </div>
       </div>`).join('');
-  }catch{el.innerHTML='<div class="empty-state"><p class="text-muted">Could not load notifications.</p></div>';}
+  } catch {
+    el.innerHTML='<div class="empty-state"><p class="text-muted">Could not load notifications.</p></div>';
+  }
 }
-async function markAllRead(){
-  try{await api.post('/notifications/read-all');Toast.success('All marked as read.');load();}
-  catch{Toast.error('Failed.');}
+
+async function markAllRead() {
+  try {
+    await Api.post('/notifications/read-all');
+    Toast.success('All marked as read.');
+    load();
+  } catch {
+    Toast.error('Failed.');
+  }
 }
-init();
+
+async function init() {
+  await Auth.load();
+  if(!Auth.requireAuth()) return;
+  
+  Layout.renderShell(Auth.user.role, 'dashboard', 'dashboard');
+  
+  document.getElementById('markAllBtn').addEventListener('click', markAllRead);
+  
+  load();
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', init);
+} else {
+  init();
+}
 </script>
 </body>
 </html>

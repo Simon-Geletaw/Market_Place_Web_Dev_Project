@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../repositories/UserRepository.php';
 
-require_once __DIR__ . '/../repositories/UserRepository.php';
-
 final class AuthService
 {
     private UserRepository $userRepository;
@@ -44,16 +42,24 @@ final class AuthService
     public function register(array $data): array
     {
         if ($this->userRepository->findByEmail($data['email'])) {
-            return ['success' => false, 'message' => 'Email already exists'];
+            return ['success' => false, 'message' => 'Email already exists','http_code' => 409,'field' => 'email'];
         }
 
         if ($this->userRepository->findByPhone($data['phone'])) {
-            return ['success' => false, 'message' => 'Phone number already exists'];
+            return ['success' => false, 'message' => 'Phone number already exists','http_code' => 409];
         }
 
         $passwordHash = password_hash($data['password'], PASSWORD_DEFAULT);
-        $role = UserRole::from($data['role']);
+        $roleInput = strtolower(trim((string) ($data['role'] ?? '')));
+        $role = match ($roleInput) {
+            'customer' => UserRole::Customer,
+            'provider' => UserRole::Provider,
+            default => null,
+        };
 
+        if ($role === null) {
+            return ['success' => false, 'message' => 'Invalid role selected'];
+        }
         try {
             $userId = $this->userRepository->createUser(
                 $data['email'],

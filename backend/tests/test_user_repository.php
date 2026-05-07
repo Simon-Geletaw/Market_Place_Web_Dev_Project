@@ -7,7 +7,7 @@ require_once __DIR__ . '/../app/repositories/UserRepository.php';
 
 try {
     // 1. Setup Connection (using the existing config)
-    $connector = new DatabaseConnector(__DIR__ . '/../config/mySetting.ini');
+    $connector = new DatabaseConnector(__DIR__ . '/../config/mySetting.ini',);
     $pdo = $connector->getConnection();
     $repository = new UserRepository($pdo);
 

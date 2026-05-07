@@ -1,8 +1,12 @@
 /* ============================================================
-   api.js — Fetch wrapper for PHP backend
-   Base URL: /api  (served by XAMPP Apache)
-   ============================================================ */
-const BASE_URL = '/api';
+  api.js — Fetch wrapper for PHP backend
+  Base URL: resolved to /backend/public from frontend pages
+  ============================================================ */
+const explicitBase = typeof window.__API_BASE__ === 'string' ? window.__API_BASE__ : '';
+const currentPath = window.location.pathname || '';
+const basePrefix = currentPath.includes('/frontend/') ? currentPath.split('/frontend/')[0] : '';
+const resolvedBase = `${window.location.origin}${basePrefix}/backend/public`;
+const BASE_URL = explicitBase.length > 0 ? explicitBase : resolvedBase;
 
 const api = {
   async _request(method, path, data = null, isFile = false) {

@@ -61,11 +61,29 @@
     </div>
   </div>
 
-  <script src="../../assets/js/modules/api.js"></script>
-  <script src="../../assets/js/modules/auth.js"></script>
-  <script src="../../assets/js/modules/toast.js"></script>
-  <script src="../../assets/js/modules/validate.js"></script>
-  <script>
+  <script type="module">
+    import Api from '../../core/api.js';
+    import Auth from '../../core/auth.js';
+    
+    // A simple validation implementation inline since validate.js is not an ES module yet
+    const Validate = {
+      required: (v) => !!v.trim(),
+      email: (v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v),
+      field: (el, isValid, errMsg) => {
+        const fg = el.closest('.form-group');
+        let err = fg.querySelector('.form-error');
+        if (!isValid) {
+          el.classList.add('error');
+          if (!err) { err = document.createElement('div'); err.className = 'form-error'; fg.appendChild(err); }
+          err.textContent = errMsg;
+        } else {
+          el.classList.remove('error');
+          if (err) err.remove();
+        }
+        return isValid;
+      }
+    };
+
     // Toggle password visibility
     document.getElementById('pwToggle').addEventListener('click', () => {
       const pw = document.getElementById('password');
@@ -89,8 +107,12 @@
       btn.disabled = true;
       btn.innerHTML = '<span class="spinner"></span> Signing in...';
       try {
-        const res = await api.post('/auth/login', { email: email.value, password: password.value });
-        const role = res.data?.role;
+        const res = await Api.post('/auth/login', { email: email.value, password: password.value });
+        if (res.token) {
+           Auth.setToken(res.token);
+           Auth.setUser(res.user);
+        }
+        const role = String(res.user?.role || '').toLowerCase();
         const map = { customer: '../dashboard/customer.html', provider: '../dashboard/provider.html', admin: '../dashboard/admin.html' };
         window.location.href = map[role] || '../dashboard/customer.html';
       } catch (err) {

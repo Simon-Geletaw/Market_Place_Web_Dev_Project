@@ -23,8 +23,10 @@ final class AuthController
     {
         $input = json_decode(file_get_contents('php://input'), true);
         
-        if (!isset($input['email']) || !isset($input['password'])) {
-            send_json(error_response('Email and password required', [], 400));
+        // Server-side validation
+        $errors = validate_login_payload($input ?? []);
+        if (!empty($errors)) {
+            send_json(error_response('Validation failed', $errors, 400));
             return;
         }
 
@@ -41,20 +43,28 @@ final class AuthController
     {
         $input = json_decode(file_get_contents('php://input'), true);
         
-        $required = ['email', 'password', 'role', 'name', 'location', 'phone'];
-        foreach ($required as $field) {
-            if (!isset($input[$field])) {
-                send_json(error_response("Field $field is required", [], 400));
-                return;
-            }
+        // Server-side validation
+        $errors = validate_register_payload($input ?? []);
+        if (!empty($errors)) {
+            send_json(error_response('Validation failed', $errors, 400));
+            return;
         }
 
         $result = $this->authService->register($input);
 
         if ($result['success']) {
             send_json(success_response('Registration successful', ['user_id' => $result['user_id']], 201));
-        } else {
-            send_json(error_response($result['message'], [], 400));
+        }
+         else {
+            if(isset($result['http_code']) && $result['http_code'] === 409){
+                if( $result['field'] === 'email'){
+                    send_json(error_response($result['message'],[], 409));
+                } else{
+                    send_json(error_response($result['message'],[],409));
+                }}
+             else {
+                send_json(error_response($result['message'], [], 400));}
+            
         }
     }
 
@@ -75,21 +85,16 @@ final class AuthController
     }
 }
 
-    public function register(): array
-    {
-<<<<<<< Updated upstream
-        return [];
-=======
-        return success_response('Auth register action ready.');
-    }
+    // public function register(): array
+    // {
+    //     return success_response('Auth register action ready.');
+    // }
 
-    public function logout(): array
-    {
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
-        }
-        session_destroy();
-        return success_response('Logout successful');
->>>>>>> Stashed changes
-    }
-}
+    // public function logout(): array
+    // {
+    //     if (session_status() === PHP_SESSION_NONE) {
+    //         session_start();
+    //     }
+    //     session_destroy();
+    //     return success_response('Logout successful');
+    // }

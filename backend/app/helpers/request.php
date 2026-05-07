@@ -10,6 +10,14 @@ function request_method(): string
 function request_path(): string
 {
     $path = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
+
+    $scriptName = str_replace('\\', '/', (string) ($_SERVER['SCRIPT_NAME'] ?? ''));
+    $baseDir = rtrim(dirname($scriptName), '/');
+
+    if ($baseDir !== '' && $baseDir !== '/' && str_starts_with($path, $baseDir)) {
+        $path = substr($path, strlen($baseDir));
+    }
+
     $path = '/' . trim($path, '/');
 
     return $path === '/' ? '/' : rtrim($path, '/');

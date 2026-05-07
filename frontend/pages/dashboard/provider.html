@@ -6,63 +6,14 @@
   <title>Provider Dashboard — ServiceLink</title>
   <link rel="stylesheet" href="../../assets/css/main.css">
   <link rel="stylesheet" href="../../assets/css/components.css">
+  <script src="../../core/guard.js"></script>
 </head>
 <body>
 
-<header class="app-navbar">
-  <div class="navbar">
-    <a href="../../landing_page/index.html" class="navbar__logo">
-      <div class="navbar__logo-icon">S</div>
-      Service<span class="navbar__logo-accent">Link</span>
-    </a>
-    <nav class="navbar__nav">
-      <a href="../marketplace.html" class="navbar__link">Browse Requests</a>
-      <a href="provider.html" class="navbar__link navbar__link--active">Dashboard</a>
-    </nav>
-    <div class="navbar__actions">
-      <div class="navbar__user" id="navUser"></div>
-      <button class="btn btn--secondary btn--sm" onclick="Auth.logout()">Logout</button>
-    </div>
-  </div>
-</header>
+<header id="app-header"></header>
 
 <div class="app-shell">
-  <aside class="app-sidebar">
-    <div class="sidebar">
-      <div class="sidebar__label">Menu</div>
-      <a href="provider.html" class="sidebar__item active">
-        <svg class="sidebar__icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-        Dashboard
-      </a>
-      <a href="../marketplace.html" class="sidebar__item">
-        <svg class="sidebar__icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
-        Browse Requests
-      </a>
-      <a href="../provider/my-offers.html" class="sidebar__item">
-        <svg class="sidebar__icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-        My Offers
-      </a>
-      <a href="../provider/assigned-jobs.html" class="sidebar__item">
-        <svg class="sidebar__icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="9,11 12,14 22,4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
-        Assigned Jobs
-      </a>
-      <a href="../provider/completed-jobs.html" class="sidebar__item">
-        <svg class="sidebar__icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>
-        Completed Jobs
-      </a>
-      <a href="../provider/reviews-received.html" class="sidebar__item">
-        <svg class="sidebar__icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg>
-        Reviews Received
-      </a>
-      <a href="../settings.html" class="sidebar__item">
-        <svg class="sidebar__icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06A1.65 1.65 0 0015 19.4a1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
-        Settings
-      </a>
-      <div class="sidebar__footer">
-        <button class="btn btn--secondary btn--sm btn--full" onclick="Auth.logout()">Sign Out</button>
-      </div>
-    </div>
-  </aside>
+  <aside id="app-sidebar"></aside>
 
   <main class="app-content">
     <div class="page-header">
@@ -109,37 +60,26 @@
         <option>Electrician</option><option>Plumber</option><option>Carpenter</option>
         <option>Painter</option><option>Cleaner</option><option>General Handyman</option>
       </select>
-      <button class="btn btn--primary btn--sm" onclick="loadNearby()">Filter</button>
+      <button class="btn btn--primary btn--sm" id="filterNearbyBtn">Filter</button>
     </div>
     <div id="nearbyList"></div>
   </main>
 </div>
 
-<script src="../../assets/js/modules/api.js"></script>
-<script src="../../assets/js/modules/auth.js"></script>
-<script src="../../assets/js/modules/toast.js"></script>
-<script>
+<script type="module">
+import Api from '../../core/api.js';
+import Auth from '../../core/auth.js';
+import Toast from '../../core/toast.js';
+import Layout from '../../core/layout.js';
+
 const BADGE = { pending:'badge--pending', accepted:'badge--accepted', rejected:'badge--rejected', countered:'badge--countered' };
 function esc(s){const d=document.createElement('div');d.textContent=s||'';return d.innerHTML}
-
-async function init() {
-  await Auth.load();
-  if (!Auth.requireAuth()) return;
-  Auth.renderNavUser(document.getElementById('navUser'));
-  document.getElementById('welcomeMsg').textContent = `Welcome, ${Auth.user.full_name}`;
-  if (Auth.user.rating_average) {
-    document.getElementById('ratingLine').textContent = `Rating: ${parseFloat(Auth.user.rating_average).toFixed(1)} ⭐  ${Auth.user.is_verified ? '· ✓ Verified' : '· Pending Verification'}`;
-    document.getElementById('avgRating').textContent = parseFloat(Auth.user.rating_average).toFixed(1);
-  }
-  loadOffers();
-  loadNearby();
-}
 
 async function loadOffers() {
   const el = document.getElementById('offersList');
   el.innerHTML = '<div class="empty-state"><div class="spinner spinner--dark"></div></div>';
   try {
-    const res = await api.get('/offers');
+    const res = await Api.get('/offers');
     const offers = (res.data||[]).slice(0,5);
     document.getElementById('cntPending').textContent  = (res.data||[]).filter(o=>o.status==='pending').length;
     document.getElementById('cntAccepted').textContent = (res.data||[]).filter(o=>o.status==='accepted').length;
@@ -163,7 +103,7 @@ async function loadNearby() {
   const cat = document.getElementById('catFilter').value;
   el.innerHTML = '<div class="empty-state"><div class="spinner spinner--dark"></div></div>';
   try {
-    const res = await api.get(`/marketplace/requests?category=${cat}`);
+    const res = await Api.get(`/marketplace/requests?category=${cat}`);
     const items = (res.data||[]).slice(0,6);
     if (!items.length) { el.innerHTML='<div class="empty-state"><p class="text-muted">No open requests found.</p></div>'; return; }
     el.innerHTML = '<div class="grid-2">' + items.map(r=>`
@@ -184,7 +124,28 @@ async function loadNearby() {
   } catch { el.innerHTML='<p class="text-muted">Could not load requests.</p>'; }
 }
 
-init();
+async function init() {
+  await Auth.load();
+  if (!Auth.requireAuth()) return;
+  Layout.renderShell('provider', 'dashboard', 'dashboard');
+  
+  document.getElementById('welcomeMsg').textContent = `Welcome, ${Auth.user.first_name || Auth.user.name || 'User'}`;
+  if (Auth.user.rating_average) {
+    document.getElementById('ratingLine').textContent = `Rating: ${parseFloat(Auth.user.rating_average).toFixed(1)} ⭐  ${Auth.user.is_verified ? '· ✓ Verified' : '· Pending Verification'}`;
+    document.getElementById('avgRating').textContent = parseFloat(Auth.user.rating_average).toFixed(1);
+  }
+  
+  document.getElementById('filterNearbyBtn').addEventListener('click', loadNearby);
+  
+  loadOffers();
+  loadNearby();
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', init);
+} else {
+  init();
+}
 </script>
 </body>
 </html>

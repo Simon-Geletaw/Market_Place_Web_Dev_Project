@@ -11,7 +11,6 @@ function require_authentication(): void
     }
 
     if (!isset($_SESSION['user_id'])) {
-        http_response_code(401);
         send_json(error_response('Unauthorized: Authentication required', [], 401));
         exit;
     }

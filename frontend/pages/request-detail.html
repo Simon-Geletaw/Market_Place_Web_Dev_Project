@@ -6,24 +6,10 @@
   <title>Request Detail — ServiceLink</title>
   <link rel="stylesheet" href="../assets/css/main.css">
   <link rel="stylesheet" href="../assets/css/components.css">
+  <script src="../core/guard.js"></script>
 </head>
 <body>
-<header class="app-navbar">
-  <div class="navbar">
-    <a href="../landing_page/index.html" class="navbar__logo">
-      <div class="navbar__logo-icon">S</div>
-      Service<span class="navbar__logo-accent">Link</span>
-    </a>
-    <nav class="navbar__nav">
-      <a href="marketplace.html" class="navbar__link">Browse</a>
-      <a href="dashboard/customer.html" class="navbar__link">Dashboard</a>
-    </nav>
-    <div class="navbar__actions">
-      <div class="navbar__user" id="navUser"></div>
-      <button class="btn btn--secondary btn--sm" onclick="Auth.logout()">Logout</button>
-    </div>
-  </div>
-</header>
+<header id="app-header"></header>
 
 <div style="padding-top:var(--navbar-height)">
   <div class="container" style="padding-top:var(--space-xl);padding-bottom:var(--space-xxl)">
@@ -57,7 +43,7 @@
   <div class="modal">
     <div class="modal__header">
       <h2 class="modal__title">Leave a Review</h2>
-      <button class="modal__close" onclick="closeModal('reviewModal')">✕</button>
+      <button class="modal__close" id="closeReviewTopBtn">✕</button>
     </div>
     <div class="modal__body">
       <p class="text-muted mb-md" id="reviewFor">Rate your provider</p>
@@ -79,16 +65,20 @@
       </div>
     </div>
     <div class="modal__footer">
-      <button class="btn btn--secondary" onclick="closeModal('reviewModal')">Cancel</button>
-      <button class="btn btn--primary" id="submitReviewBtn" onclick="submitReview()">Submit Review</button>
+      <button class="btn btn--secondary" id="closeReviewBtn">Cancel</button>
+      <button class="btn btn--primary" id="submitReviewBtn">Submit Review</button>
     </div>
   </div>
 </div>
 
-<script src="../assets/js/modules/api.js"></script>
-<script src="../assets/js/modules/auth.js"></script>
-<script src="../assets/js/modules/toast.js"></script>
-<script>
+<div class="toast-container" id="toastContainer"></div>
+
+<script type="module">
+import Api from '../core/api.js';
+import Auth from '../core/auth.js';
+import Toast from '../core/toast.js';
+import Layout from '../core/layout.js';
+
 const BADGE = { Requested:'badge--requested', Negotiating:'badge--negotiating', Assigned:'badge--assigned', Completed:'badge--completed', Reviewed:'badge--reviewed' };
 const TIMELINE = ['Requested','Negotiating','Assigned','Completed','Reviewed'];
 let request = null;
@@ -96,16 +86,9 @@ function esc(s){const d=document.createElement('div');d.textContent=s||'';return
 
 const requestId = new URLSearchParams(location.search).get('id');
 
-async function init() {
-  await Auth.load();
-  if (!Auth.requireAuth()) return;
-  Auth.renderNavUser(document.getElementById('navUser'));
-  loadRequest();
-}
-
 async function loadRequest() {
   try {
-    const res = await api.get(`/requests/${requestId}`);
+    const res = await Api.get(`/requests/${requestId}`);
     request = res.data;
     document.getElementById('breadTitle').textContent = request.title;
     renderContent();
@@ -169,9 +152,11 @@ function renderActionPanel() {
         <div class="card__header"><h3 style="font-size:15px">Job Complete 🎉</h3></div>
         <div class="card__body">
           <p class="text-muted mb-md">The provider has marked this job as complete. Please leave a review.</p>
-          <button class="btn btn--primary btn--full" onclick="openReviewModal()">Leave a Review</button>
+          <button class="btn btn--primary btn--full" id="leaveReviewBtn">Leave a Review</button>
         </div>
       </div>`;
+    const btn = document.getElementById('leaveReviewBtn');
+    if (btn) btn.addEventListener('click', openReviewModal);
     return;
   }
 
@@ -203,13 +188,20 @@ function renderActionPanel() {
               </div>
               ${o.message ? `<p class="text-sm text-muted" style="margin-top:4px">${esc(o.message)}</p>` : ''}
               <div class="offer-card__actions">
-                <button class="btn btn--primary btn--sm" onclick="acceptOffer('${o.id}','${esc(o.provider_name||'Provider')}',${o.price_offered})">Accept</button>
-                <button class="btn btn--secondary btn--sm" onclick="rejectOffer('${o.id}')">Reject</button>
+                <button class="btn btn--primary btn--sm accept-offer-btn" data-id="${o.id}" data-name="${esc(o.provider_name||'Provider')}" data-price="${o.price_offered}">Accept</button>
+                <button class="btn btn--secondary btn--sm reject-offer-btn" data-id="${o.id}">Reject</button>
               </div>
             </div>`).join('')
           }
         </div>
       </div>`;
+    
+    document.querySelectorAll('.accept-offer-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => acceptOffer(e.target.dataset.id, e.target.dataset.name, e.target.dataset.price));
+    });
+    document.querySelectorAll('.reject-offer-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => rejectOffer(e.target.dataset.id));
+    });
     return;
   }
 
@@ -219,7 +211,7 @@ function renderActionPanel() {
 async function acceptOffer(offerId, providerName, price) {
   if (!confirm(`Accept offer from ${providerName} for ${price} ETB?`)) return;
   try {
-    await api.post(`/offers/${offerId}/accept`);
+    await Api.post(`/offers/${offerId}/accept`);
     Toast.success('Offer accepted! Job assigned.');
     loadRequest();
   } catch (err) { Toast.error(err.message || 'Failed to accept offer.'); }
@@ -228,13 +220,12 @@ async function acceptOffer(offerId, providerName, price) {
 async function rejectOffer(offerId) {
   if (!confirm('Reject this offer?')) return;
   try {
-    await api.post(`/offers/${offerId}/reject`);
+    await Api.post(`/offers/${offerId}/reject`);
     Toast.success('Offer rejected.');
     loadRequest();
   } catch (err) { Toast.error(err.message || 'Failed.'); }
 }
 
-// Review modal
 let ratingSelected = 0;
 function openReviewModal() {
   document.getElementById('reviewFor').textContent = `Rate your experience for: ${request?.title}`;
@@ -259,7 +250,7 @@ async function submitReview() {
   const btn = document.getElementById('submitReviewBtn');
   btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Submitting...';
   try {
-    await api.post(`/requests/${requestId}/review`, { rating: ratingSelected, comment: document.getElementById('reviewComment').value });
+    await Api.post(`/requests/${requestId}/review`, { rating: ratingSelected, comment: document.getElementById('reviewComment').value });
     Toast.success('Review submitted! Thank you.');
     closeModal('reviewModal');
     loadRequest();
@@ -269,7 +260,23 @@ async function submitReview() {
   }
 }
 
-init();
+async function init() {
+  await Auth.load();
+  if (!Auth.requireAuth()) return;
+  Layout.renderNavbar('app-header', 'dashboard');
+  
+  document.getElementById('closeReviewTopBtn').addEventListener('click', () => closeModal('reviewModal'));
+  document.getElementById('closeReviewBtn').addEventListener('click', () => closeModal('reviewModal'));
+  document.getElementById('submitReviewBtn').addEventListener('click', submitReview);
+
+  loadRequest();
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', init);
+} else {
+  init();
+}
 </script>
 </body>
 </html>
