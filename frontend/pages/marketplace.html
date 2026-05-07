@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Browse Services — ServiceLink</title>
+  <link rel="stylesheet" href="../assets/css/main.css">
+  <link rel="stylesheet" href="../assets/css/components.css">
+</head>
+<body>
+<header class="app-navbar">
+  <div class="navbar">
+    <a href="../landing_page/index.html" class="navbar__logo">
+      <div class="navbar__logo-icon">S</div>
+      Service<span class="navbar__logo-accent">Link</span>
+    </a>
+    <nav class="navbar__nav">
+      <a href="marketplace.html" class="navbar__link navbar__link--active">Browse</a>
+      <a href="#" class="navbar__link" id="dashLink">Dashboard</a>
+    </nav>
+    <div class="navbar__actions" id="navActions">
+      <a href="auth/login.html" class="btn btn--secondary btn--sm">Login</a>
+      <a href="auth/register.html" class="btn btn--primary btn--sm">Sign Up</a>
+    </div>
+  </div>
+</header>
+
+<div style="padding-top:var(--navbar-height)">
+  <div class="container" style="padding-top:var(--space-xl);padding-bottom:var(--space-xl)">
+
+    <!-- Search -->
+    <div style="max-width:640px;margin:0 auto var(--space-xl)">
+      <div class="search-bar">
+        <input type="text" id="searchInput" placeholder="What service do you need?" oninput="debounceLoad()">
+        <button class="search-bar__btn" onclick="loadRequests()">Search</button>
+      </div>
+    </div>
+
+    <!-- Filters + Grid -->
+    <div style="display:flex;gap:var(--space-xl);align-items:flex-start">
+      <!-- Filters (sidebar) -->
+      <aside style="width:220px;flex-shrink:0">
+        <div class="card">
+          <div class="card__header"><h4 style="font-size:14px">Filters</h4></div>
+          <div class="card__body" style="display:flex;flex-direction:column;gap:var(--space-md)">
+            <div class="form-group" style="margin-bottom:0">
+              <label class="form-label">Category</label>
+              <select class="form-select" id="fCategory" onchange="loadRequests()">
+                <option value="">All</option>
+                <option>Electrician</option><option>Plumber</option><option>Carpenter</option>
+                <option>Painter</option><option>Cleaner</option><option>General Handyman</option>
+              </select>
+            </div>
+            <div class="form-group" style="margin-bottom:0">
+              <label class="form-label">Location</label>
+              <select class="form-select" id="fLocation" onchange="loadRequests()">
+                <option value="">All Sub-cities</option>
+                <option>Bole</option><option>Kirkos</option><option>Addis Ketema</option>
+                <option>Akaki Kaliti</option><option>Arada</option><option>Yeka</option>
+              </select>
+            </div>
+            <div class="form-group" style="margin-bottom:0">
+              <label class="form-label">Sort By</label>
+              <select class="form-select" id="fSort" onchange="loadRequests()">
+                <option value="desc">Newest First</option>
+                <option value="asc">Oldest First</option>
+              </select>
+            </div>
+            <button class="btn btn--secondary btn--sm" onclick="clearFilters()">Clear Filters</button>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Results -->
+      <div style="flex:1">
+        <div class="flex-between mb-md">
+          <p id="resultsCount" class="text-muted text-sm">Loading...</p>
+        </div>
+        <div id="requestsGrid"></div>
+        <div id="pagination" class="pagination"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../assets/js/modules/api.js"></script>
+<script src="../assets/js/modules/auth.js"></script>
+<script>
+const BADGE = { Requested:'badge--requested', Negotiating:'badge--negotiating', Assigned:'badge--assigned', Completed:'badge--completed' };
+let debounceTimer;
+function esc(s){const d=document.createElement('div');d.textContent=s||'';return d.innerHTML}
+
+async function init() {
+  await Auth.load();
+  if (Auth.isLoggedIn()) {
+    const map = { customer:'dashboard/customer.html', provider:'dashboard/provider.html', admin:'dashboard/admin.html' };
+    document.getElementById('dashLink').href = map[Auth.role()] || '#';
+    document.getElementById('navActions').innerHTML = `
+      <div class="navbar__user">
+        <div class="navbar__avatar">${Auth.user.full_name?.[0]||'U'}</div>
+        <span style="font-size:13px;font-weight:500">${Auth.user.full_name}</span>
+      </div>
+      <button class="btn btn--secondary btn--sm" onclick="Auth.logout()">Logout</button>`;
+  }
+  loadRequests();
+}
+
+function debounceLoad() { clearTimeout(debounceTimer); debounceTimer = setTimeout(loadRequests, 400); }
+
+async function loadRequests() {
+  const search   = document.getElementById('searchInput').value;
+  const category = document.getElementById('fCategory').value;
+  const location = document.getElementById('fLocation').value;
+  const sort     = document.getElementById('fSort').value;
+  const grid = document.getElementById('requestsGrid');
+  grid.innerHTML = '<div class="empty-state"><div class="spinner spinner--dark"></div></div>';
+
+  try {
+    const res = await api.get(`/marketplace/requests?search=${encodeURIComponent(search)}&category=${encodeURIComponent(category)}&location=${encodeURIComponent(location)}&sort=${sort}`);
+    const requests = res.data || [];
+    document.getElementById('resultsCount').textContent = `${requests.length} request${requests.length!==1?'s':''} found`;
+    if (!requests.length) {
+      grid.innerHTML = `<div class="empty-state"><div class="empty-state__icon">🔍</div><div class="empty-state__title">No results found</div><p class="empty-state__text">Try adjusting your filters or search terms.</p></div>`;
+      return;
+    }
+    grid.innerHTML = '<div class="grid-2">' + requests.map(r => {
+      const detailPage = Auth.role() === 'provider' ? `request-detail-provider.html?id=${r.id}` : `request-detail.html?id=${r.id}`;
+      return `<div class="request-card">
+        <div class="request-card__header">
+          <div>
+            <div class="request-card__title">${esc(r.title)}</div>
+            <div class="request-card__meta">
+              <span>📍 ${esc(r.location)}</span>
+              <span>🗂 ${esc(r.category_name||r.category)}</span>
+              <span class="text-sm">${timeAgo(r.created_at)}</span>
+            </div>
+          </div>
+          <span class="badge ${BADGE[r.status]||''}">${r.status}</span>
+        </div>
+        <p class="request-card__desc">${esc(r.description)}</p>
+        <div class="request-card__footer">
+          <span class="text-sm text-muted">${r.offer_count||0} offer${r.offer_count!=1?'s':''} · ${r.budget?r.budget+' ETB':'No budget'}</span>
+          <a href="${detailPage}" class="btn btn--primary btn--sm">View Details</a>
+        </div>
+      </div>`;
+    }).join('') + '</div>';
+  } catch {
+    grid.innerHTML = '<div class="empty-state"><p class="text-muted">Could not load requests.</p></div>';
+  }
+}
+
+function clearFilters() {
+  ['fCategory','fLocation','fSort'].forEach(id => document.getElementById(id).value = id==='fSort'?'desc':'');
+  document.getElementById('searchInput').value = '';
+  loadRequests();
+}
+
+function timeAgo(ts) {
+  const diff = (Date.now() - new Date(ts)) / 1000;
+  if (diff < 3600) return `${Math.floor(diff/60)}m ago`;
+  if (diff < 86400) return `${Math.floor(diff/3600)}h ago`;
+  return `${Math.floor(diff/86400)}d ago`;
+}
+
+init();
+</script>
+</body>
+</html>

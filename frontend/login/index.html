@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Log in to your ServiceLink account to post service requests, manage offers, and connect with trusted local professionals.">
+  <meta name="keywords" content="ServiceLink login, marketplace login, service provider login">
+  <title>Log In — ServiceLink</title>
+
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- 
+       SECTION 1 — BRANDING PANEL (Left / Top on mobile)
+        -->
+  <aside class="auth-brand" aria-hidden="true">
+    <div class="auth-brand__inner">
+      <a href="../landing_page/index.html" class="auth-brand__logo">
+        <svg class="auth-brand__logo-icon" width="40" height="40" viewBox="0 0 32 32" fill="none">
+          <rect width="32" height="32" rx="8" fill="#0066CC"/>
+          <path d="M10 16L14.5 20.5L22 11" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span class="auth-brand__logo-text">Service<span class="auth-brand__logo-accent">Link</span></span>
+      </a>
+
+      <div class="auth-brand__content">
+        <h2 class="auth-brand__headline">Find Local Services,<br>Get It Done Fast.</h2>
+        <p class="auth-brand__subtext">Trusted by 2,000+ homeowners. Connect with verified electricians, plumbers, carpenters, and more in your area.</p>
+
+        <!-- Floating feature cards -->
+        <div class="auth-brand__features">
+          <div class="auth-brand__feature-card">
+            <span class="auth-brand__feature-icon">--</span>
+            <div>
+              <span class="auth-brand__feature-title">Fast Matching</span>
+              <span class="auth-brand__feature-desc">Get offers in minutes</span>
+            </div>
+          </div>
+          <div class="auth-brand__feature-card">
+            <span class="auth-brand__feature-icon">--</span>
+            <div>
+              <span class="auth-brand__feature-title">Verified Providers</span>
+              <span class="auth-brand__feature-desc">Background-checked pros</span>
+            </div>
+          </div>
+          <div class="auth-brand__feature-card">
+            <span class="auth-brand__feature-icon">--</span>
+            <div>
+              <span class="auth-brand__feature-title">4.8 Average</span>
+              <span class="auth-brand__feature-desc">From 500+ reviews</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Decorative shapes -->
+      <div class="auth-brand__shape auth-brand__shape--circle"></div>
+      <div class="auth-brand__shape auth-brand__shape--dots"></div>
+    </div>
+  </aside>
+
+
+  <!-- 
+       SECTION 2 — LOGIN FORM (Right / Main on mobile)
+        -->
+  <main class="auth-main" id="main-content">
+    <div class="auth-form-container">
+
+      <!-- Mobile-only logo -->
+      <a href="../landing_page/index.html" class="auth-mobile-logo" aria-label="ServiceLink Home">
+        <svg width="36" height="36" viewBox="0 0 32 32" fill="none">
+          <rect width="32" height="32" rx="8" fill="#0066CC"/>
+          <path d="M10 16L14.5 20.5L22 11" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span class="auth-mobile-logo__text">Service<span class="auth-mobile-logo__accent">Link</span></span>
+      </a>
+
+      <!-- Form Header -->
+      <header class="auth-form__header">
+        <h1 class="auth-form__title" id="login-heading">Welcome Back</h1>
+        <p class="auth-form__subtitle">Please enter your details to sign in.</p>
+      </header>
+
+      <!-- Live Error Region (screen readers) -->
+      <div id="loginFormStatus" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
+
+      <!-- Login Form -->
+      <form class="auth-form" id="loginForm" method="POST" action="#" novalidate aria-labelledby="login-heading">
+
+        <!-- Email Field -->
+        <div class="form-group" id="emailGroup">
+          <label class="form-label" for="loginEmail">Email Address</label>
+          <div class="input-wrapper">
+            <svg class="input-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <rect x="2" y="4" width="20" height="16" rx="3" stroke="currentColor" stroke-width="1.5"/>
+              <path d="M2 7L12 13L22 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <input
+              class="form-input"
+              type="email"
+              id="loginEmail"
+              name="email"
+              placeholder="you@example.com"
+              autocomplete="email"
+              required
+              aria-required="true"
+              aria-describedby="emailError"
+            >
+          </div>
+          <span class="form-error" id="emailError" role="alert" aria-live="assertive"></span>
+        </div>
+
+        <!-- Password Field -->
+        <div class="form-group" id="passwordGroup">
+          <div class="form-label-row">
+            <label class="form-label" for="loginPassword">Password</label>
+            <a href="#" class="form-link" id="forgotPasswordLink">Forgot Password?</a>
+          </div>
+          <div class="input-wrapper">
+            <svg class="input-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <rect x="3" y="11" width="18" height="11" rx="3" stroke="currentColor" stroke-width="1.5"/>
+              <path d="M7 11V7a5 5 0 0110 0v4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+            <input
+              class="form-input form-input--password"
+              type="password"
+              id="loginPassword"
+              name="password"
+              placeholder="••••••••"
+              autocomplete="current-password"
+              required
+              aria-required="true"
+              aria-describedby="passwordError"
+            >
+            <button
+              type="button"
+              class="password-toggle"
+              id="passwordToggle"
+              aria-label="Show password"
+              aria-pressed="false"
+            >
+              <!-- Eye open icon -->
+              <svg class="password-toggle__icon password-toggle__icon--show" width="20" height="20" viewBox="0 0 24 24" fill="none">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.5"/>
+              </svg>
+              <!-- Eye closed icon -->
+              <svg class="password-toggle__icon password-toggle__icon--hide" width="20" height="20" viewBox="0 0 24 24" fill="none" style="display:none;">
+                <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                <line x1="1" y1="1" x2="23" y2="23" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+              </svg>
+            </button>
+          </div>
+          <span class="form-error" id="passwordError" role="alert" aria-live="assertive"></span>
+        </div>
+
+        <!-- Submit Button -->
+        <button type="submit" class="btn btn--primary btn--full" id="loginSubmitBtn">
+          <span class="btn__text">Log In</span>
+          <span class="btn__spinner" aria-hidden="true" style="display:none;">
+            <svg class="spinner" width="20" height="20" viewBox="0 0 24 24" fill="none">
+              <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-dasharray="31.4 31.4" stroke-dashoffset="0"/>
+            </svg>
+          </span>
+        </button>
+
+      </form>
+
+      <!-- Footer Link -->
+      <p class="auth-form__footer">
+        Don't have an account? <a href="../register/index.html" class="auth-form__footer-link" id="registerLink">Create Account</a>
+      </p>
+
+    </div>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
