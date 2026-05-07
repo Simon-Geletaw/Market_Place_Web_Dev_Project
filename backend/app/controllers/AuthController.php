@@ -4,97 +4,85 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../services/AuthService.php';
 require_once __DIR__ . '/../repositories/UserRepository.php';
+require_once __DIR__ . '/../repositories/AuditLogRepository.php';
 require_once __DIR__ . '/../repositories/DatabaseConnector.php';
 require_once __DIR__ . '/../helpers/response.php';
 require_once __DIR__ . '/../helpers/request.php';
+require_once __DIR__ . '/../validators/auth_validator.php';
 
+/**
+ * AuthController
+ *
+ * Thin HTTP handler for authentication endpoints.
+ * All business logic lives in AuthService.
+ */
 final class AuthController
 {
     private AuthService $authService;
 
     public function __construct()
     {
-        $db = (new DatabaseConnector())->getConnection();
-        $userRepo = new UserRepository($db);
-        $this->authService = new AuthService($userRepo);
+        $db   = (new DatabaseConnector())->getConnection();
+        $users = new UserRepository($db);
+        $audit = new AuditLogRepository($db);
+        $this->authService = new AuthService($users, $audit);
     }
 
-    public function login(): void
+    // POST /api/auth/login
+    public function login(): array
     {
-        $input = json_decode(file_get_contents('php://input'), true);
-        
-        // Server-side validation
-        $errors = validate_login_payload($input ?? []);
+        $input  = request_json_body();
+        $errors = validate_login_payload($input);
+
         if (!empty($errors)) {
-            send_json(error_response('Validation failed', $errors, 400));
-            return;
+            return error_response('Validation failed.', $errors, 422);
         }
 
         $result = $this->authService->login($input['email'], $input['password']);
 
         if ($result['success']) {
-            send_json(success_response('Login successful', $result['user']));
-        } else {
-            send_json(error_response($result['message'], [], 401));
+            return success_response('Login successful.', ['user' => $result['user']]);
         }
+
+        return error_response($result['message'], [], 401);
     }
 
-    public function register(): void
+    // POST /api/auth/register
+    public function register(): array
     {
-        $input = json_decode(file_get_contents('php://input'), true);
-        
-        // Server-side validation
-        $errors = validate_register_payload($input ?? []);
+        $input  = request_json_body();
+        $errors = validate_register_payload($input);
+
         if (!empty($errors)) {
-            send_json(error_response('Validation failed', $errors, 400));
-            return;
+            return error_response('Validation failed.', $errors, 422);
         }
 
         $result = $this->authService->register($input);
 
         if ($result['success']) {
-            send_json(success_response('Registration successful', ['user_id' => $result['user_id']], 201));
+            return success_response('Registration successful.', ['user_id' => $result['user_id']], 201);
         }
-         else {
-            if(isset($result['http_code']) && $result['http_code'] === 409){
-                if( $result['field'] === 'email'){
-                    send_json(error_response($result['message'],[], 409));
-                } else{
-                    send_json(error_response($result['message'],[],409));
-                }}
-             else {
-                send_json(error_response($result['message'], [], 400));}
-            
-        }
+
+        $code = $result['http_code'] ?? 400;
+        return error_response($result['message'], [], $code);
     }
 
-    public function logout(): void
+    // POST /api/auth/logout
+    public function logout(): array
     {
         $this->authService->logout();
-        send_json(success_response('Logged out successfully'));
+        return success_response('Logged out successfully.');
     }
 
-    public function showLogin(): array
+    // GET /api/auth/me
+    public function me(): array
     {
-        return success_response('Auth login route ready.');
-    }
+        $user = $this->authService->currentUser();
 
-    public function showRegister(): array
-    {
-        return success_response('Auth register route ready.');
+        if (!$user) {
+            return error_response('Not authenticated.', [], 401);
+        }
+
+        return success_response('Authenticated.', ['user' => $user]);
     }
 }
-
-    // public function register(): array
-    // {
-    //     return success_response('Auth register action ready.');
-    // }
-
-    // public function logout(): array
-    // {
-    //     if (session_status() === PHP_SESSION_NONE) {
-    //         session_start();
-    //     }
-    //     session_destroy();
-    //     return success_response('Logout successful');
-    // }
