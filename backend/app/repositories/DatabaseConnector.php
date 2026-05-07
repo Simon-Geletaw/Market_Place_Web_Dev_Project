@@ -1,39 +1,60 @@
 <?php
 
-class DatabaseConnector
+declare(strict_types=1);
+
+/**
+ * DatabaseConnector
+ *
+ * Singleton-style wrapper around PDO.
+ * Reads credentials from config/mySetting.ini.
+ * Column names in MySQL schema are UPPER_CASE — PDO FETCH_ASSOC returns them uppercase.
+ */
+final class DatabaseConnector
 {
+    private static ?PDO $instance = null;
     private PDO $dbConnection;
 
-    public function __construct($file = __DIR__ . '/../../config/mySetting.ini')
+    public function __construct(string $file = __DIR__ . '/../../config/mySetting.ini')
     {
+        if (self::$instance !== null) {
+            $this->dbConnection = self::$instance;
+            return;
+        }
+
+        $config = parse_ini_file($file);
+        if ($config === false || empty($config['dsn'])) {
+            throw new RuntimeException('Database configuration file missing or invalid: ' . $file);
+        }
+
         try {
-            $config = parse_ini_file($file);
-            if (!$config) {
-                throw new Exception('unable to open the file');
-            }
-
-            $dsn = $config['dsn'];
-            $username = $config['username'];
-            $password = $config['password'];
-
-            $this->dbConnection = new PDO($dsn, $username, $password);
-            $this->dbConnection->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-            $this->dbConnection->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
-        } catch (Exception $e) {
-            error_log($e->getMessage());
-            throw new Exception('Database connection failed');
+            $pdo = new PDO(
+                $config['dsn'],
+                $config['username'] ?? '',
+                $config['password'] ?? '',
+                [
+                    PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
+                    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+                    PDO::ATTR_EMULATE_PREPARES   => false,
+                ]
+            );
+            self::$instance = $pdo;
+            $this->dbConnection = $pdo;
+        } catch (PDOException $e) {
+            error_log('[DB] Connection failed: ' . $e->getMessage());
+            throw new RuntimeException('Database connection failed. Check configuration.');
         }
     }
 
     public function getConnection(): PDO
     {
-        try {
-            return $this->dbConnection;
-        } catch (Exception $e) {
-            error_log($e->getMessage());
-            throw new Exception('Failed to get database connection');
-        }
+        return $this->dbConnection;
+    }
+
+    /**
+     * Reset singleton (useful for testing).
+     */
+    public static function reset(): void
+    {
+        self::$instance = null;
     }
 }
-
-?>
