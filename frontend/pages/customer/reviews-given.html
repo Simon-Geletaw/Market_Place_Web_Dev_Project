@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Reviews Given — ServiceLink</title>
+  <link rel="stylesheet" href="../../assets/css/main.css">
+  <link rel="stylesheet" href="../../assets/css/components.css">
+</head>
+<body>
+<header class="app-navbar">
+  <div class="navbar">
+    <a href="../../landing_page/index.html" class="navbar__logo"><div class="navbar__logo-icon">S</div>Service<span class="navbar__logo-accent">Link</span></a>
+    <nav class="navbar__nav"><a href="../dashboard/customer.html" class="navbar__link">Dashboard</a></nav>
+    <div class="navbar__actions"><div class="navbar__user" id="navUser"></div><button class="btn btn--secondary btn--sm" onclick="Auth.logout()">Logout</button></div>
+  </div>
+</header>
+<div class="app-shell">
+  <aside class="app-sidebar">
+    <div class="sidebar">
+      <div class="sidebar__label">Customer Menu</div>
+      <a href="../dashboard/customer.html" class="sidebar__item">📊 Dashboard</a>
+      <a href="my-requests.html" class="sidebar__item">📋 My Requests</a>
+      <a href="../marketplace.html" class="sidebar__item">🔍 Browse Services</a>
+      <a href="reviews-given.html" class="sidebar__item active">⭐ Reviews Given</a>
+      <a href="../settings.html" class="sidebar__item">⚙️ Settings</a>
+      <div class="sidebar__footer"><button class="btn btn--secondary btn--sm btn--full" onclick="Auth.logout()">Sign Out</button></div>
+    </div>
+  </aside>
+  <main class="app-content">
+    <div class="page-header">
+      <div><div class="page-header__title">Reviews Given</div><div class="page-header__subtitle">Feedback you've submitted for providers</div></div>
+    </div>
+    <div id="list"></div>
+  </main>
+</div>
+<script src="../../assets/js/modules/api.js"></script>
+<script src="../../assets/js/modules/auth.js"></script>
+<script>
+function esc(s){const d=document.createElement('div');d.textContent=s||'';return d.innerHTML}
+function stars(n){return '★'.repeat(n)+'☆'.repeat(5-n)}
+async function init(){
+  await Auth.load();if(!Auth.requireAuth())return;Auth.renderNavUser(document.getElementById('navUser'));
+  const el=document.getElementById('list');el.innerHTML='<div class="empty-state"><div class="spinner spinner--dark"></div></div>';
+  try{
+    const res=await api.get('/reviews/given');const r=res.data||[];
+    if(!r.length){el.innerHTML='<div class="empty-state"><div class="empty-state__icon">⭐</div><div class="empty-state__title">No reviews yet</div><p class="empty-state__text">Reviews appear here after you complete a service request.</p></div>';return;}
+    el.innerHTML=r.map(rv=>`<div class="card mb-md">
+      <div class="card__body">
+        <div class="flex-between mb-md">
+          <div>
+            <div style="font-weight:600">${esc(rv.request_title||'Service Request')}</div>
+            <div class="text-sm text-muted">Provider: ${esc(rv.provider_name||'—')}</div>
+          </div>
+          <div style="color:#FFA500;font-size:18px">${stars(rv.rating)}</div>
+        </div>
+        ${rv.comment?`<p style="line-height:1.6">${esc(rv.comment)}</p>`:'<p class="text-muted text-sm">No comment provided.</p>'}
+        <div class="text-sm text-muted mt-sm">${new Date(rv.created_at).toLocaleDateString()}</div>
+      </div>
+    </div>`).join('');
+  }catch{el.innerHTML='<div class="empty-state"><p class="text-muted">Could not load reviews.</p></div>';}
+}
+init();
+</script>
+</body>
+</html>

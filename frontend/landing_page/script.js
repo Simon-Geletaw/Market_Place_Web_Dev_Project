@@ -6,7 +6,7 @@
  *  2. Mobile hamburger menu toggle
  *  3. Smooth scroll to anchor links
  *  4. Active nav-link highlighting on scroll
- *  5. Testimonial carousel (prev/next/dots/auto-rotate)
+ *  5. Animated stat counters (Intersection Observer)
  *  6. Animated stat counters (Intersection Observer)
  *  7. Scroll-reveal animations
  *  8. Back-to-top button
@@ -15,7 +15,7 @@
 'use strict';
 
 document.addEventListener('DOMContentLoaded', () => {
-  /* ─── 1. STICKY NAVBAR ─── */
+  /* --- 1. STICKY NAVBAR --- */
   const navbar = document.getElementById('navbar');
 
   function handleNavbarScroll() {
@@ -27,7 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   window.addEventListener('scroll', handleNavbarScroll, { passive: true });
 
-  /* ─── 2. MOBILE MENU TOGGLE ─── */
+  /* --- 2. MOBILE MENU TOGGLE --- */
   const navToggle = document.getElementById('navToggle');
   const navMenu = document.getElementById('navbarMenu');
 
@@ -50,7 +50,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  /* ─── 3. SMOOTH SCROLL ─── */
+  /* --- 3. SMOOTH SCROLL --- */
   document.querySelectorAll('a[href^="#"]').forEach(anchor => {
     anchor.addEventListener('click', (e) => {
       const targetId = anchor.getAttribute('href');
@@ -63,7 +63,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  /* ─── 4. ACTIVE NAV LINK ON SCROLL ─── */
+  /* --- 4. ACTIVE NAV LINK ON SCROLL --- */
   const sections = document.querySelectorAll('section[id]');
   const navLinks = document.querySelectorAll('.navbar__link');
 
@@ -85,85 +85,8 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   window.addEventListener('scroll', highlightNavLink, { passive: true });
 
-  /* ─── 5. TESTIMONIAL CAROUSEL ─── */
-  const track = document.getElementById('testimonialTrack');
-  const dotsContainer = document.getElementById('testimonialDots');
-  const prevBtn = document.getElementById('testimonialPrev');
-  const nextBtn = document.getElementById('testimonialNext');
 
-  if (track) {
-    const cards = track.querySelectorAll('.testimonial-card');
-    let currentIndex = 0;
-    let autoPlayTimer = null;
-    let cardsPerView = getCardsPerView();
-
-    function getCardsPerView() {
-      if (window.innerWidth <= 640) return 1;
-      if (window.innerWidth <= 992) return 2;
-      return 3;
-    }
-
-    function getTotalSlides() {
-      return Math.max(1, cards.length - cardsPerView + 1);
-    }
-
-    // Build dots
-    function buildDots() {
-      dotsContainer.innerHTML = '';
-      const total = getTotalSlides();
-      for (let i = 0; i < total; i++) {
-        const dot = document.createElement('button');
-        dot.className = 'testimonials__dot' + (i === currentIndex ? ' testimonials__dot--active' : '');
-        dot.setAttribute('aria-label', `Go to slide ${i + 1}`);
-        dot.setAttribute('role', 'tab');
-        dot.addEventListener('click', () => goToSlide(i));
-        dotsContainer.appendChild(dot);
-      }
-    }
-
-    function updateDots() {
-      dotsContainer.querySelectorAll('.testimonials__dot').forEach((dot, i) => {
-        dot.classList.toggle('testimonials__dot--active', i === currentIndex);
-      });
-    }
-
-    function goToSlide(index) {
-      const total = getTotalSlides();
-      currentIndex = ((index % total) + total) % total;
-      const gap = parseInt(getComputedStyle(track).gap) || 24;
-      const cardWidth = cards[0].offsetWidth + gap;
-      track.style.transform = `translateX(-${currentIndex * cardWidth}px)`;
-      updateDots();
-    }
-
-    prevBtn.addEventListener('click', () => { goToSlide(currentIndex - 1); resetAutoPlay(); });
-    nextBtn.addEventListener('click', () => { goToSlide(currentIndex + 1); resetAutoPlay(); });
-
-    function startAutoPlay() {
-      autoPlayTimer = setInterval(() => goToSlide(currentIndex + 1), 5000);
-    }
-    function resetAutoPlay() {
-      clearInterval(autoPlayTimer);
-      startAutoPlay();
-    }
-
-    // Pause on hover
-    track.addEventListener('mouseenter', () => clearInterval(autoPlayTimer));
-    track.addEventListener('mouseleave', () => startAutoPlay());
-
-    // Handle resize
-    window.addEventListener('resize', () => {
-      cardsPerView = getCardsPerView();
-      if (currentIndex >= getTotalSlides()) currentIndex = 0;
-      buildDots();
-      goToSlide(currentIndex);
-    });
-
-    buildDots();
-    startAutoPlay();
-  }
-
-  /* ─── 6. ANIMATED STAT COUNTERS ─── */
+  /* --- 6. ANIMATED STAT COUNTERS --- */
   const statNumbers = document.querySelectorAll('.stats__number[data-target]');
   let statsAnimated = false;
 
@@ -200,9 +123,9 @@ document.addEventListener('DOMContentLoaded', () => {
     statsObserver.observe(statsSection);
   }
 
-  /* ─── 7. SCROLL-REVEAL ANIMATIONS ─── */
+  /* --- 7. SCROLL-REVEAL ANIMATIONS --- */
   const revealElements = document.querySelectorAll(
-    '.category-card, .hiw__step, .testimonial-card, .section-header'
+    '.category-card, .hiw__step, .section-header'
   );
   revealElements.forEach(el => el.classList.add('reveal'));
 
@@ -219,7 +142,7 @@ document.addEventListener('DOMContentLoaded', () => {
   );
   revealElements.forEach(el => revealObserver.observe(el));
 
-  /* ─── 8. BACK TO TOP ─── */
+  /* --- 8. BACK TO TOP --- */
   const backToTop = document.getElementById('backToTop');
   window.addEventListener('scroll', () => {
     backToTop.classList.toggle('back-to-top--visible', window.scrollY > 500);

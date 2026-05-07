@@ -77,11 +77,19 @@ final class AuthController
 
     public function register(): array
     {
+<<<<<<< Updated upstream
+        return [];
+=======
         return success_response('Auth register action ready.');
     }
 
     public function logout(): array
     {
-        return success_response('Auth logout action ready.');
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+        session_destroy();
+        return success_response('Logout successful');
+>>>>>>> Stashed changes
     }
 }

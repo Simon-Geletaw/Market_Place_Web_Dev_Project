@@ -29,3 +29,20 @@
 [02-May-2026 12:11:23 Europe/Berlin] Requested route key: POST /api/validate-demo
 [02-May-2026 12:11:23 Europe/Berlin] Requested route key: POST /api/validate-demo
 [02-May-2026 12:11:23 Europe/Berlin] Requested route key: POST /api/validate-demo
+[06-May-2026 20:52:32 Europe/Berlin] Requested route key: GET /
+[06-May-2026 20:52:40 Europe/Berlin] Requested route key: GET /api/health
+[06-May-2026 20:52:40 Europe/Berlin] PHP Warning:  parse_ini_file(config/mySetting.ini): Failed to open stream: No such file or directory in C:\xampp\htdocs\Market_Place_Web_Dev_Project\backend\app\repositories\DatabaseConnector.php on line 10
+[06-May-2026 20:52:40 Europe/Berlin] unable to open the file
+[06-May-2026 20:52:40 Europe/Berlin] Database connection failed
+[06-May-2026 20:52:55 Europe/Berlin] Requested route key: GET /api/health
+[06-May-2026 20:52:55 Europe/Berlin] PHP Warning:  syntax error, unexpected '=' in C:\xampp\htdocs\Market_Place_Web_Dev_Project\backend\app\repositories/../../config/mySetting.ini on line 6
+ in C:\xampp\htdocs\Market_Place_Web_Dev_Project\backend\app\repositories\DatabaseConnector.php on line 10
+[06-May-2026 20:52:55 Europe/Berlin] unable to open the file
+[06-May-2026 20:52:55 Europe/Berlin] Database connection failed
+[06-May-2026 20:53:08 Europe/Berlin] Requested route key: GET /api/health
+[06-May-2026 20:53:08 Europe/Berlin] Unknown named parameter $PDO
+[06-May-2026 20:53:29 Europe/Berlin] Requested route key: GET /api/health
+[06-May-2026 20:53:47 Europe/Berlin] Requested route key: GET /api/health
+[06-May-2026 20:58:03 Europe/Berlin] Requested route key: OPTIONS /auth/login
+[06-May-2026 20:58:43 Europe/Berlin] Requested route key: POST /auth/login
+

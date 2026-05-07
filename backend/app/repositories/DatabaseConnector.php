@@ -4,7 +4,7 @@ class DatabaseConnector
 {
     private PDO $dbConnection;
 
-    public function __construct($file = 'config/mySetting.ini')
+    public function __construct($file = __DIR__ . '/../../config/mySetting.ini')
     {
         try {
             $config = parse_ini_file($file);

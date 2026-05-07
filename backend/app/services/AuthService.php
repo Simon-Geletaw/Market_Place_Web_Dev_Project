@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../repositories/UserRepository.php';
 
+require_once __DIR__ . '/../repositories/UserRepository.php';
+
 final class AuthService
 {
     private UserRepository $userRepository;

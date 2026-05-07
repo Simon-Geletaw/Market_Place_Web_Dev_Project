@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Page Not Found — ServiceLink</title>
+  <link rel="stylesheet" href="../assets/css/main.css">
+  <link rel="stylesheet" href="../assets/css/components.css">
+</head>
+<body>
+<header class="app-navbar">
+  <div class="navbar">
+    <a href="../landing_page/index.html" class="navbar__logo"><div class="navbar__logo-icon">S</div>Service<span class="navbar__logo-accent">Link</span></a>
+  </div>
+</header>
+<div style="padding-top:var(--navbar-height);min-height:100vh;display:flex;align-items:center;justify-content:center">
+  <div class="empty-state">
+    <div style="font-size:80px;margin-bottom:var(--space-md)">🔍</div>
+    <h1 style="font-size:48px;font-weight:700;color:var(--color-primary)">404</h1>
+    <div class="empty-state__title">Page not found</div>
+    <p class="empty-state__text">The page you're looking for doesn't exist or has been moved.</p>
+    <div style="display:flex;gap:var(--space-md);justify-content:center;flex-wrap:wrap">
+      <a href="../landing_page/index.html" class="btn btn--primary">Go Home</a>
+      <button class="btn btn--secondary" onclick="history.back()">Go Back</button>
+    </div>
+  </div>
+</div>
+</body>
+</html>
