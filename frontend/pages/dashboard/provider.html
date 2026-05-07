@@ -1,9 +1,12 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-role="provider">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <meta name="description" content="Browse open service requests, manage your offers, and track assigned jobs.">
   <title>Provider Dashboard — ServiceLink</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../../assets/css/main.css">
   <link rel="stylesheet" href="../../assets/css/components.css">
   <script src="../../core/guard.js"></script>
@@ -19,126 +22,172 @@
     <div class="page-header">
       <div>
         <div class="page-header__title" id="welcomeMsg">Provider Dashboard</div>
-        <div class="page-header__subtitle" id="ratingLine">Find and complete service jobs</div>
+        <div class="page-header__subtitle">Find jobs, submit offers, and grow your business</div>
       </div>
-      <a href="../marketplace.html" class="btn btn--primary">Browse Available Jobs</a>
+      <a href="../marketplace.html" class="btn btn--primary">🔍 Browse Marketplace</a>
     </div>
 
     <!-- Stat Cards -->
     <div class="grid-4 mb-lg">
-      <div class="stat-card stat-card--negotiating">
-        <div class="stat-card__icon" style="background:#fff4e0">📤</div>
+      <div class="stat-card">
+        <div class="stat-card__icon" style="background:#e8f4ff">📤</div>
         <div class="stat-card__value" id="cntPending">—</div>
-        <div class="stat-card__label">Pending Offers</div>
+        <div class="stat-card__label">Active Offers</div>
       </div>
-      <div class="stat-card stat-card--assigned">
-        <div class="stat-card__icon" style="background:#e8f5eb">✅</div>
-        <div class="stat-card__value" id="cntAccepted">—</div>
-        <div class="stat-card__label">Accepted Offers</div>
+      <div class="stat-card">
+        <div class="stat-card__icon" style="background:#e8f5eb">🔨</div>
+        <div class="stat-card__value" id="cntAssigned">—</div>
+        <div class="stat-card__label">Assigned Jobs</div>
       </div>
-      <div class="stat-card stat-card--completed">
+      <div class="stat-card">
         <div class="stat-card__icon" style="background:#e0faf4">🎉</div>
         <div class="stat-card__value" id="cntCompleted">—</div>
-        <div class="stat-card__label">Completed Jobs</div>
+        <div class="stat-card__label">Completed</div>
       </div>
-      <div class="stat-card stat-card--reviewed" style="border-left-color:var(--status-reviewed)">
-        <div class="stat-card__icon" style="background:#eef0ff">⭐</div>
-        <div class="stat-card__value" id="avgRating">—</div>
-        <div class="stat-card__label">Avg Rating</div>
+      <div class="stat-card">
+        <div class="stat-card__icon" style="background:#fff4e0">⭐</div>
+        <div class="stat-card__value" id="ratingAvg">—</div>
+        <div class="stat-card__label">Your Rating</div>
       </div>
     </div>
 
-    <!-- Recent Offers -->
-    <h3 style="margin-bottom:var(--space-md)">My Recent Offers</h3>
-    <div id="offersList"></div>
-
-    <!-- Nearby Open Requests -->
-    <h3 style="margin:var(--space-xl) 0 var(--space-md)">Open Requests Near You</h3>
-    <div class="filter-bar">
-      <select class="form-select" id="catFilter">
-        <option value="">All Categories</option>
-        <option>Electrician</option><option>Plumber</option><option>Carpenter</option>
-        <option>Painter</option><option>Cleaner</option><option>General Handyman</option>
-      </select>
-      <button class="btn btn--primary btn--sm" id="filterNearbyBtn">Filter</button>
+    <!-- Assigned Jobs -->
+    <div class="mb-lg">
+      <h3 class="section-title">Active Assigned Jobs</h3>
+      <div id="assignedList">
+        <div class="empty-state"><div class="spinner spinner--dark"></div><p>Loading...</p></div>
+      </div>
     </div>
-    <div id="nearbyList"></div>
+
+    <!-- My Offers -->
+    <div>
+      <h3 class="section-title">Recent Offers</h3>
+      <div id="offersList">
+        <div class="empty-state"><div class="spinner spinner--dark"></div><p>Loading...</p></div>
+      </div>
+    </div>
   </main>
 </div>
 
+<div class="toast-container" id="toastContainer"></div>
+
 <script type="module">
-import Api from '../../core/api.js';
-import Auth from '../../core/auth.js';
-import Toast from '../../core/toast.js';
+import Api    from '../../core/api.js';
+import Auth   from '../../core/auth.js';
+import Toast  from '../../core/toast.js';
 import Layout from '../../core/layout.js';
 
-const BADGE = { pending:'badge--pending', accepted:'badge--accepted', rejected:'badge--rejected', countered:'badge--countered' };
-function esc(s){const d=document.createElement('div');d.textContent=s||'';return d.innerHTML}
+function esc(s) { const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
 
-async function loadOffers() {
-  const el = document.getElementById('offersList');
-  el.innerHTML = '<div class="empty-state"><div class="spinner spinner--dark"></div></div>';
-  try {
-    const res = await Api.get('/offers');
-    const offers = (res.data||[]).slice(0,5);
-    document.getElementById('cntPending').textContent  = (res.data||[]).filter(o=>o.status==='pending').length;
-    document.getElementById('cntAccepted').textContent = (res.data||[]).filter(o=>o.status==='accepted').length;
-    document.getElementById('cntCompleted').textContent= (res.data||[]).filter(o=>o.status==='accepted'&&o.request_status==='Completed').length;
-    if (!offers.length) { el.innerHTML='<div class="empty-state"><p class="text-muted">No offers submitted yet.</p></div>'; return; }
-    el.innerHTML = `<div class="table-wrap"><table class="table"><thead><tr><th>Request</th><th>Price</th><th>Status</th><th>Date</th><th></th></tr></thead><tbody>
-      ${offers.map(o=>`<tr>
-        <td><a href="../request-detail-provider.html?id=${o.request_id}">${esc(o.request_title||'Request')}</a></td>
-        <td><strong>${parseFloat(o.price_offered).toLocaleString()} ETB</strong></td>
-        <td><span class="badge ${BADGE[o.status]||''}">${o.status}</span></td>
-        <td class="text-muted text-sm">${new Date(o.created_at).toLocaleDateString()}</td>
-        <td><a href="../request-detail-provider.html?id=${o.request_id}" class="btn btn--secondary btn--sm">View</a></td>
-      </tr>`).join('')}
-    </tbody></table></div>
-    <p style="margin-top:var(--space-sm)"><a href="../provider/my-offers.html">View all offers →</a></p>`;
-  } catch { el.innerHTML='<p class="text-muted">Could not load offers.</p>'; }
-}
+const OFFER_BADGE = {
+  Pending:  'badge--negotiating',
+  Accepted: 'badge--assigned',
+  Rejected: 'badge--danger',
+  Countered: 'badge--requested',
+};
 
-async function loadNearby() {
-  const el = document.getElementById('nearbyList');
-  const cat = document.getElementById('catFilter').value;
-  el.innerHTML = '<div class="empty-state"><div class="spinner spinner--dark"></div></div>';
+async function loadDashboard() {
   try {
-    const res = await Api.get(`/marketplace/requests?category=${cat}`);
-    const items = (res.data||[]).slice(0,6);
-    if (!items.length) { el.innerHTML='<div class="empty-state"><p class="text-muted">No open requests found.</p></div>'; return; }
-    el.innerHTML = '<div class="grid-2">' + items.map(r=>`
-      <div class="request-card">
-        <div class="request-card__header">
-          <div>
-            <div class="request-card__title">${esc(r.title)}</div>
-            <div class="request-card__meta"><span>📍 ${esc(r.location)}</span><span>🗂 ${esc(r.category_name||r.category)}</span></div>
+    const [dashRes, offersRes] = await Promise.all([
+      Api.get('/provider/dashboard'),
+      Api.get('/offers'),
+    ]);
+
+    const data   = dashRes.data  || {};
+    const offers = offersRes.data || [];
+
+    // Stats
+    document.getElementById('cntPending').textContent   = offers.filter(o => o.status === 'Pending').length;
+    document.getElementById('cntAssigned').textContent  = data.assigned_count  ?? '0';
+    document.getElementById('cntCompleted').textContent = data.completed_count ?? '0';
+
+    const user = Auth.getUser();
+    document.getElementById('ratingAvg').textContent =
+      user?.rating_average ? parseFloat(user.rating_average).toFixed(1) + ' ★' : 'New';
+
+    // Assigned jobs
+    const assignedList = document.getElementById('assignedList');
+    const recent = data.recent_assigned || [];
+    if (!recent.length) {
+      assignedList.innerHTML = `<div class="empty-state">
+        <div class="empty-state__icon">🔨</div>
+        <p class="empty-state__text">No active assigned jobs. <a href="../marketplace.html">Browse the marketplace</a>.</p>
+      </div>`;
+    } else {
+      assignedList.innerHTML = recent.map(r => `
+        <div class="request-card mb-md">
+          <div class="request-card__header">
+            <div>
+              <div class="request-card__title">${esc((r.description||'').substring(0,60))}...</div>
+              <div class="request-card__meta">
+                <span>📍 ${esc(r.location || '—')}</span>
+                <span>🗂 ${esc(r.category_name || '—')}</span>
+                <span>📅 ${r.preferred_date || 'Flexible'}</span>
+              </div>
+            </div>
+            <span class="badge badge--assigned">Assigned</span>
           </div>
-          <span class="badge badge--requested">${r.status}</span>
-        </div>
-        <p class="request-card__desc">${esc(r.description)}</p>
-        <div class="request-card__footer">
-          ${r.budget ? `<span class="text-sm text-muted">Budget: ${r.budget} ETB</span>` : '<span></span>'}
-          <a href="../request-detail-provider.html?id=${r.id}" class="btn btn--primary btn--sm">View & Offer</a>
-        </div>
-      </div>`).join('') + '</div>';
-  } catch { el.innerHTML='<p class="text-muted">Could not load requests.</p>'; }
+          <div class="request-card__footer">
+            <div class="request-card__actions">
+              <a href="../request-detail-provider.html?id=${r.id}" class="btn btn--primary btn--sm">View Job</a>
+              <button class="btn btn--success btn--sm" onclick="markComplete('${r.id}', this)">✓ Mark Complete</button>
+            </div>
+          </div>
+        </div>`).join('');
+    }
+
+    // Offers
+    const offersList = document.getElementById('offersList');
+    if (!offers.length) {
+      offersList.innerHTML = `<div class="empty-state">
+        <p class="empty-state__text">No offers yet. <a href="../marketplace.html">Browse the marketplace</a> to submit your first offer.</p>
+      </div>`;
+    } else {
+      offersList.innerHTML = offers.slice(0, 5).map(o => `
+        <div class="request-card mb-sm">
+          <div class="request-card__header">
+            <div>
+              <div class="request-card__title">Offer #${esc(o.id?.substring(0,8))}...</div>
+              <div class="request-card__meta">
+                <span>💰 ETB ${parseFloat(o.price||0).toLocaleString()}</span>
+                <span>📅 ${o.created_at ? new Date(o.created_at).toLocaleDateString() : '—'}</span>
+              </div>
+            </div>
+            <span class="badge ${OFFER_BADGE[o.status]||''}">${esc(o.status)}</span>
+          </div>
+          ${o.message ? `<p class="request-card__desc">${esc(o.message)}</p>` : ''}
+        </div>`).join('');
+    }
+
+  } catch (err) {
+    Toast.error(err.message || 'Failed to load dashboard.');
+  }
 }
+
+window.markComplete = async function(requestId, btn) {
+  if (!confirm('Mark this job as completed?')) return;
+  btn.disabled = true;
+  btn.textContent = 'Updating...';
+  try {
+    await Api.post(`/requests/${requestId}/complete`, {});
+    Toast.success('Job marked as complete!');
+    loadDashboard();
+  } catch (err) {
+    Toast.error(err.message || 'Failed to mark complete.');
+    btn.disabled = false;
+    btn.textContent = '✓ Mark Complete';
+  }
+};
 
 async function init() {
-  await Auth.load();
-  if (!Auth.requireAuth()) return;
+  const ok = await Auth.load();
+  if (!ok || !Auth.requireAuth(['provider'])) return;
+
   Layout.renderShell('provider', 'dashboard', 'dashboard');
-  
-  document.getElementById('welcomeMsg').textContent = `Welcome, ${Auth.user.first_name || Auth.user.name || 'User'}`;
-  if (Auth.user.rating_average) {
-    document.getElementById('ratingLine').textContent = `Rating: ${parseFloat(Auth.user.rating_average).toFixed(1)} ⭐  ${Auth.user.is_verified ? '· ✓ Verified' : '· Pending Verification'}`;
-    document.getElementById('avgRating').textContent = parseFloat(Auth.user.rating_average).toFixed(1);
-  }
-  
-  document.getElementById('filterNearbyBtn').addEventListener('click', loadNearby);
-  
-  loadOffers();
-  loadNearby();
+  document.getElementById('welcomeMsg').textContent =
+    `Welcome, ${Auth.user?.name || 'Provider'}! 👷`;
+
+  await loadDashboard();
 }
 
 if (document.readyState === 'loading') {

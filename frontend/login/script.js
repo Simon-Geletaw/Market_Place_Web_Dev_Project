@@ -162,29 +162,32 @@ const Handlers = {
     try {
       const data = await Api.post('/auth/login', { email, password });
       UI.setLoading(false);
-      if (data.success) {
+      if (data.success && data.data && data.data.user) {
         UI.announceStatus('Login successful! Redirecting...');
-        
-        // Store session properly
-        Auth.setSession(data.token, data.data);
+
+        // Store the user object in localStorage for UI rendering.
+        // The PHP session cookie is set automatically by the browser.
+        Auth.storeUser(data.data.user);
         Toast.success('Login successful!');
 
-        const role = (data.data.role || data.data.ROLE || 'customer').toLowerCase();
+        const role = (data.data.user.role || 'customer').toLowerCase();
         setTimeout(() => {
-          if (role === 'admin') window.location.href = '../pages/dashboard/admin.html';
-          else if (role === 'provider') window.location.href = '../pages/dashboard/provider.html';
-          else window.location.href = '../pages/dashboard/customer.html';
-        }, 500);
+          const base = window.location.pathname.split('/frontend/')[0];
+          if (role === 'admin')    window.location.href = base + '/frontend/pages/dashboard/admin.html';
+          else if (role === 'provider') window.location.href = base + '/frontend/pages/dashboard/provider.html';
+          else window.location.href = base + '/frontend/pages/dashboard/customer.html';
+        }, 400);
       } else {
-        UI.showError(DOM.passwordGroup, DOM.passwordInput, DOM.passwordError, data.message || 'Login failed');
-        UI.announceStatus(data.message || 'Login failed');
+        const msg = data.message || 'Invalid email or password.';
+        UI.showError(DOM.passwordGroup, DOM.passwordInput, DOM.passwordError, msg);
+        UI.announceStatus(msg);
       }
     } catch (error) {
       UI.setLoading(false);
-      console.error('Login error:', error);
-      UI.showError(DOM.passwordGroup, DOM.passwordInput, DOM.passwordError, error.message || 'Unable to connect.');
-      UI.announceStatus('Unable to connect to service.');
-      Toast.error(error.message || 'Unable to connect.');
+      const msg = error.message || 'Unable to connect. Is the server running?';
+      UI.showError(DOM.passwordGroup, DOM.passwordInput, DOM.passwordError, msg);
+      UI.announceStatus(msg);
+      Toast.error(msg);
     }
   },
 };

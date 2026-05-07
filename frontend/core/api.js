@@ -2,27 +2,32 @@
  * api.js
  * Centralized HTTP client.
  *
- * Uses session cookies (credentials: 'same-origin') — no Authorization token needed.
+ * Uses session cookies (credentials: 'same-origin') — no Authorization token.
+ * All paths passed to Api methods should NOT include '/api' — it is added automatically.
+ * e.g. Api.post('/auth/login', data)  →  POST .../backend/public/api/auth/login
+ *
  * All 401 responses trigger Auth.logout() to clear stale local state.
  */
 
 import Auth from './auth.js';
-import Toast from './toast.js';
 
 // Resolve backend base URL. Allow override via window.__API_BASE__ for non-standard deployments.
-const explicitBase = typeof window.__API_BASE__ === 'string' ? window.__API_BASE__ : '';
-
 function resolveBase() {
   const origin = window.location.origin;
   const path   = window.location.pathname;
-  const prefix = path.includes('/frontend/') ? path.split('/frontend/')[0] : '';
-  return `${origin}${prefix}/backend/public`;
+  // Detect if served under a sub-directory (e.g. /Market_Place_Web_Dev_Project/frontend/...)
+  const parts  = path.split('/frontend/');
+  const prefix = parts.length > 1 ? parts[0] : '';
+  return `${origin}${prefix}/backend/public/api`;
 }
 
-const BASE_URL = explicitBase.length > 0 ? explicitBase : resolveBase();
+const BASE_URL = (typeof window.__API_BASE__ === 'string' && window.__API_BASE__.length > 0)
+  ? window.__API_BASE__
+  : resolveBase();
 
 const Api = {
   async _request(method, path, data = null, isFile = false) {
+    const url  = BASE_URL + path;
     const opts = {
       method,
       credentials: 'same-origin',
@@ -40,16 +45,16 @@ const Api = {
 
     let res;
     try {
-      res = await fetch(BASE_URL + path, opts);
+      res = await fetch(url, opts);
     } catch {
-      throw { status: 0, message: 'Network error. Check your connection.' };
+      throw { status: 0, message: 'Network error. Check your connection and ensure the server is running.' };
     }
 
     let json;
     try {
       json = await res.json();
     } catch {
-      json = { success: false, message: 'Server returned invalid JSON.' };
+      json = { success: false, message: `Server error (${res.status}). Invalid response.` };
     }
 
     if (res.status === 401) {
@@ -58,7 +63,7 @@ const Api = {
     }
 
     if (!res.ok) {
-      throw { status: res.status, message: json.message || 'Request failed.', data: json };
+      throw { status: res.status, message: json.message || `Request failed (${res.status}).`, data: json };
     }
 
     return json;

@@ -1,9 +1,11 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-role="admin">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1.0">
-  <title>Admin Console — ServiceLink</title>
+  <title>Admin Dashboard — ServiceLink</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../../assets/css/main.css">
   <link rel="stylesheet" href="../../assets/css/components.css">
   <script src="../../core/guard.js"></script>
@@ -18,115 +20,149 @@
   <main class="app-content">
     <div class="page-header">
       <div>
-        <div class="page-header__title">Admin Console</div>
+        <div class="page-header__title">Admin Dashboard</div>
         <div class="page-header__subtitle">Platform overview and management</div>
       </div>
     </div>
 
-    <!-- Stat Cards -->
+    <!-- Stats -->
     <div class="grid-4 mb-lg">
-      <div class="stat-card stat-card--requested">
+      <div class="stat-card">
         <div class="stat-card__icon" style="background:#e8f4ff">👥</div>
-        <div class="stat-card__value" id="totalUsers">—</div>
-        <div class="stat-card__label">Total Users</div>
+        <div class="stat-card__value" id="totalProviders">—</div>
+        <div class="stat-card__label">Total Providers</div>
       </div>
-      <div class="stat-card stat-card--negotiating">
-        <div class="stat-card__icon" style="background:#fff4e0">📋</div>
-        <div class="stat-card__value" id="totalRequests">—</div>
-        <div class="stat-card__label">Total Requests</div>
-      </div>
-      <div class="stat-card stat-card--assigned">
-        <div class="stat-card__icon" style="background:#e8f5eb">🔧</div>
-        <div class="stat-card__value" id="pendingVerification">—</div>
+      <div class="stat-card">
+        <div class="stat-card__icon" style="background:#fff3cd">⏳</div>
+        <div class="stat-card__value" id="unverifiedProviders">—</div>
         <div class="stat-card__label">Pending Verification</div>
       </div>
-      <div class="stat-card stat-card--completed">
-        <div class="stat-card__icon" style="background:#e0faf4">✅</div>
-        <div class="stat-card__value" id="completedJobs">—</div>
-        <div class="stat-card__label">Completed Jobs</div>
+      <div class="stat-card">
+        <div class="stat-card__icon" style="background:#e8f5eb">✅</div>
+        <div class="stat-card__value" id="totalCategories">—</div>
+        <div class="stat-card__label">Active Categories</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card__icon" style="background:#f8d7da">📋</div>
+        <div class="stat-card__value" id="totalAuditLogs">—</div>
+        <div class="stat-card__label">Audit Events</div>
       </div>
     </div>
 
-    <div class="grid-2">
-      <!-- Pending Verifications -->
-      <div class="card">
-        <div class="card__header">
-          <h3 style="font-size:16px">Pending Provider Verifications</h3>
-          <a href="../admin/verification.html" class="btn btn--ghost btn--sm">View All</a>
-        </div>
-        <div class="card__body" id="pendingList"></div>
+    <!-- Providers Pending Verification -->
+    <div class="mb-lg">
+      <div class="page-header" style="margin-bottom:12px">
+        <h3 class="section-title" style="margin:0">Providers Pending Verification</h3>
+        <a href="../admin/verification.html" class="btn btn--ghost btn--sm">View All →</a>
       </div>
+      <div id="pendingProviders">
+        <div class="empty-state"><div class="spinner spinner--dark"></div><p>Loading...</p></div>
+      </div>
+    </div>
 
-      <!-- Recent Activity -->
-      <div class="card">
-        <div class="card__header">
-          <h3 style="font-size:16px">Recent Audit Logs</h3>
-          <a href="../admin/audit-logs.html" class="btn btn--ghost btn--sm">View All</a>
-        </div>
-        <div class="card__body" id="auditList"></div>
+    <!-- Recent Audit Logs -->
+    <div>
+      <div class="page-header" style="margin-bottom:12px">
+        <h3 class="section-title" style="margin:0">Recent Audit Events</h3>
+        <a href="../admin/audit-logs.html" class="btn btn--ghost btn--sm">View All →</a>
+      </div>
+      <div id="auditLogsList">
+        <div class="empty-state"><div class="spinner spinner--dark"></div><p>Loading...</p></div>
       </div>
     </div>
   </main>
 </div>
 
+<div class="toast-container" id="toastContainer"></div>
+
 <script type="module">
-import Api from '../../core/api.js';
-import Auth from '../../core/auth.js';
-import Toast from '../../core/toast.js';
+import Api    from '../../core/api.js';
+import Auth   from '../../core/auth.js';
+import Toast  from '../../core/toast.js';
 import Layout from '../../core/layout.js';
 
-function esc(s){const d=document.createElement('div');d.textContent=s||'';return d.innerHTML}
+function esc(s) { const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
 
-async function loadMetrics() {
+async function loadDashboard() {
   try {
-    const res = await Api.get('/admin/metrics');
-    const m = res.data || {};
-    document.getElementById('totalUsers').textContent = m.total_users || '—';
-    document.getElementById('totalRequests').textContent = m.total_requests || '—';
-    document.getElementById('pendingVerification').textContent = m.pending_verifications || '—';
-    document.getElementById('completedJobs').textContent = m.completed_jobs || '—';
-  } catch {}
+    const [dashRes, logsRes, catsRes] = await Promise.all([
+      Api.get('/admin/dashboard'),
+      Api.get('/admin/audit-logs?per_page=5'),
+      Api.get('/admin/categories'),
+    ]);
+
+    const dash = dashRes.data || {};
+    document.getElementById('totalProviders').textContent     = dash.total_providers      ?? '0';
+    document.getElementById('unverifiedProviders').textContent = dash.unverified_providers ?? '0';
+    document.getElementById('totalCategories').textContent    = (catsRes.data || []).filter(c => c.IS_ACTIVE !== false).length;
+    document.getElementById('totalAuditLogs').textContent     = logsRes.data?.total ?? '—';
+
+    // Pending providers
+    const provRes     = await Api.get('/admin/providers');
+    const unverified  = (provRes.data || []).filter(p => !p.is_verified);
+    const pendingEl   = document.getElementById('pendingProviders');
+
+    if (!unverified.length) {
+      pendingEl.innerHTML = `<div class="empty-state"><p class="empty-state__text">✅ All providers are verified.</p></div>`;
+    } else {
+      pendingEl.innerHTML = unverified.slice(0, 5).map(p => `
+        <div class="request-card mb-sm">
+          <div class="request-card__header">
+            <div>
+              <div class="request-card__title">${esc(p.name)}</div>
+              <div class="request-card__meta">
+                <span>📧 ${esc(p.email)}</span>
+                <span>📍 ${esc(p.location || '—')}</span>
+              </div>
+            </div>
+            <button class="btn btn--success btn--sm" onclick="verifyProvider('${p.id}', this)">✓ Verify</button>
+          </div>
+        </div>`).join('');
+    }
+
+    // Audit logs
+    const logs   = logsRes.data?.logs || [];
+    const logsEl = document.getElementById('auditLogsList');
+    if (!logs.length) {
+      logsEl.innerHTML = `<div class="empty-state"><p class="empty-state__text">No audit events yet.</p></div>`;
+    } else {
+      logsEl.innerHTML = `<div class="table-wrapper"><table class="data-table">
+        <thead><tr><th>Action</th><th>User</th><th>Entity</th><th>Time</th></tr></thead>
+        <tbody>
+        ${logs.map(l => `<tr>
+          <td><code>${esc(l.action)}</code></td>
+          <td>${esc(l.user_name || '—')}</td>
+          <td>${esc(l.entity_type || '—')} ${l.entity_id ? `<small>#${l.entity_id.substring(0,8)}</small>` : ''}</td>
+          <td>${l.created_at ? new Date(l.created_at).toLocaleString() : '—'}</td>
+        </tr>`).join('')}
+        </tbody>
+      </table></div>`;
+    }
+  } catch (err) {
+    Toast.error(err.message || 'Failed to load dashboard.');
+  }
 }
 
-async function loadPending() {
-  const el = document.getElementById('pendingList');
+window.verifyProvider = async function(providerId, btn) {
+  if (!confirm('Verify this provider?')) return;
+  btn.disabled = true;
+  btn.textContent = 'Verifying...';
   try {
-    const res = await Api.get('/admin/providers?verified=0&limit=5');
-    const providers = res.data || [];
-    if (!providers.length) { el.innerHTML='<p class="text-muted" style="padding:var(--space-md)">No pending verifications.</p>'; return; }
-    el.innerHTML = providers.map(p=>`
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:var(--space-sm) 0;border-bottom:1px solid var(--color-border)">
-        <div>
-          <div style="font-weight:600;font-size:14px">${esc(p.full_name)}</div>
-          <div class="text-sm text-muted">${esc(p.location)} · Joined ${new Date(p.created_at).toLocaleDateString()}</div>
-        </div>
-        <a href="../admin/verification.html?id=${p.id}" class="btn btn--primary btn--sm">Review</a>
-      </div>`).join('');
-  } catch { el.innerHTML='<p class="text-muted">Could not load data.</p>'; }
-}
-
-async function loadAudit() {
-  const el = document.getElementById('auditList');
-  try {
-    const res = await Api.get('/admin/audit-logs?limit=6');
-    const logs = res.data || [];
-    if (!logs.length) { el.innerHTML='<p class="text-muted" style="padding:var(--space-md)">No recent activity.</p>'; return; }
-    el.innerHTML = logs.map(l=>`
-      <div style="padding:var(--space-sm) 0;border-bottom:1px solid var(--color-border)">
-        <div style="font-size:13px;font-weight:500">${esc(l.action)}</div>
-        <div class="text-sm text-muted">${esc(l.user_name||'System')} · ${new Date(l.created_at).toLocaleString()}</div>
-      </div>`).join('');
-  } catch { el.innerHTML='<p class="text-muted">Could not load logs.</p>'; }
-}
+    await Api.patch(`/admin/providers/${providerId}/verify`);
+    Toast.success('Provider verified!');
+    loadDashboard();
+  } catch (err) {
+    Toast.error(err.message || 'Failed to verify.');
+    btn.disabled = false;
+    btn.textContent = '✓ Verify';
+  }
+};
 
 async function init() {
-  await Auth.load();
-  if (!Auth.requireRole('admin')) return;
+  const ok = await Auth.load();
+  if (!ok || !Auth.requireAuth(['admin'])) return;
   Layout.renderShell('admin', 'dashboard', 'dashboard');
-  
-  loadMetrics();
-  loadPending();
-  loadAudit();
+  await loadDashboard();
 }
 
 if (document.readyState === 'loading') {

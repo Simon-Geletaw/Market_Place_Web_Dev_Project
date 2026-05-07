@@ -1,104 +1,140 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-role="admin">
 <head>
   <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
   <title>Provider Verification — ServiceLink Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../../assets/css/main.css">
   <link rel="stylesheet" href="../../assets/css/components.css">
+  <script src="../../core/guard.js"></script>
 </head>
 <body>
-<header class="app-navbar">
-  <div class="navbar">
-    <a href="../../landing_page/index.html" class="navbar__logo"><div class="navbar__logo-icon">S</div>Service<span class="navbar__logo-accent">Link</span> <span class="badge badge--verified" style="font-size:10px;margin-left:4px">Admin</span></a>
-    <div class="navbar__actions"><div class="navbar__user" id="navUser"></div><button class="btn btn--secondary btn--sm" onclick="Auth.logout()">Logout</button></div>
-  </div>
-</header>
+<header id="app-header"></header>
 <div class="app-shell">
-  <aside class="app-sidebar">
-    <div class="sidebar">
-      <div class="sidebar__label">Admin Panel</div>
-      <a href="../dashboard/admin.html" class="sidebar__item">📊 Overview</a>
-      <a href="verification.html" class="sidebar__item active">🔒 Verification</a>
-      <a href="audit-logs.html" class="sidebar__item">📋 Audit Logs</a>
-      <a href="metrics.html" class="sidebar__item">📈 Metrics</a>
-      <div class="sidebar__footer"><button class="btn btn--secondary btn--sm btn--full" onclick="Auth.logout()">Sign Out</button></div>
-    </div>
-  </aside>
+  <aside id="app-sidebar"></aside>
   <main class="app-content">
     <div class="page-header">
-      <div><div class="page-header__title">Provider Verification</div><div class="page-header__subtitle">Review and approve provider applications</div></div>
-      <select class="form-select" id="filterVerified" onchange="load()" style="width:auto">
-        <option value="0">Pending</option><option value="1">Verified</option><option value="">All</option>
+      <div>
+        <div class="page-header__title">Provider Verification</div>
+        <div class="page-header__subtitle">Review and approve provider applications</div>
+      </div>
+      <select class="form-select" id="filterVerified" style="width:auto">
+        <option value="pending">Pending Only</option>
+        <option value="all">All Providers</option>
+        <option value="verified">Verified Only</option>
       </select>
     </div>
     <div id="list"></div>
   </main>
 </div>
 
+<!-- Detail Modal -->
 <div class="modal-overlay" id="detailModal">
-  <div class="modal" style="max-width:600px">
-    <div class="modal__header"><h2 class="modal__title">Provider Details</h2><button class="modal__close" onclick="closeModal()">✕</button></div>
+  <div class="modal" style="max-width:560px">
+    <div class="modal__header">
+      <h2 class="modal__title">Provider Details</h2>
+      <button class="modal__close" id="closeModalBtn">✕</button>
+    </div>
     <div class="modal__body" id="detailContent"></div>
     <div class="modal__footer" id="detailActions"></div>
   </div>
 </div>
 
-<script src="../../assets/js/modules/api.js"></script>
-<script src="../../assets/js/modules/auth.js"></script>
-<script src="../../assets/js/modules/toast.js"></script>
-<script>
-function esc(s){const d=document.createElement('div');d.textContent=s||'';return d.innerHTML}
-let currentId=null;
-async function init(){await Auth.load();if(!Auth.requireRole('admin'))return;Auth.renderNavUser(document.getElementById('navUser'));load();}
-async function load(){
-  const v=document.getElementById('filterVerified').value;
-  const el=document.getElementById('list');el.innerHTML='<div class="empty-state"><div class="spinner spinner--dark"></div></div>';
-  try{
-    const res=await api.get(`/admin/providers?verified=${v}`);const providers=res.data||[];
-    if(!providers.length){el.innerHTML='<div class="empty-state"><div class="empty-state__icon">🔍</div><div class="empty-state__title">No providers found</div></div>';return;}
-    el.innerHTML=`<div class="table-wrap"><table class="table"><thead><tr><th>Name</th><th>Email</th><th>Location</th><th>Joined</th><th>Status</th><th></th></tr></thead><tbody>
-      ${providers.map(p=>`<tr>
-        <td><strong>${esc(p.full_name)}</strong></td>
+<div class="toast-container" id="toastContainer"></div>
+
+<script type="module">
+import Api    from '../../core/api.js';
+import Auth   from '../../core/auth.js';
+import Toast  from '../../core/toast.js';
+import Layout from '../../core/layout.js';
+
+function esc(s) { const d = document.createElement('div'); d.textContent = s||''; return d.innerHTML; }
+
+let allProviders = [];
+
+async function load() {
+  const filter = document.getElementById('filterVerified').value;
+  const el = document.getElementById('list');
+  el.innerHTML = '<div class="empty-state"><div class="spinner spinner--dark"></div><p>Loading providers...</p></div>';
+  try {
+    const res = await Api.get('/admin/providers');
+    allProviders = res.data || [];
+
+    let filtered = allProviders;
+    if (filter === 'pending')  filtered = allProviders.filter(p => !p.is_verified);
+    if (filter === 'verified') filtered = allProviders.filter(p =>  p.is_verified);
+
+    if (!filtered.length) {
+      el.innerHTML = `<div class="empty-state"><div class="empty-state__icon">🔍</div><p class="empty-state__text">No providers found for the selected filter.</p></div>`;
+      return;
+    }
+
+    el.innerHTML = `<div class="table-wrapper"><table class="data-table">
+      <thead><tr><th>Name</th><th>Email</th><th>Location</th><th>Rating</th><th>Joined</th><th>Status</th><th></th></tr></thead>
+      <tbody>
+      ${filtered.map(p => `<tr>
+        <td><strong>${esc(p.name)}</strong></td>
         <td>${esc(p.email)}</td>
-        <td>${esc(p.location||'—')}</td>
-        <td class="text-sm text-muted">${new Date(p.created_at).toLocaleDateString()}</td>
-        <td><span class="badge ${p.is_verified?'badge--verified':'badge--unverified'}">${p.is_verified?'Verified':'Pending'}</span></td>
+        <td>${esc(p.location || '—')}</td>
+        <td>${p.rating_average > 0 ? parseFloat(p.rating_average).toFixed(1)+' ⭐ ('+p.total_reviews+')' : 'New'}</td>
+        <td class="text-sm text-muted">${p.created_at ? new Date(p.created_at).toLocaleDateString() : '—'}</td>
+        <td><span class="badge ${p.is_verified ? 'badge--assigned' : 'badge--requested'}">${p.is_verified ? 'Verified' : 'Pending'}</span></td>
         <td>
-          <button class="btn btn--primary btn--sm" onclick="openDetail('${p.id}')">Review</button>
-          ${!p.is_verified?`<button class="btn btn--secondary btn--sm" onclick="verify('${p.id}',true)">Approve</button>`:`<button class="btn btn--danger btn--sm" onclick="verify('${p.id}',false)">Revoke</button>`}
+          <button class="btn btn--ghost btn--sm" onclick="openDetail('${p.id}')">View</button>
+          ${!p.is_verified ? `<button class="btn btn--success btn--sm" onclick="verifyProvider('${p.id}', this)">✓ Verify</button>` : ''}
         </td>
       </tr>`).join('')}
-    </tbody></table></div>`;
-  }catch{el.innerHTML='<div class="empty-state"><p class="text-muted">Could not load providers.</p></div>';}
+      </tbody></table></div>`;
+  } catch (err) {
+    el.innerHTML = `<div class="empty-state"><p class="text-muted">${esc(err.message || 'Could not load providers.')}</p></div>`;
+  }
 }
-async function openDetail(id){
-  currentId=id;
-  try{
-    const res=await api.get(`/admin/providers/${id}`);const p=res.data;
-    document.getElementById('detailContent').innerHTML=`
-      <div class="info-row"><span class="info-row__label">Name</span><span class="info-row__val">${esc(p.full_name)}</span></div>
+
+window.openDetail = function(id) {
+  const p = allProviders.find(x => x.id === id);
+  if (!p) return;
+  document.getElementById('detailContent').innerHTML = `
+    <div class="info-grid">
+      <div class="info-row"><span class="info-row__label">Name</span><span class="info-row__val">${esc(p.name)}</span></div>
       <div class="info-row"><span class="info-row__label">Email</span><span class="info-row__val">${esc(p.email)}</span></div>
-      <div class="info-row"><span class="info-row__label">Phone</span><span class="info-row__val">${esc(p.phone||'—')}</span></div>
-      <div class="info-row"><span class="info-row__label">Location</span><span class="info-row__val">${esc(p.location||'—')}</span></div>
-      <div class="info-row"><span class="info-row__label">Joined</span><span class="info-row__val">${new Date(p.created_at).toLocaleString()}</span></div>
-      <div class="info-row"><span class="info-row__label">Status</span><span class="info-row__val"><span class="badge ${p.is_verified?'badge--verified':'badge--unverified'}">${p.is_verified?'Verified':'Pending'}</span></span></div>
-      <div class="info-row"><span class="info-row__label">Rating</span><span class="info-row__val">${p.rating_average?parseFloat(p.rating_average).toFixed(1)+' ⭐':'No ratings yet'}</span></div>`;
-    document.getElementById('detailActions').innerHTML=`
-      <button class="btn btn--secondary" onclick="closeModal()">Close</button>
-      ${!p.is_verified?`<button class="btn btn--primary" onclick="verify('${p.id}',true)">Approve Provider</button>`:`<button class="btn btn--danger" onclick="verify('${p.id}',false)">Revoke Verification</button>`}`;
-    document.getElementById('detailModal').classList.add('open');
-  }catch{Toast.error('Failed to load provider details.');}
+      <div class="info-row"><span class="info-row__label">Phone</span><span class="info-row__val">${esc(p.phone || '—')}</span></div>
+      <div class="info-row"><span class="info-row__label">Location</span><span class="info-row__val">${esc(p.location || '—')}</span></div>
+      <div class="info-row"><span class="info-row__label">Rating</span><span class="info-row__val">${p.rating_average > 0 ? parseFloat(p.rating_average).toFixed(1)+' ⭐ from '+p.total_reviews+' reviews' : 'No reviews yet'}</span></div>
+      <div class="info-row"><span class="info-row__label">Status</span><span class="info-row__val"><span class="badge ${p.is_verified ? 'badge--assigned' : 'badge--requested'}">${p.is_verified ? 'Verified' : 'Pending'}</span></span></div>
+      <div class="info-row"><span class="info-row__label">Joined</span><span class="info-row__val">${p.created_at ? new Date(p.created_at).toLocaleString() : '—'}</span></div>
+    </div>`;
+  document.getElementById('detailActions').innerHTML = `
+    <button class="btn btn--secondary" id="closeModalFooterBtn">Close</button>
+    ${!p.is_verified ? `<button class="btn btn--success" onclick="verifyProvider('${p.id}', this); document.getElementById('detailModal').classList.remove('open'); load();">✓ Approve Provider</button>` : '<span class="text-muted">Provider is already verified.</span>'}`;
+  document.getElementById('detailModal').classList.add('open');
+  document.getElementById('closeModalFooterBtn').onclick = () => document.getElementById('detailModal').classList.remove('open');
+};
+
+window.verifyProvider = async function(id, btn) {
+  if (!confirm('Verify this provider?')) return;
+  const orig = btn.textContent;
+  btn.disabled = true; btn.textContent = 'Verifying...';
+  try {
+    await Api.patch(`/admin/providers/${id}/verify`);
+    Toast.success('Provider verified successfully!');
+    load();
+  } catch (err) {
+    Toast.error(err.message || 'Failed to verify.');
+    btn.disabled = false; btn.textContent = orig;
+  }
+};
+
+async function init() {
+  const ok = await Auth.load();
+  if (!ok || !Auth.requireAuth(['admin'])) return;
+  Layout.renderShell('admin', 'verification', 'admin');
+  document.getElementById('filterVerified').addEventListener('change', load);
+  document.getElementById('closeModalBtn').addEventListener('click', () => document.getElementById('detailModal').classList.remove('open'));
+  load();
 }
-function closeModal(){document.getElementById('detailModal').classList.remove('open');}
-async function verify(id,approve){
-  if(!confirm(approve?'Approve this provider?':'Revoke this provider\'s verification?'))return;
-  try{
-    await api.put(`/admin/providers/${id}/verify`,{is_verified:approve?1:0});
-    Toast.success(approve?'Provider approved!':'Verification revoked.');
-    closeModal();load();
-  }catch(e){Toast.error(e.message||'Failed.');}
-}
-init();
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+else init();
 </script>
 </body>
 </html>

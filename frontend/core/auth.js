@@ -2,11 +2,12 @@
  * auth.js
  * Authentication and Session Management
  *
- * Backend uses PHP sessions (cookies). Frontend stores only the user object
- * in localStorage for UI rendering (name, role). The actual auth state is
- * the session cookie maintained by the browser automatically.
+ * The backend uses PHP sessions (cookies). The browser sends the session cookie
+ * automatically with every same-origin request — no Authorization header needed.
  *
- * Auth.load() calls GET /api/auth/me to validate the session is still alive.
+ * This module stores only the USER OBJECT (not a token) in localStorage for
+ * UI rendering (name, role, avatar, etc.). The real auth state is the
+ * live PHP session validated by GET /auth/me.
  */
 
 import State from './state.js';
@@ -14,38 +15,36 @@ import State from './state.js';
 const USER_KEY = 'service_marketplace_user';
 
 const Auth = {
-  /** In-memory user reference after load() completes */
+  /** In-memory cache after load() */
   user: null,
 
-  /** Read the cached user from localStorage (for synchronous access). */
+  /** Read cached user from localStorage (synchronous, for UI hints). */
   getUser() {
     if (this.user) return this.user;
     const str = localStorage.getItem(USER_KEY);
     if (!str) return null;
-    try {
-      return JSON.parse(str);
-    } catch {
-      return null;
-    }
+    try { return JSON.parse(str); } catch { return null; }
+  },
+
+  /**
+   * Public method — called by login/script.js after a successful login response.
+   * Stores the user object returned by the backend.
+   */
+  storeUser(user) {
+    this._setSession(user);
   },
 
   /**
    * Validate the PHP session against the backend and refresh user state.
-   * Called once on page load before any protected logic runs.
+   * Must be called at the top of every protected page init() before any
+   * guarded logic runs.
    *
    * @returns {Promise<boolean>} true if authenticated
    */
   async load() {
     try {
-      // Resolve base URL the same way api.js does (avoid circular dep)
-      const base = window.__API_BASE__ ||
-        `${window.location.origin}${
-          window.location.pathname.includes('/frontend/')
-            ? window.location.pathname.split('/frontend/')[0]
-            : ''
-        }/backend/public`;
-
-      const res  = await fetch(base + '/api/auth/me', {
+      const base = this._resolveApiBase();
+      const res  = await fetch(base + '/auth/me', {
         method: 'GET',
         credentials: 'same-origin',
         headers: { 'Content-Type': 'application/json' },
@@ -65,7 +64,7 @@ const Auth = {
       this._clearSession();
       return false;
     } catch {
-      // Network error — keep existing cached user for offline-ish resilience
+      // Network error — fall back to localStorage cache for resilience
       const cached = this.getUser();
       if (cached) {
         this.user = cached;
@@ -77,18 +76,18 @@ const Auth = {
   },
 
   /**
-   * Check if a user is currently loaded (synchronous, no network).
-   * Use this only for UI hints — always call load() for real auth checks.
+   * Synchronous auth check (after load() has run).
+   * For quick UI checks only — always call load() for real protection.
    */
   isAuthenticated() {
     return !!this.getUser();
   },
 
   /**
-   * Guard method — call this at the top of every protected page init().
-   * Relies on load() having been called first.
+   * Route guard — call after load() in protected page init().
+   * Redirects to login if not authenticated, or to own dashboard if wrong role.
    *
-   * @param {string[]} allowedRoles - e.g. ['customer'] or [] for any role
+   * @param {string[]} allowedRoles - e.g. ['customer'] or [] for any authenticated user
    * @returns {boolean} true if authorized
    */
   requireAuth(allowedRoles = []) {
@@ -98,38 +97,31 @@ const Auth = {
       return false;
     }
     if (allowedRoles.length > 0 && !allowedRoles.includes(user.role)) {
-      window.location.href = this._resolveRoot('/frontend/pages/404.html');
+      window.location.href = this._resolveRoot(
+        `/frontend/pages/dashboard/${user.role}.html`
+      );
       return false;
     }
     return true;
   },
 
   /**
-   * Clear session and redirect to login.
-   * Called on 401 responses or explicit logout.
+   * Log out the user. Calls the backend to destroy the session,
+   * then clears local state and redirects to login.
    */
   async logout() {
     try {
-      const base = window.__API_BASE__ ||
-        `${window.location.origin}${
-          window.location.pathname.includes('/frontend/')
-            ? window.location.pathname.split('/frontend/')[0]
-            : ''
-        }/backend/public`;
-
-      await fetch(base + '/api/auth/logout', {
+      await fetch(this._resolveApiBase() + '/auth/logout', {
         method: 'POST',
         credentials: 'same-origin',
       });
-    } catch {
-      // Fire and forget — clear local state regardless
-    }
+    } catch { /* fire and forget */ }
     this._clearSession();
     this._redirectToLogin();
   },
 
   // ------------------------------------------------------------------
-  // Internal helpers
+  // Private helpers
   // ------------------------------------------------------------------
 
   _setSession(user) {
@@ -144,14 +136,20 @@ const Auth = {
     State.set('user', null);
   },
 
-  /**
-   * Resolve an absolute path accounting for sub-directory deployment.
-   */
+  _resolveApiBase() {
+    if (typeof window.__API_BASE__ === 'string' && window.__API_BASE__.length > 0) {
+      return window.__API_BASE__;
+    }
+    const origin = window.location.origin;
+    const parts  = window.location.pathname.split('/frontend/');
+    const prefix = parts.length > 1 ? parts[0] : '';
+    return `${origin}${prefix}/backend/public/api`;
+  },
+
   _resolveRoot(path) {
     const origin = window.location.origin;
-    const prefix = window.location.pathname.includes('/frontend/')
-      ? window.location.pathname.split('/frontend/')[0]
-      : '';
+    const parts  = window.location.pathname.split('/frontend/');
+    const prefix = parts.length > 1 ? parts[0] : '';
     return `${origin}${prefix}${path}`;
   },
 
@@ -159,7 +157,7 @@ const Auth = {
     window.location.href = this._resolveRoot('/frontend/login/index.html');
   },
 
-  /** Legacy compatibility: getToken() now always returns null (session-based). */
+  /** @deprecated — session-based, no token. Kept for compatibility. */
   getToken() { return null; },
 };
 
