@@ -2,87 +2,144 @@
 
 declare(strict_types=1);
 
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
+// ------------------------------------------------------------------
+// CORS — Allow the frontend origin to use session cookies
+// ------------------------------------------------------------------
+$allowedOrigins = [
+    'http://localhost',
+    'http://127.0.0.1',
+    'http://localhost:80',
+];
+
+$origin = $_SERVER['HTTP_ORIGIN'] ?? '';
+if (in_array($origin, $allowedOrigins, true) || $origin === '') {
+    // Same-host requests or explicit allowed origins
+    header('Access-Control-Allow-Origin: ' . ($origin ?: '*'));
+} else {
+    header('Access-Control-Allow-Origin: http://localhost');
+}
+
+header('Access-Control-Allow-Methods: GET, POST, PATCH, PUT, DELETE, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With');
+header('Access-Control-Allow-Credentials: true');
 
 if (($_SERVER['REQUEST_METHOD'] ?? '') === 'OPTIONS') {
-    http_response_code(200);
+    http_response_code(204);
     exit;
 }
 
+// ------------------------------------------------------------------
+// Error logging
+// ------------------------------------------------------------------
+ini_set('log_errors', '1');
+ini_set('error_log', __DIR__ . '/../logs/php_error.log');
+
+// ------------------------------------------------------------------
+// Session configuration (must be before any output)
+// ------------------------------------------------------------------
+ini_set('session.cookie_httponly', '1');
+ini_set('session.cookie_samesite', 'Lax');
+// ini_set('session.cookie_secure', '1'); // Enable on HTTPS
+
+// ------------------------------------------------------------------
+// Autoload helpers (must be first — everything else depends on these)
+// ------------------------------------------------------------------
 require_once __DIR__ . '/../app/helpers/response.php';
 require_once __DIR__ . '/../app/helpers/request.php';
 require_once __DIR__ . '/../app/helpers/router.php';
+
+// ------------------------------------------------------------------
+// Middleware
+// ------------------------------------------------------------------
 require_once __DIR__ . '/../app/middleware/auth.php';
 require_once __DIR__ . '/../app/middleware/role.php';
 require_once __DIR__ . '/../app/middleware/validation.php';
+
+// ------------------------------------------------------------------
+// Validators
+// ------------------------------------------------------------------
 require_once __DIR__ . '/../app/validators/auth_validator.php';
+require_once __DIR__ . '/../app/validators/request_validator.php';
+require_once __DIR__ . '/../app/validators/offer_validator.php';
+require_once __DIR__ . '/../app/validators/review_validator.php';
+
+// ------------------------------------------------------------------
+// Repositories (load before controllers — controllers require them)
+// ------------------------------------------------------------------
+require_once __DIR__ . '/../app/repositories/DatabaseConnector.php';
+require_once __DIR__ . '/../app/repositories/UserRepository.php';
+require_once __DIR__ . '/../app/repositories/CategoryRepository.php';
+require_once __DIR__ . '/../app/repositories/RequestRepository.php';
+require_once __DIR__ . '/../app/repositories/OfferRepository.php';
+require_once __DIR__ . '/../app/repositories/ReviewRepository.php';
+require_once __DIR__ . '/../app/repositories/AuditLogRepository.php';
+require_once __DIR__ . '/../app/repositories/StatusHistoryRepository.php';
+
+// ------------------------------------------------------------------
+// Services
+// ------------------------------------------------------------------
+require_once __DIR__ . '/../app/services/AuthService.php';
+require_once __DIR__ . '/../app/services/RequestService.php';
+require_once __DIR__ . '/../app/services/OfferService.php';
+require_once __DIR__ . '/../app/services/ReviewService.php';
+require_once __DIR__ . '/../app/services/AdminService.php';
+
+// ------------------------------------------------------------------
+// Controllers
+// ------------------------------------------------------------------
 require_once __DIR__ . '/../app/controllers/StatusController.php';
-require_once __DIR__ . '/../app/controllers/PayloadController.php';
 require_once __DIR__ . '/../app/controllers/AuthController.php';
 require_once __DIR__ . '/../app/controllers/RequestController.php';
 require_once __DIR__ . '/../app/controllers/OfferController.php';
 require_once __DIR__ . '/../app/controllers/ReviewController.php';
 require_once __DIR__ . '/../app/controllers/AdminController.php';
 require_once __DIR__ . '/../app/controllers/DashboardController.php';
-require_once __DIR__ . '/../app/repositories/DatabaseConnector.php';
 
+// ------------------------------------------------------------------
+// Route registry
+// ------------------------------------------------------------------
 $routes = require __DIR__ . '/../app/routes/api.php';
 
-ini_set('log_errors', '1');
-ini_set('error_log', __DIR__ . '/../logs/php_error.log');
-
+// ------------------------------------------------------------------
+// Dispatch
+// ------------------------------------------------------------------
 try {
     $method = request_method();
-    $path = request_path();
-    $key = $method . ' ' . $path;
-    error_log("Requested route key: $key");
+    $path   = request_path();
 
     $route = match_route($method, $path, $routes);
 
     if ($route === null) {
-        send_json(error_response('Not Found', ['route' => $key], 404));
+        send_json(error_response('Route not found: ' . $method . ' ' . $path, [], 404));
         exit;
     }
 
+    // Store route params globally so controllers can read them.
     set_route_params($route['params'] ?? []);
 
-    foreach ($route['middleware'] ?? [] as $middleware) {
+    // Run middleware stack in order.
+    foreach ($route['middleware'] as $middleware) {
         if ($middleware === 'auth') {
             require_authentication();
             continue;
         }
-
         if (str_starts_with($middleware, 'role:')) {
             require_role(substr($middleware, 5));
         }
     }
 
-    $className = $route['controller'];
-    $methodName = $route['action'];
+    // Instantiate controller (no constructor args — each controller creates its own deps).
+    $controller = new $route['controller']();
+    $action     = $route['action'];
+    $result     = $controller->$action();
 
-    $reflection = new ReflectionClass($className);
-    $constructor = $reflection->getConstructor();
-
-    if ($constructor && $constructor->getNumberOfParameters() > 0) {
-        $db = (new DatabaseConnector())->getConnection();
-        $controller = $reflection->newInstance($db);
-    } else {
-        $controller = $reflection->newInstance();
-    }
-
-    $result = $controller->$methodName();
     if (is_array($result)) {
         send_json($result);
     }
 
-    exit;
-} catch (InvalidArgumentException $exception) {
-    send_json(error_response($exception->getMessage(), [], 400));
-    exit;
-} catch (Throwable $exception) {
-    error_log($exception->getMessage());
-    send_json(error_response('Internal Server Error', [], 500));
-    exit;
+} catch (InvalidArgumentException $e) {
+    send_json(error_response($e->getMessage(), [], 400));
+} catch (Throwable $e) {
+    error_log('[500] ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine());
+    send_json(error_response('Internal server error.', [], 500));
 }

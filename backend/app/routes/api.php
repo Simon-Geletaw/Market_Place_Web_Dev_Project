@@ -2,225 +2,280 @@
 
 declare(strict_types=1);
 
+/**
+ * API Route Registry
+ *
+ * Format per route:
+ *   'method'     => HTTP verb (GET, POST, PATCH, DELETE)
+ *   'path'       => URL path (supports {param} segments)
+ *   'controller' => Controller class name
+ *   'action'     => Method name on the controller
+ *   'middleware' => Ordered list: 'auth' | 'role:<roleName>'
+ *
+ * Role names must match the ROLE enum values (case-insensitive compare in role.php):
+ *   customer | provider | admin
+ */
 return [
+
+    // ----------------------------------------------------------------
+    // System health
+    // ----------------------------------------------------------------
     [
-        'group' => 'system',
-        'method' => 'GET',
-        'path' => '/ok',
+        'method'     => 'GET',
+        'path'       => '/api/health',
         'controller' => StatusController::class,
-        'action' => 'ok',
-        'middleware' => [],
-    ],
-    [
-        'group' => 'system',
-        'method' => 'GET',
-        'path' => '/api/health',
-        'controller' => StatusController::class,
-        'action' => 'ok',
-        'middleware' => [],
-    ],
-    [
-        'group' => 'system',
-        'method' => 'POST',
-        'path' => '/api/validate-demo',
-        'controller' => PayloadController::class,
-        'action' => 'validateDemo',
+        'action'     => 'ok',
         'middleware' => [],
     ],
 
-    // Auth routes: public login/register entry points plus protected logout.
+    // ----------------------------------------------------------------
+    // Authentication  (no auth required — guest endpoints)
+    // ----------------------------------------------------------------
     [
-        'group' => 'auth',
-        'method' => 'GET',
-        'path' => '/auth/login',
+        'method'     => 'POST',
+        'path'       => '/api/auth/login',
         'controller' => AuthController::class,
-        'action' => 'showLogin',
+        'action'     => 'login',
         'middleware' => [],
     ],
     [
-        'group' => 'auth',
-        'method' => 'POST',
-        'path' => '/auth/login',
+        'method'     => 'POST',
+        'path'       => '/api/auth/register',
         'controller' => AuthController::class,
-        'action' => 'login',
-        'middleware' => ['validate:auth_login'],
-    ],
-    [
-        'group' => 'auth',
-        'method' => 'GET',
-        'path' => '/auth/register',
-        'controller' => AuthController::class,
-        'action' => 'showRegister',
+        'action'     => 'register',
         'middleware' => [],
     ],
     [
-        'group' => 'auth',
-        'method' => 'POST',
-        'path' => '/auth/register',
+        'method'     => 'POST',
+        'path'       => '/api/auth/logout',
         'controller' => AuthController::class,
-        'action' => 'register',
-        'middleware' => ['validate:auth_register'],
-    ],
-    [
-        'group' => 'auth',
-        'method' => 'POST',
-        'path' => '/auth/logout',
-        'controller' => AuthController::class,
-        'action' => 'logout',
+        'action'     => 'logout',
         'middleware' => ['auth'],
     ],
-
-    // Role dashboards: users are sent here after successful registration or login.
     [
-        'group' => 'customer',
-        'method' => 'GET',
-        'path' => '/customer/dashboard',
-        'controller' => DashboardController::class,
-        'action' => 'customer',
+        'method'     => 'GET',
+        'path'       => '/api/auth/me',
+        'controller' => AuthController::class,
+        'action'     => 'me',
+        'middleware' => [], // me() handles its own 401 gracefully
+    ],
+
+    // ----------------------------------------------------------------
+    // Public categories  (dynamic list for request forms)
+    // ----------------------------------------------------------------
+    [
+        'method'     => 'GET',
+        'path'       => '/api/categories',
+        'controller' => AdminController::class,
+        'action'     => 'categories',
+        'middleware' => [],
+    ],
+
+    // ----------------------------------------------------------------
+    // Marketplace (public browse for providers and guests)
+    // ----------------------------------------------------------------
+    [
+        'method'     => 'GET',
+        'path'       => '/api/marketplace',
+        'controller' => RequestController::class,
+        'action'     => 'browse',
+        'middleware' => [],
+    ],
+
+    // ----------------------------------------------------------------
+    // Service Requests — Customer
+    // ----------------------------------------------------------------
+    [
+        'method'     => 'GET',
+        'path'       => '/api/requests',
+        'controller' => RequestController::class,
+        'action'     => 'myRequests',
         'middleware' => ['auth', 'role:customer'],
     ],
     [
-        'group' => 'provider',
-        'method' => 'GET',
-        'path' => '/provider/dashboard',
-        'controller' => DashboardController::class,
-        'action' => 'provider',
+        'method'     => 'POST',
+        'path'       => '/api/requests',
+        'controller' => RequestController::class,
+        'action'     => 'create',
+        'middleware' => ['auth', 'role:customer'],
+    ],
+    [
+        'method'     => 'GET',
+        'path'       => '/api/requests/{id}',
+        'controller' => RequestController::class,
+        'action'     => 'show',
+        'middleware' => ['auth'],
+    ],
+
+    // ----------------------------------------------------------------
+    // Offers on a specific request
+    // ----------------------------------------------------------------
+    [
+        'method'     => 'GET',
+        'path'       => '/api/requests/{id}/offers',
+        'controller' => OfferController::class,
+        'action'     => 'listForRequest',
+        'middleware' => ['auth', 'role:customer'],
+    ],
+    [
+        'method'     => 'POST',
+        'path'       => '/api/requests/{id}/offers',
+        'controller' => OfferController::class,
+        'action'     => 'submit',
         'middleware' => ['auth', 'role:provider'],
     ],
 
-    // Request routes: customer request creation, browsing, detail, and provider completion.
+    // ----------------------------------------------------------------
+    // Request lifecycle — Provider marks complete
+    // ----------------------------------------------------------------
     [
-        'group' => 'requests',
-        'method' => 'GET',
-        'path' => '/requests/browse',
+        'method'     => 'POST',
+        'path'       => '/api/requests/{id}/complete',
         'controller' => RequestController::class,
-        'action' => 'browse',
-        'middleware' => [],
-    ],
-    [
-        'group' => 'requests',
-        'method' => 'GET',
-        'path' => '/requests/{request_id}',
-        'controller' => RequestController::class,
-        'action' => 'show',
-        'middleware' => ['auth'],
-    ],
-    [
-        'group' => 'requests',
-        'method' => 'POST',
-        'path' => '/requests/create',
-        'controller' => RequestController::class,
-        'action' => 'create',
-        'middleware' => ['auth', 'role:customer', 'validate:request_create'],
-    ],
-    [
-        'group' => 'requests',
-        'method' => 'PATCH',
-        'path' => '/requests/{request_id}/complete',
-        'controller' => RequestController::class,
-        'action' => 'markCompleted',
-        'middleware' => ['auth', 'role:provider', 'validate:request_complete'],
+        'action'     => 'markCompleted',
+        'middleware' => ['auth', 'role:provider'],
     ],
 
-    // Offer routes: provider offers and customer negotiation actions.
+    // ----------------------------------------------------------------
+    // Review — Customer submits after completion
+    // ----------------------------------------------------------------
     [
-        'group' => 'offers',
-        'method' => 'POST',
-        'path' => '/offers/submit',
-        'controller' => OfferController::class,
-        'action' => 'submit',
-        'middleware' => ['auth', 'role:provider', 'validate:offer_submit'],
-    ],
-    [
-        'group' => 'offers',
-        'method' => 'PATCH',
-        'path' => '/offers/{offer_id}/accept',
-        'controller' => OfferController::class,
-        'action' => 'accept',
-        'middleware' => ['auth', 'role:customer', 'validate:offer_accept'],
-    ],
-    [
-        'group' => 'offers',
-        'method' => 'PATCH',
-        'path' => '/offers/{offer_id}/reject',
-        'controller' => OfferController::class,
-        'action' => 'reject',
-        'middleware' => ['auth', 'role:customer', 'validate:offer_reject'],
-    ],
-    [
-        'group' => 'offers',
-        'method' => 'PATCH',
-        'path' => '/offers/{offer_id}/counter',
-        'controller' => OfferController::class,
-        'action' => 'counter',
-        'middleware' => ['auth', 'role:customer', 'validate:offer_counter'],
+        'method'     => 'POST',
+        'path'       => '/api/requests/{id}/review',
+        'controller' => ReviewController::class,
+        'action'     => 'submitForRequest',
+        'middleware' => ['auth', 'role:customer'],
     ],
 
-    // Review routes: customer review submission and provider review browsing.
+    // ----------------------------------------------------------------
+    // Offers — Provider views own offers
+    // ----------------------------------------------------------------
     [
-        'group' => 'reviews',
-        'method' => 'POST',
-        'path' => '/reviews/submit',
-        'controller' => ReviewController::class,
-        'action' => 'submit',
-        'middleware' => ['auth', 'role:customer', 'validate:review_submit'],
+        'method'     => 'GET',
+        'path'       => '/api/offers',
+        'controller' => OfferController::class,
+        'action'     => 'myOffers',
+        'middleware' => ['auth', 'role:provider'],
     ],
     [
-        'group' => 'reviews',
-        'method' => 'GET',
-        'path' => '/reviews/provider/{provider_id}',
+        'method'     => 'PATCH',
+        'path'       => '/api/offers/{id}/accept',
+        'controller' => OfferController::class,
+        'action'     => 'accept',
+        'middleware' => ['auth', 'role:customer'],
+    ],
+    [
+        'method'     => 'PATCH',
+        'path'       => '/api/offers/{id}/reject',
+        'controller' => OfferController::class,
+        'action'     => 'reject',
+        'middleware' => ['auth', 'role:customer'],
+    ],
+    [
+        'method'     => 'PATCH',
+        'path'       => '/api/offers/{id}/counter',
+        'controller' => OfferController::class,
+        'action'     => 'counter',
+        'middleware' => ['auth', 'role:customer'],
+    ],
+
+    // ----------------------------------------------------------------
+    // Reviews — Public provider profile + customer history
+    // ----------------------------------------------------------------
+    [
+        'method'     => 'GET',
+        'path'       => '/api/reviews/my',
         'controller' => ReviewController::class,
-        'action' => 'providerReviews',
+        'action'     => 'myReviews',
+        'middleware' => ['auth', 'role:customer'],
+    ],
+    [
+        'method'     => 'GET',
+        'path'       => '/api/reviews/provider/{id}',
+        'controller' => ReviewController::class,
+        'action'     => 'providerReviews',
         'middleware' => [],
     ],
 
-    // Admin routes: protected admin-only operational routes.
+    // ----------------------------------------------------------------
+    // Dashboards
+    // ----------------------------------------------------------------
     [
-        'group' => 'admin',
-        'method' => 'GET',
-        'path' => '/admin/dashboard',
+        'method'     => 'GET',
+        'path'       => '/api/customer/dashboard',
+        'controller' => DashboardController::class,
+        'action'     => 'customer',
+        'middleware' => ['auth', 'role:customer'],
+    ],
+    [
+        'method'     => 'GET',
+        'path'       => '/api/provider/dashboard',
+        'controller' => DashboardController::class,
+        'action'     => 'provider',
+        'middleware' => ['auth', 'role:provider'],
+    ],
+
+    // ----------------------------------------------------------------
+    // Provider — assigned and completed job lists
+    // ----------------------------------------------------------------
+    [
+        'method'     => 'GET',
+        'path'       => '/api/provider/jobs/assigned',
+        'controller' => RequestController::class,
+        'action'     => 'browse',   // Reuses browse but will be scoped by session in future
+        'middleware' => ['auth', 'role:provider'],
+    ],
+
+    // ----------------------------------------------------------------
+    // Admin
+    // ----------------------------------------------------------------
+    [
+        'method'     => 'GET',
+        'path'       => '/api/admin/dashboard',
         'controller' => AdminController::class,
-        'action' => 'dashboard',
+        'action'     => 'dashboard',
         'middleware' => ['auth', 'role:admin'],
     ],
     [
-        'group' => 'admin',
-        'method' => 'GET',
-        'path' => '/admin/categories',
+        'method'     => 'GET',
+        'path'       => '/api/admin/audit-logs',
         'controller' => AdminController::class,
-        'action' => 'categories',
+        'action'     => 'auditLogs',
         'middleware' => ['auth', 'role:admin'],
     ],
     [
-        'group' => 'admin',
-        'method' => 'POST',
-        'path' => '/admin/categories',
+        'method'     => 'GET',
+        'path'       => '/api/admin/providers',
         'controller' => AdminController::class,
-        'action' => 'createCategory',
-        'middleware' => ['auth', 'role:admin', 'validate:category_create'],
-    ],
-    [
-        'group' => 'admin',
-        'method' => 'PATCH',
-        'path' => '/admin/categories/{category_id}',
-        'controller' => AdminController::class,
-        'action' => 'updateCategory',
-        'middleware' => ['auth', 'role:admin', 'validate:category_update'],
-    ],
-    [
-        'group' => 'admin',
-        'method' => 'GET',
-        'path' => '/admin/audit-logs',
-        'controller' => AdminController::class,
-        'action' => 'auditLogs',
+        'action'     => 'providers',
         'middleware' => ['auth', 'role:admin'],
     ],
     [
-        'group' => 'admin',
-        'method' => 'PATCH',
-        'path' => '/admin/providers/{provider_id}/verify',
+        'method'     => 'PATCH',
+        'path'       => '/api/admin/providers/{id}/verify',
         'controller' => AdminController::class,
-        'action' => 'verifyProvider',
-        'middleware' => ['auth', 'role:admin', 'validate:provider_verify'],
+        'action'     => 'verifyProvider',
+        'middleware' => ['auth', 'role:admin'],
+    ],
+    [
+        'method'     => 'GET',
+        'path'       => '/api/admin/categories',
+        'controller' => AdminController::class,
+        'action'     => 'categories',
+        'middleware' => ['auth', 'role:admin'],
+    ],
+    [
+        'method'     => 'POST',
+        'path'       => '/api/admin/categories',
+        'controller' => AdminController::class,
+        'action'     => 'createCategory',
+        'middleware' => ['auth', 'role:admin'],
+    ],
+    [
+        'method'     => 'PATCH',
+        'path'       => '/api/admin/categories/{id}',
+        'controller' => AdminController::class,
+        'action'     => 'updateCategory',
+        'middleware' => ['auth', 'role:admin'],
     ],
 ];
