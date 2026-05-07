@@ -55,9 +55,7 @@ function request_input(): array
 
 function route_key(): string
 {
-    $key = request_method() . ' ' . request_path();
-    error_log("Generated route key: $key"); // Log the generated route key for debugging
-    return $key;
+    return request_method() . ' ' . request_path();
 }
 
 function set_route_params(array $params): void
