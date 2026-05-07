@@ -1,41 +1,54 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-role="customer">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1.0">
   <title>Request Detail — ServiceLink</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../assets/css/main.css">
   <link rel="stylesheet" href="../assets/css/components.css">
   <script src="../core/guard.js"></script>
+  <style>
+    .offer-card { border:1px solid var(--border); border-radius:10px; padding:14px; margin-bottom:10px; background:#fff; transition:.2s; }
+    .offer-card:hover { box-shadow:0 2px 12px rgba(0,0,0,.08); }
+    .offer-card__header { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
+    .offer-card__provider { display:flex; align-items:center; gap:10px; }
+    .offer-card__price { font-size:1.1rem; font-weight:700; color:var(--primary); }
+    .offer-card__actions { display:flex; gap:8px; margin-top:10px; }
+    .star { font-size:24px; cursor:pointer; color:#ccc; transition:color .15s; }
+    .star.active { color:#f59e0b; }
+    .timeline { list-style:none; padding:0; margin:0; position:relative; }
+    .timeline::before { content:''; position:absolute; left:14px; top:0; bottom:0; width:2px; background:#e2e8f0; }
+    .timeline__item { display:flex; gap:16px; align-items:flex-start; padding:10px 0; position:relative; }
+    .timeline__dot { width:30px; height:30px; border-radius:50%; background:#e2e8f0; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; flex-shrink:0; z-index:1; }
+    .timeline__item.active .timeline__dot { background:var(--primary); color:#fff; }
+    .timeline__item.done .timeline__dot { background:#10b981; color:#fff; }
+    .info-row { display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #f0f0f0; font-size:.9rem; }
+    .info-row__label { color:#666; }
+    .info-row__val { font-weight:500; }
+    .counter-form { background:#f8f9fa; border-radius:8px; padding:12px; margin-top:10px; display:none; }
+    .counter-form.open { display:block; }
+  </style>
 </head>
 <body>
 <header id="app-header"></header>
 
-<div style="padding-top:var(--navbar-height)">
-  <div class="container" style="padding-top:var(--space-xl);padding-bottom:var(--space-xxl)">
+<div class="app-shell">
+  <aside id="app-sidebar"></aside>
+  <main class="app-content">
 
-    <div class="breadcrumb">
+    <div class="breadcrumb mb-md">
       <a href="dashboard/customer.html">Dashboard</a>
-      <span class="breadcrumb__sep">›</span>
-      <a href="customer/my-requests.html">My Requests</a>
       <span class="breadcrumb__sep">›</span>
       <span id="breadTitle">Request Detail</span>
     </div>
 
-    <div style="display:grid;grid-template-columns:1fr 360px;gap:var(--space-xl);align-items:start">
-      <!-- Left: Request content -->
-      <div>
-        <div id="requestContent">
-          <div class="empty-state"><div class="spinner spinner--dark"></div></div>
-        </div>
-      </div>
-
-      <!-- Right: Action panel -->
-      <div style="position:sticky;top:calc(var(--navbar-height) + var(--space-lg))">
-        <div id="actionPanel"></div>
-      </div>
+    <div id="requestContent">
+      <div class="empty-state"><div class="spinner spinner--dark"></div><p>Loading request...</p></div>
     </div>
-  </div>
+
+  </main>
 </div>
 
 <!-- Review Modal -->
@@ -50,10 +63,8 @@
       <div class="form-group">
         <label class="form-label">Rating *</label>
         <div class="star-rating" id="starRating">
-          <span class="star" data-v="1">★</span>
-          <span class="star" data-v="2">★</span>
-          <span class="star" data-v="3">★</span>
-          <span class="star" data-v="4">★</span>
+          <span class="star" data-v="1">★</span><span class="star" data-v="2">★</span>
+          <span class="star" data-v="3">★</span><span class="star" data-v="4">★</span>
           <span class="star" data-v="5">★</span>
         </div>
         <input type="hidden" id="ratingVal" value="0">
@@ -61,7 +72,7 @@
       <div class="form-group">
         <label class="form-label">Feedback (optional)</label>
         <textarea class="form-textarea" id="reviewComment" placeholder="Share your experience..." maxlength="500"></textarea>
-        <div class="char-count" id="reviewCharCount">0/500</div>
+        <div class="char-count" id="reviewCharCount" style="text-align:right;font-size:.8rem;color:#999">0/500</div>
       </div>
     </div>
     <div class="modal__footer">
@@ -74,161 +85,235 @@
 <div class="toast-container" id="toastContainer"></div>
 
 <script type="module">
-import Api from '../core/api.js';
-import Auth from '../core/auth.js';
-import Toast from '../core/toast.js';
+import Api    from '../core/api.js';
+import Auth   from '../core/auth.js';
+import Toast  from '../core/toast.js';
 import Layout from '../core/layout.js';
 
-const BADGE = { Requested:'badge--requested', Negotiating:'badge--negotiating', Assigned:'badge--assigned', Completed:'badge--completed', Reviewed:'badge--reviewed' };
+const BADGE    = { Requested:'badge--requested', Negotiating:'badge--negotiating', Assigned:'badge--assigned', Completed:'badge--completed', Reviewed:'badge--reviewed' };
 const TIMELINE = ['Requested','Negotiating','Assigned','Completed','Reviewed'];
-let request = null;
-function esc(s){const d=document.createElement('div');d.textContent=s||'';return d.innerHTML}
+let request    = null;
+let offers     = [];
+let ratingSelected = 0;
 
 const requestId = new URLSearchParams(location.search).get('id');
+function esc(s) { const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
 
-async function loadRequest() {
+// -----------------------------------------------------------------------
+// Load request + offers in parallel
+// -----------------------------------------------------------------------
+async function loadAll() {
+  const content = document.getElementById('requestContent');
+  content.innerHTML = '<div class="empty-state"><div class="spinner spinner--dark"></div><p>Loading...</p></div>';
   try {
+    // Load request first, then if it's Negotiating or Requested → load offers
     const res = await Api.get(`/requests/${requestId}`);
-    request = res.data;
-    document.getElementById('breadTitle').textContent = request.title;
-    renderContent();
-    renderActionPanel();
-  } catch {
-    document.getElementById('requestContent').innerHTML = '<div class="empty-state"><p class="text-muted">Request not found.</p></div>';
+    request   = res.data;
+
+    const heading = (request.description || '').substring(0, 60) + ((request.description || '').length > 60 ? '...' : '');
+    document.getElementById('breadTitle').textContent = heading;
+    document.title = heading + ' — ServiceLink';
+
+    // Fetch offers for customer if request is in negotiation
+    if (['Requested','Negotiating'].includes(request.status)) {
+      try {
+        const offersRes = await Api.get(`/requests/${requestId}/offers`);
+        offers = Array.isArray(offersRes.data) ? offersRes.data : [];
+      } catch { offers = []; }
+    }
+
+    render();
+  } catch (err) {
+    content.innerHTML = `<div class="empty-state"><p class="text-muted">${esc(err.message || 'Request not found.')}</p></div>`;
   }
 }
 
-function renderContent() {
+function render() {
   const r = request;
+  const user = Auth.getUser();
+  const isOwner = user && (r.customer_id === user.id || r.customer_id === user.USER_ID);
   const statusIdx = TIMELINE.indexOf(r.status);
+
   document.getElementById('requestContent').innerHTML = `
-    <div class="flex-between mb-md" style="flex-wrap:wrap;gap:var(--space-sm)">
-      <span class="badge" style="background:#f0f0f0;color:#666;font-size:11px">${esc(r.category_name||r.category)}</span>
-      <span class="badge ${BADGE[r.status]||''}">${r.status}</span>
-    </div>
-    <h1 style="font-size:22px;margin-bottom:var(--space-lg)">${esc(r.title)}</h1>
+    <div style="display:grid;grid-template-columns:1fr 340px;gap:24px;align-items:start">
+      <!-- Left: Info -->
+      <div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+          <span class="badge" style="background:#f0f0f0;color:#555">${esc(r.category_name || '—')}</span>
+          <span class="badge ${BADGE[r.status] || ''}">${esc(r.status)}</span>
+        </div>
+        <h1 style="font-size:1.3rem;margin-bottom:16px;line-height:1.5">${esc(r.description)}</h1>
 
-    <div class="card mb-md">
-      <div class="card__header"><h3 style="font-size:15px">Request Details</h3></div>
-      <div class="card__body">
-        <div class="info-row"><span class="info-row__label">Posted by</span><span class="info-row__val">${esc(r.customer_name||'Customer')}</span></div>
-        <div class="info-row"><span class="info-row__label">Location</span><span class="info-row__val">${esc(r.location)}</span></div>
-        <div class="info-row"><span class="info-row__label">Preferred Date</span><span class="info-row__val">${r.preferred_date||'Flexible'}</span></div>
-        <div class="info-row"><span class="info-row__label">Budget</span><span class="info-row__val">${r.budget ? r.budget + ' ETB' : 'Open'}</span></div>
-        <div class="info-row"><span class="info-row__label">Posted</span><span class="info-row__val">${new Date(r.created_at).toLocaleString()}</span></div>
+        <div class="card mb-md">
+          <div class="card__header"><h3 style="font-size:14px">Request Details</h3></div>
+          <div class="card__body">
+            <div class="info-row"><span class="info-row__label">Location</span><span class="info-row__val">📍 ${esc(r.location || '—')}</span></div>
+            <div class="info-row"><span class="info-row__label">Preferred Date</span><span class="info-row__val">📅 ${r.preferred_date || 'Flexible'}</span></div>
+            <div class="info-row"><span class="info-row__label">Offers Received</span><span class="info-row__val">💬 ${r.offer_count || 0}</span></div>
+            <div class="info-row"><span class="info-row__label">Posted</span><span class="info-row__val">${r.created_at ? new Date(r.created_at).toLocaleString() : '—'}</span></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card__header"><h3 style="font-size:14px">Status Timeline</h3></div>
+          <div class="card__body">
+            <ul class="timeline">
+              ${TIMELINE.map((s,i) => `
+                <li class="timeline__item ${i < statusIdx ? 'done' : i === statusIdx ? 'active' : ''}">
+                  <div class="timeline__dot">${i < statusIdx ? '✓' : i+1}</div>
+                  <div>
+                    <div style="font-weight:600;font-size:.9rem">${s}</div>
+                    <div style="font-size:.8rem;color:#999">${i === statusIdx ? 'Current state' : i < statusIdx ? 'Completed' : 'Pending'}</div>
+                  </div>
+                </li>`).join('')}
+            </ul>
+          </div>
+        </div>
       </div>
-    </div>
 
-    <div class="card mb-md">
-      <div class="card__header"><h3 style="font-size:15px">Description</h3></div>
-      <div class="card__body" style="line-height:1.7">${esc(r.description)}</div>
-    </div>
+      <!-- Right: Action Panel -->
+      <div style="position:sticky;top:80px" id="actionPanel"></div>
+    </div>`;
 
-    <div class="card">
-      <div class="card__header"><h3 style="font-size:15px">Status Timeline</h3></div>
+  renderActionPanel(isOwner);
+}
+
+function renderActionPanel(isOwner) {
+  const r     = request;
+  const panel = document.getElementById('actionPanel');
+
+  // ── Reviewed / Assigned: info only
+  if (r.status === 'Reviewed') {
+    panel.innerHTML = `<div class="card"><div class="card__body">
+      <div class="empty-state"><div class="empty-state__icon">✅</div><div class="empty-state__title" style="font-size:1rem">Completed &amp; Reviewed</div></div>
+    </div></div>`;
+    return;
+  }
+
+  // ── Completed: leave review
+  if (r.status === 'Completed' && isOwner) {
+    panel.innerHTML = `<div class="card"><div class="card__header"><h3 style="font-size:14px">Job Complete 🎉</h3></div>
       <div class="card__body">
-        <ul class="timeline">
-          ${TIMELINE.map((s,i) => `
-            <li class="timeline__item ${i < statusIdx ? 'done' : i === statusIdx ? 'active' : ''}">
-              <div class="timeline__dot">${i < statusIdx ? '✓' : i+1}</div>
-              <div class="timeline__body">
-                <div class="timeline__label">${s}</div>
-                ${i <= statusIdx ? `<div class="timeline__time">${i===statusIdx ? 'Current state' : 'Completed'}</div>` : ''}
-              </div>
-            </li>`).join('')}
-        </ul>
+        <p class="text-muted mb-md" style="font-size:.9rem">The provider has marked this job complete. Leave a review to finish.</p>
+        <button class="btn btn--primary btn--full" id="leaveReviewBtn">⭐ Leave a Review</button>
       </div>
     </div>`;
-}
-
-function renderActionPanel() {
-  const r = request;
-  const panel = document.getElementById('actionPanel');
-  const isOwner = r.customer_id === Auth.user?.id;
-
-  if (r.status === 'Completed' && isOwner) {
-    panel.innerHTML = `
-      <div class="card">
-        <div class="card__header"><h3 style="font-size:15px">Job Complete 🎉</h3></div>
-        <div class="card__body">
-          <p class="text-muted mb-md">The provider has marked this job as complete. Please leave a review.</p>
-          <button class="btn btn--primary btn--full" id="leaveReviewBtn">Leave a Review</button>
-        </div>
-      </div>`;
-    const btn = document.getElementById('leaveReviewBtn');
-    if (btn) btn.addEventListener('click', openReviewModal);
+    document.getElementById('leaveReviewBtn')?.addEventListener('click', openReviewModal);
     return;
   }
 
-  if (r.status === 'Reviewed') {
-    panel.innerHTML = `<div class="card"><div class="card__body"><div class="empty-state"><div class="empty-state__icon">✅</div><div class="empty-state__title">Completed & Reviewed</div></div></div></div>`;
+  // ── Assigned: show who is working
+  if (r.status === 'Assigned') {
+    panel.innerHTML = `<div class="card"><div class="card__header"><h3 style="font-size:14px">✅ Job Assigned</h3></div>
+      <div class="card__body">
+        <p class="text-muted" style="font-size:.9rem">A provider has been assigned. They will begin work soon.</p>
+        ${r.accepted_price ? `<p style="margin-top:8px"><strong>Agreed Price:</strong> ETB ${parseFloat(r.accepted_price).toLocaleString()}</p>` : ''}
+      </div>
+    </div>`;
     return;
   }
 
+  // ── Negotiating / Requested: show offers for customer
   if (['Negotiating','Requested'].includes(r.status) && isOwner) {
-    const offers = r.offers || [];
     panel.innerHTML = `
       <div class="card">
         <div class="card__header">
-          <h3 style="font-size:15px">Offers Received (${offers.length})</h3>
+          <h3 style="font-size:14px">Offers Received (${offers.length})</h3>
+          <button class="btn btn--ghost btn--sm" onclick="loadAll()">↻</button>
         </div>
-        <div class="card__body">
-          ${!offers.length ? '<p class="text-muted text-sm">No offers yet. Providers will submit offers soon.</p>' :
-            offers.map(o => `
-            <div class="offer-card">
-              <div class="offer-card__header">
-                <div class="offer-card__provider">
-                  <div class="navbar__avatar" style="width:32px;height:32px;font-size:12px">${(o.provider_name||'P')[0]}</div>
-                  <div>
-                    <div style="font-weight:600;font-size:13px">${esc(o.provider_name||'Provider')}</div>
-                    <div class="text-sm text-muted">⭐ ${o.provider_rating||'N/A'}</div>
+        <div class="card__body" id="offersBody">
+          ${!offers.length
+            ? `<p class="text-muted" style="font-size:.9rem;text-align:center;padding:16px 0">No offers yet.<br>Providers will submit offers soon.</p>`
+            : offers.map(o => `
+              <div class="offer-card">
+                <div class="offer-card__header">
+                  <div class="offer-card__provider">
+                    <div style="width:34px;height:34px;border-radius:50%;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px">
+                      ${esc((o.provider_name || 'P')[0].toUpperCase())}
+                    </div>
+                    <div>
+                      <div style="font-weight:600;font-size:.9rem">${esc(o.provider_name || 'Provider')}</div>
+                      <div style="font-size:.8rem;color:#999">⭐ ${o.provider_rating ? parseFloat(o.provider_rating).toFixed(1) : 'New'}</div>
+                    </div>
+                  </div>
+                  <div class="offer-card__price">ETB ${parseFloat(o.price || 0).toLocaleString()}</div>
+                </div>
+                ${o.message ? `<p style="font-size:.85rem;color:#555;margin:6px 0">${esc(o.message)}</p>` : ''}
+                ${o.counter_price ? `<div style="background:#fff4e0;border-radius:6px;padding:8px;font-size:.85rem;margin:6px 0">
+                  <strong>Counter offer:</strong> ETB ${parseFloat(o.counter_price).toLocaleString()}
+                  ${o.counter_message ? `<br><em>${esc(o.counter_message)}</em>` : ''}
+                </div>` : ''}
+                <div class="offer-card__actions">
+                  <button class="btn btn--success btn--sm" onclick="acceptOffer('${o.id}','${esc(o.provider_name||'Provider')}',${o.price||0})">✓ Accept</button>
+                  <button class="btn btn--danger btn--sm" onclick="rejectOffer('${o.id}')">✗ Reject</button>
+                  <button class="btn btn--ghost btn--sm" onclick="toggleCounter('counter-${o.id}')">↔ Counter</button>
+                </div>
+                <div class="counter-form" id="counter-${o.id}">
+                  <input class="form-input" type="number" placeholder="Your counter price (ETB)" id="counter-price-${o.id}" min="1">
+                  <textarea class="form-textarea" placeholder="Message (optional)" id="counter-msg-${o.id}" rows="2" style="margin-top:6px"></textarea>
+                  <div style="display:flex;gap:6px;margin-top:6px">
+                    <button class="btn btn--primary btn--sm" onclick="submitCounter('${o.id}')">Send Counter</button>
+                    <button class="btn btn--ghost btn--sm" onclick="toggleCounter('counter-${o.id}')">Cancel</button>
                   </div>
                 </div>
-                <div class="offer-card__price">${parseFloat(o.price_offered).toLocaleString()} ETB</div>
-              </div>
-              ${o.message ? `<p class="text-sm text-muted" style="margin-top:4px">${esc(o.message)}</p>` : ''}
-              <div class="offer-card__actions">
-                <button class="btn btn--primary btn--sm accept-offer-btn" data-id="${o.id}" data-name="${esc(o.provider_name||'Provider')}" data-price="${o.price_offered}">Accept</button>
-                <button class="btn btn--secondary btn--sm reject-offer-btn" data-id="${o.id}">Reject</button>
-              </div>
-            </div>`).join('')
+              </div>`).join('')
           }
         </div>
       </div>`;
-    
-    document.querySelectorAll('.accept-offer-btn').forEach(btn => {
-      btn.addEventListener('click', (e) => acceptOffer(e.target.dataset.id, e.target.dataset.name, e.target.dataset.price));
-    });
-    document.querySelectorAll('.reject-offer-btn').forEach(btn => {
-      btn.addEventListener('click', (e) => rejectOffer(e.target.dataset.id));
-    });
     return;
   }
 
-  panel.innerHTML = `<div class="card"><div class="card__body"><p class="text-muted text-sm">Status: <strong>${r.status}</strong></p></div></div>`;
+  panel.innerHTML = `<div class="card"><div class="card__body">
+    <p class="text-muted" style="font-size:.9rem">Status: <strong>${esc(r.status)}</strong></p>
+  </div></div>`;
 }
 
-async function acceptOffer(offerId, providerName, price) {
-  if (!confirm(`Accept offer from ${providerName} for ${price} ETB?`)) return;
+// -----------------------------------------------------------------------
+// Offer actions (exposed globally for onclick handlers)
+// -----------------------------------------------------------------------
+window.acceptOffer = async function(offerId, providerName, price) {
+  if (!confirm(`Accept offer from ${providerName} for ETB ${parseFloat(price).toLocaleString()}?`)) return;
   try {
-    await Api.post(`/offers/${offerId}/accept`);
+    await Api.patch(`/offers/${offerId}/accept`);
     Toast.success('Offer accepted! Job assigned.');
-    loadRequest();
+    loadAll();
   } catch (err) { Toast.error(err.message || 'Failed to accept offer.'); }
-}
+};
 
-async function rejectOffer(offerId) {
+window.rejectOffer = async function(offerId) {
   if (!confirm('Reject this offer?')) return;
   try {
-    await Api.post(`/offers/${offerId}/reject`);
+    await Api.patch(`/offers/${offerId}/reject`);
     Toast.success('Offer rejected.');
-    loadRequest();
+    loadAll();
   } catch (err) { Toast.error(err.message || 'Failed.'); }
-}
+};
 
-let ratingSelected = 0;
+window.toggleCounter = function(id) {
+  document.getElementById(id)?.classList.toggle('open');
+};
+
+window.submitCounter = async function(offerId) {
+  const priceEl = document.getElementById(`counter-price-${offerId}`);
+  const msgEl   = document.getElementById(`counter-msg-${offerId}`);
+  const price   = parseFloat(priceEl?.value);
+  if (!price || price < 1) { Toast.error('Enter a valid counter price.'); return; }
+  try {
+    await Api.patch(`/offers/${offerId}/counter`, {
+      counter_price: price,
+      counter_message: msgEl?.value?.trim() || null,
+    });
+    Toast.success('Counter offer sent!');
+    loadAll();
+  } catch (err) { Toast.error(err.message || 'Failed to send counter.'); }
+};
+
+// -----------------------------------------------------------------------
+// Review modal
+// -----------------------------------------------------------------------
 function openReviewModal() {
-  document.getElementById('reviewFor').textContent = `Rate your experience for: ${request?.title}`;
+  document.getElementById('reviewFor').textContent =
+    `Rate your experience for: ${(request?.description||'').substring(0,50)}`;
   document.getElementById('reviewModal').classList.add('open');
 }
 function closeModal(id) { document.getElementById(id).classList.remove('open'); }
@@ -238,7 +323,9 @@ document.getElementById('starRating').addEventListener('click', e => {
   if (!star) return;
   ratingSelected = parseInt(star.dataset.v);
   document.getElementById('ratingVal').value = ratingSelected;
-  document.querySelectorAll('#starRating .star').forEach((s,i) => s.classList.toggle('active', i < ratingSelected));
+  document.querySelectorAll('#starRating .star').forEach((s,i) =>
+    s.classList.toggle('active', i < ratingSelected)
+  );
 });
 
 document.getElementById('reviewComment').addEventListener('input', function() {
@@ -246,37 +333,42 @@ document.getElementById('reviewComment').addEventListener('input', function() {
 });
 
 async function submitReview() {
-  if (ratingSelected < 1) { Toast.error('Please select a rating.'); return; }
+  if (ratingSelected < 1) { Toast.error('Please select a rating (1–5 stars).'); return; }
   const btn = document.getElementById('submitReviewBtn');
-  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Submitting...';
+  btn.disabled = true; btn.textContent = 'Submitting...';
   try {
-    await Api.post(`/requests/${requestId}/review`, { rating: ratingSelected, comment: document.getElementById('reviewComment').value });
+    await Api.post(`/requests/${requestId}/review`, {
+      rating: ratingSelected,
+      comment: document.getElementById('reviewComment').value.trim(),
+    });
     Toast.success('Review submitted! Thank you.');
     closeModal('reviewModal');
-    loadRequest();
+    loadAll();
   } catch (err) {
     Toast.error(err.message || 'Failed to submit review.');
     btn.disabled = false; btn.textContent = 'Submit Review';
   }
 }
 
+// -----------------------------------------------------------------------
+// Init
+// -----------------------------------------------------------------------
 async function init() {
-  await Auth.load();
-  if (!Auth.requireAuth()) return;
-  Layout.renderNavbar('app-header', 'dashboard');
-  
+  if (!requestId) { window.history.back(); return; }
+  const ok = await Auth.load();
+  if (!ok || !Auth.requireAuth(['customer'])) return;
+
+  Layout.renderShell('customer', 'requests', 'dashboard');
+
   document.getElementById('closeReviewTopBtn').addEventListener('click', () => closeModal('reviewModal'));
-  document.getElementById('closeReviewBtn').addEventListener('click', () => closeModal('reviewModal'));
-  document.getElementById('submitReviewBtn').addEventListener('click', submitReview);
+  document.getElementById('closeReviewBtn').addEventListener('click',    () => closeModal('reviewModal'));
+  document.getElementById('submitReviewBtn').addEventListener('click',   submitReview);
 
-  loadRequest();
+  loadAll();
 }
 
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', init);
-} else {
-  init();
-}
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+else init();
 </script>
 </body>
 </html>

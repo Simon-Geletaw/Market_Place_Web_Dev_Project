@@ -102,7 +102,13 @@ final class AdminService
 
     public function listCategories(): array
     {
-        return $this->categories->findAllActive();
+        $rows = $this->categories->findAllActive();
+        return array_map(fn(array $r) => [
+            'id'          => $r['CATEGORY_ID'],
+            'name'        => $r['NAME'],
+            'description' => $r['DESCRIPTION'] ?? '',
+            'icon'        => $r['ICON']        ?? '',
+        ], $rows);
     }
 
     public function createCategory(string $adminId, array $data): array
