@@ -2,6 +2,15 @@
 
 declare(strict_types=1);
 
+header("Access-Control-Allow-Origin: *");
+header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
+header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With");
+
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit;
+}
+
 require_once __DIR__ . '/../app/helpers/response.php';
 require_once __DIR__ . '/../app/helpers/request.php';
 require_once __DIR__ . '/../app/helpers/router.php';
@@ -49,10 +58,19 @@ try {
         }
     }
     $DB = new DatabaseConnector();
-    $DBConnection=$DB->getConnection();
+    $DBConnection = $DB->getConnection();
     $className = $route['controller'];
     $methodName = $route['action'];
-    $controller = new $className(PDO: $DBConnection);
+    
+    // Check if the controller class has a constructor that expects PDO
+    $reflection = new ReflectionClass($className);
+    $constructor = $reflection->getConstructor();
+    
+    if ($constructor && count($constructor->getParameters()) > 0) {
+        $controller = new $className($DBConnection);
+    } else {
+        $controller = new $className();
+    }
 
     send_json($controller->$methodName());
     exit;
