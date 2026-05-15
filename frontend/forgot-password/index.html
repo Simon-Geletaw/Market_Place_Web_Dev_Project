@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Reset your ServiceLink password.">
+  <title>Forgot Password — ServiceLink</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../login/style.css">
+</head>
+<body>
+  <aside class="auth-brand" aria-hidden="true">
+    <div class="auth-brand__inner">
+      <a href="../landing_page/index.html" class="auth-brand__logo">
+        <svg class="auth-brand__logo-icon" width="40" height="40" viewBox="0 0 32 32" fill="none">
+          <rect width="32" height="32" rx="8" fill="#0066CC"/>
+          <path d="M10 16L14.5 20.5L22 11" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span class="auth-brand__logo-text">Service<span class="auth-brand__logo-accent">Link</span></span>
+      </a>
+      <div class="auth-brand__content">
+        <h2 class="auth-brand__headline">Reset your password</h2>
+        <p class="auth-brand__subtext">Enter your email address to receive password reset instructions.</p>
+      </div>
+      <div class="auth-brand__shape auth-brand__shape--circle"></div>
+      <div class="auth-brand__shape auth-brand__shape--dots"></div>
+    </div>
+  </aside>
+
+  <main class="auth-main" id="main-content">
+    <div class="auth-form-container">
+      <a href="../landing_page/index.html" class="auth-mobile-logo" aria-label="ServiceLink Home">
+        <svg width="36" height="36" viewBox="0 0 32 32" fill="none">
+          <rect width="32" height="32" rx="8" fill="#0066CC"/>
+          <path d="M10 16L14.5 20.5L22 11" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span class="auth-mobile-logo__text">Service<span class="auth-mobile-logo__accent">Link</span></span>
+      </a>
+
+      <header class="auth-form__header">
+        <h1 class="auth-form__title" id="forgot-heading">Forgot Password</h1>
+        <p class="auth-form__subtitle">Enter your email to receive a reset link.</p>
+      </header>
+
+      <div id="formStatus" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
+
+      <form class="auth-form" id="forgotForm" method="POST" action="#" novalidate aria-labelledby="forgot-heading">
+        <div class="form-group" id="emailGroup">
+          <label class="form-label" for="email">Email Address</label>
+          <div class="input-wrapper">
+            <svg class="input-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <rect x="2" y="4" width="20" height="16" rx="3" stroke="currentColor" stroke-width="1.5"/>
+              <path d="M2 7L12 13L22 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <input class="form-input" type="email" id="email" name="email" placeholder="you@example.com" autocomplete="email" required aria-required="true" aria-describedby="emailError">
+          </div>
+          <span class="form-error" id="emailError" role="alert" aria-live="assertive"></span>
+        </div>
+
+        <button type="submit" class="btn btn--primary btn--full" id="submitBtn">
+          <span class="btn__text">Send Reset Link</span>
+          <span class="btn__spinner" aria-hidden="true" style="display:none;">
+            <svg class="spinner" width="20" height="20" viewBox="0 0 24 24" fill="none">
+              <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-dasharray="31.4 31.4" stroke-dashoffset="0"/>
+            </svg>
+          </span>
+        </button>
+      </form>
+
+      <p class="auth-form__footer">
+        Remember your password? <a href="../login/index.html" class="auth-form__footer-link">Log In</a>
+      </p>
+    </div>
+  </main>
+  <script type="module" src="script.js"></script>
+</body>
+</html>
