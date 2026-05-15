@@ -10,11 +10,11 @@
   <link rel="stylesheet" href="../assets/css/components.css">
   <script src="../core/guard.js"></script>
   <style>
-    .offer-card { border:1px solid var(--border); border-radius:10px; padding:14px; margin-bottom:10px; background:#fff; transition:.2s; }
+    .offer-card { border:1px solid var(--color-border); border-radius:10px; padding:14px; margin-bottom:10px; background:#fff; transition:.2s; }
     .offer-card:hover { box-shadow:0 2px 12px rgba(0,0,0,.08); }
     .offer-card__header { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
     .offer-card__provider { display:flex; align-items:center; gap:10px; }
-    .offer-card__price { font-size:1.1rem; font-weight:700; color:var(--primary); }
+    .offer-card__price { font-size:1.1rem; font-weight:700; color:var(--color-primary); }
     .offer-card__actions { display:flex; gap:8px; margin-top:10px; }
     .star { font-size:24px; cursor:pointer; color:#ccc; transition:color .15s; }
     .star.active { color:#f59e0b; }
@@ -22,13 +22,17 @@
     .timeline::before { content:''; position:absolute; left:14px; top:0; bottom:0; width:2px; background:#e2e8f0; }
     .timeline__item { display:flex; gap:16px; align-items:flex-start; padding:10px 0; position:relative; }
     .timeline__dot { width:30px; height:30px; border-radius:50%; background:#e2e8f0; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; flex-shrink:0; z-index:1; }
-    .timeline__item.active .timeline__dot { background:var(--primary); color:#fff; }
+    .timeline__item.active .timeline__dot { background:var(--color-primary); color:#fff; }
     .timeline__item.done .timeline__dot { background:#10b981; color:#fff; }
     .info-row { display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #f0f0f0; font-size:.9rem; }
     .info-row__label { color:#666; }
     .info-row__val { font-weight:500; }
     .counter-form { background:#f8f9fa; border-radius:8px; padding:12px; margin-top:10px; display:none; }
     .counter-form.open { display:block; }
+    @media (max-width: 768px) {
+      #requestContent > div { grid-template-columns: 1fr !important; }
+      #actionPanel { position: static !important; }
+    }
   </style>
 </head>
 <body>

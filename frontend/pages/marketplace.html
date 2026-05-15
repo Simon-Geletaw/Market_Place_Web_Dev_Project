@@ -30,12 +30,16 @@
         <div class="card">
           <div class="card__header"><h4 class="marketplace-page__sidebar-title">Filters</h4></div>
           <div class="card__body marketplace-page__filters">
+            <style>
+              @media (max-width: 768px) {
+                .marketplace-page__content { flex-direction: column; }
+                .marketplace-page__sidebar { width: 100%; margin-bottom: 1rem; }
+              }
+            </style>
             <div class="form-group marketplace-page__field">
               <label class="form-label" for="fCategory">Category</label>
               <select class="form-select" id="fCategory">
                 <option value="">All</option>
-                <option>Electrician</option><option>Plumber</option><option>Carpenter</option>
-                <option>Painter</option><option>Cleaner</option><option>General Handyman</option>
               </select>
             </div>
             <div class="form-group marketplace-page__field">
