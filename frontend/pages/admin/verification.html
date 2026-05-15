@@ -31,10 +31,10 @@
 
 <!-- Detail Modal -->
 <div class="modal-overlay" id="detailModal">
-  <div class="modal" style="max-width:560px">
+  <div class="modal" style="max-width:560px" role="dialog" aria-modal="true" aria-labelledby="modalTitleVerification">
     <div class="modal__header">
-      <h2 class="modal__title">Provider Details</h2>
-      <button class="modal__close" id="closeModalBtn">✕</button>
+      <h2 class="modal__title" id="modalTitleVerification">Provider Details</h2>
+      <button class="modal__close" id="closeModalBtn" aria-label="Close modal">✕</button>
     </div>
     <div class="modal__body" id="detailContent"></div>
     <div class="modal__footer" id="detailActions"></div>

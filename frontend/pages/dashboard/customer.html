@@ -75,10 +75,10 @@
 
 <!-- Create Request Modal -->
 <div class="modal-overlay" id="createModal">
-  <div class="modal">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitleDashboardCreate">
     <div class="modal__header">
-      <h2 class="modal__title">Post a New Service Request</h2>
-      <button class="modal__close" id="closeCreateTopBtn">✕</button>
+      <h2 class="modal__title" id="modalTitleDashboardCreate">Post a New Service Request</h2>
+      <button class="modal__close" id="closeCreateTopBtn" aria-label="Close new request modal">✕</button>
     </div>
     <div class="modal__body">
       <form id="createForm" novalidate>

@@ -57,10 +57,10 @@
 
 <!-- Review Modal -->
 <div class="modal-overlay" id="reviewModal">
-  <div class="modal">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitleReview">
     <div class="modal__header">
-      <h2 class="modal__title">Leave a Review</h2>
-      <button class="modal__close" id="closeReviewTopBtn">✕</button>
+      <h2 class="modal__title" id="modalTitleReview">Leave a Review</h2>
+      <button class="modal__close" id="closeReviewTopBtn" aria-label="Close review modal">✕</button>
     </div>
     <div class="modal__body">
       <p class="text-muted mb-md" id="reviewFor">Rate your provider</p>

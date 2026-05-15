@@ -31,8 +31,8 @@
 </div>
 
 <div class="modal-overlay" id="createModal">
-  <div class="modal">
-    <div class="modal__header"><h2 class="modal__title">Post a New Request</h2><button class="modal__close" id="closeCreateTopBtn">✕</button></div>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitleCreate">
+    <div class="modal__header"><h2 class="modal__title" id="modalTitleCreate">Post a New Request</h2><button class="modal__close" id="closeCreateTopBtn" aria-label="Close new request modal">✕</button></div>
     <div class="modal__body">
       <div class="form-group"><label class="form-label">Category</label>
         <select class="form-select" id="crCat"><option value="">Select...</option><option>Electrician</option><option>Plumber</option><option>Carpenter</option><option>Painter</option><option>Cleaner</option><option>General Handyman</option></select></div>
