@@ -36,14 +36,14 @@ return [
         'path'       => '/api/auth/login',
         'controller' => AuthController::class,
         'action'     => 'login',
-        'middleware' => [],
+        'middleware' => ['validate:auth_login'],
     ],
     [
         'method'     => 'POST',
         'path'       => '/api/auth/register',
         'controller' => AuthController::class,
         'action'     => 'register',
-        'middleware' => [],
+        'middleware' => ['validate:auth_register'],
     ],
     [
         'method'     => 'POST',
@@ -58,6 +58,34 @@ return [
         'controller' => AuthController::class,
         'action'     => 'me',
         'middleware' => [], // me() handles its own 401 gracefully
+    ],
+    [
+        'method'     => 'POST',
+        'path'       => '/api/auth/forgot-password',
+        'controller' => AuthController::class,
+        'action'     => 'forgotPassword',
+        'middleware' => ['validate:forgot_password'],
+    ],
+    [
+        'method'     => 'POST',
+        'path'       => '/api/auth/reset-password',
+        'controller' => AuthController::class,
+        'action'     => 'resetPassword',
+        'middleware' => ['validate:reset_password'],
+    ],
+    [
+        'method'     => 'PUT',
+        'path'       => '/api/auth/profile',
+        'controller' => AuthController::class,
+        'action'     => 'updateProfile',
+        'middleware' => ['auth', 'validate:profile_update'],
+    ],
+    [
+        'method'     => 'PUT',
+        'path'       => '/api/auth/password',
+        'controller' => AuthController::class,
+        'action'     => 'updatePassword',
+        'middleware' => ['auth', 'validate:password_update'],
     ],
 
     // ----------------------------------------------------------------
@@ -97,7 +125,7 @@ return [
         'path'       => '/api/requests',
         'controller' => RequestController::class,
         'action'     => 'create',
-        'middleware' => ['auth', 'role:customer'],
+        'middleware' => ['auth', 'role:customer', 'validate:request_create'],
     ],
     [
         'method'     => 'GET',
@@ -122,7 +150,7 @@ return [
         'path'       => '/api/requests/{id}/offers',
         'controller' => OfferController::class,
         'action'     => 'submit',
-        'middleware' => ['auth', 'role:provider'],
+        'middleware' => ['auth', 'role:provider', 'validate:offer_submit'],
     ],
 
     // ----------------------------------------------------------------
@@ -133,7 +161,7 @@ return [
         'path'       => '/api/requests/{id}/complete',
         'controller' => RequestController::class,
         'action'     => 'markCompleted',
-        'middleware' => ['auth', 'role:provider'],
+        'middleware' => ['auth', 'role:provider', 'validate:request_complete'],
     ],
 
     // ----------------------------------------------------------------
@@ -144,7 +172,7 @@ return [
         'path'       => '/api/requests/{id}/review',
         'controller' => ReviewController::class,
         'action'     => 'submitForRequest',
-        'middleware' => ['auth', 'role:customer'],
+        'middleware' => ['auth', 'role:customer', 'validate:review_submit'],
     ],
 
     // ----------------------------------------------------------------
@@ -162,21 +190,21 @@ return [
         'path'       => '/api/offers/{id}/accept',
         'controller' => OfferController::class,
         'action'     => 'accept',
-        'middleware' => ['auth', 'role:customer'],
+        'middleware' => ['auth', 'role:customer', 'validate:offer_accept'],
     ],
     [
         'method'     => 'PATCH',
         'path'       => '/api/offers/{id}/reject',
         'controller' => OfferController::class,
         'action'     => 'reject',
-        'middleware' => ['auth', 'role:customer'],
+        'middleware' => ['auth', 'role:customer', 'validate:offer_reject'],
     ],
     [
         'method'     => 'PATCH',
         'path'       => '/api/offers/{id}/counter',
         'controller' => OfferController::class,
         'action'     => 'counter',
-        'middleware' => ['auth', 'role:customer'],
+        'middleware' => ['auth', 'role:customer', 'validate:offer_counter'],
     ],
 
     // ----------------------------------------------------------------
@@ -188,6 +216,20 @@ return [
         'controller' => ReviewController::class,
         'action'     => 'myReviews',
         'middleware' => ['auth', 'role:customer'],
+    ],
+    [
+        'method'     => 'GET',
+        'path'       => '/api/reviews/given',
+        'controller' => ReviewController::class,
+        'action'     => 'given',
+        'middleware' => ['auth', 'role:customer'],
+    ],
+    [
+        'method'     => 'GET',
+        'path'       => '/api/reviews/received',
+        'controller' => ReviewController::class,
+        'action'     => 'received',
+        'middleware' => ['auth', 'role:provider'],
     ],
     [
         'method'     => 'GET',
@@ -222,8 +264,40 @@ return [
         'method'     => 'GET',
         'path'       => '/api/provider/jobs/assigned',
         'controller' => RequestController::class,
-        'action'     => 'browse',   // Reuses browse but will be scoped by session in future
+        'action'     => 'providerAssignedJobs',
         'middleware' => ['auth', 'role:provider'],
+    ],
+    [
+        'method'     => 'GET',
+        'path'       => '/api/provider/jobs/completed',
+        'controller' => RequestController::class,
+        'action'     => 'providerCompletedJobs',
+        'middleware' => ['auth', 'role:provider'],
+    ],
+
+    // ----------------------------------------------------------------
+    // Notifications
+    // ----------------------------------------------------------------
+    [
+        'method'     => 'GET',
+        'path'       => '/api/notifications',
+        'controller' => NotificationController::class,
+        'action'     => 'index',
+        'middleware' => ['auth'],
+    ],
+    [
+        'method'     => 'POST',
+        'path'       => '/api/notifications/{id}/read',
+        'controller' => NotificationController::class,
+        'action'     => 'markRead',
+        'middleware' => ['auth'],
+    ],
+    [
+        'method'     => 'POST',
+        'path'       => '/api/notifications/read-all',
+        'controller' => NotificationController::class,
+        'action'     => 'readAll',
+        'middleware' => ['auth'],
     ],
 
     // ----------------------------------------------------------------
@@ -234,6 +308,13 @@ return [
         'path'       => '/api/admin/dashboard',
         'controller' => AdminController::class,
         'action'     => 'dashboard',
+        'middleware' => ['auth', 'role:admin'],
+    ],
+    [
+        'method'     => 'GET',
+        'path'       => '/api/admin/metrics',
+        'controller' => AdminController::class,
+        'action'     => 'metrics',
         'middleware' => ['auth', 'role:admin'],
     ],
     [
@@ -269,13 +350,13 @@ return [
         'path'       => '/api/admin/categories',
         'controller' => AdminController::class,
         'action'     => 'createCategory',
-        'middleware' => ['auth', 'role:admin'],
+        'middleware' => ['auth', 'role:admin', 'validate:category_create'],
     ],
     [
         'method'     => 'PATCH',
         'path'       => '/api/admin/categories/{id}',
         'controller' => AdminController::class,
         'action'     => 'updateCategory',
-        'middleware' => ['auth', 'role:admin'],
+        'middleware' => ['auth', 'role:admin', 'validate:category_update'],
     ],
 ];

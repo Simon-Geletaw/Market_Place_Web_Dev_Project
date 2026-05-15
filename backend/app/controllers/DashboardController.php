@@ -7,6 +7,7 @@ require_once __DIR__ . '/../repositories/RequestRepository.php';
 require_once __DIR__ . '/../repositories/CategoryRepository.php';
 require_once __DIR__ . '/../repositories/StatusHistoryRepository.php';
 require_once __DIR__ . '/../repositories/AuditLogRepository.php';
+require_once __DIR__ . '/../repositories/OfferRepository.php';
 require_once __DIR__ . '/../repositories/DatabaseConnector.php';
 require_once __DIR__ . '/../helpers/response.php';
 require_once __DIR__ . '/../helpers/request.php';
@@ -28,7 +29,8 @@ final class DashboardController
             new RequestRepository($db),
             new CategoryRepository($db),
             new StatusHistoryRepository($db),
-            new AuditLogRepository($db)
+            new AuditLogRepository($db),
+            new OfferRepository($db)
         );
     }
 

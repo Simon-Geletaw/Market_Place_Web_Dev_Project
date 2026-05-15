@@ -17,6 +17,31 @@ final class ReviewRepository
         $this->db = $db;
     }
 
+    public function transaction(callable $callback): mixed
+    {
+        $alreadyInTransaction = $this->db->inTransaction();
+
+        if (!$alreadyInTransaction) {
+            $this->db->beginTransaction();
+        }
+
+        try {
+            $result = $callback();
+
+            if (!$alreadyInTransaction) {
+                $this->db->commit();
+            }
+
+            return $result;
+        } catch (Throwable $exception) {
+            if (!$alreadyInTransaction && $this->db->inTransaction()) {
+                $this->db->rollBack();
+            }
+
+            throw $exception;
+        }
+    }
+
     public function create(string $requestId, string $customerId, string $providerId, int $rating, string $comment): string
     {
         $uuid = $this->generateUuid();
@@ -44,6 +69,7 @@ final class ReviewRepository
     public function findByProvider(string $providerId): array
     {
         $sql  = 'SELECT r.*, u.NAME AS CUSTOMER_NAME, sr.DESCRIPTION AS REQUEST_DESCRIPTION,
+                        sr.DESCRIPTION AS REQUEST_TITLE,
                         sc.NAME AS CATEGORY_NAME
                  FROM REVIEWS r
                  JOIN USERS              u  ON r.CUSTOMER_ID  = u.USER_ID
@@ -58,6 +84,7 @@ final class ReviewRepository
     public function findByCustomer(string $customerId): array
     {
         $sql  = 'SELECT r.*, u.NAME AS PROVIDER_NAME, sr.DESCRIPTION AS REQUEST_DESCRIPTION,
+                        sr.DESCRIPTION AS REQUEST_TITLE,
                         sc.NAME AS CATEGORY_NAME
                  FROM REVIEWS r
                  JOIN USERS              u  ON r.PROVIDER_ID  = u.USER_ID

@@ -30,10 +30,15 @@ function request_query(): array
 
 function request_json_body(): array
 {
+    if (array_key_exists('json_body', $GLOBALS)) {
+        return $GLOBALS['json_body'];
+    }
+
     $rawBody = file_get_contents('php://input');
 
     if ($rawBody === false || trim($rawBody) === '') {
-        return [];
+        $GLOBALS['json_body'] = [];
+        return $GLOBALS['json_body'];
     }
 
     $decoded = json_decode($rawBody, true);
@@ -42,7 +47,8 @@ function request_json_body(): array
         throw new InvalidArgumentException('Invalid JSON body.');
     }
 
-    return $decoded;
+    $GLOBALS['json_body'] = $decoded;
+    return $GLOBALS['json_body'];
 }
 
 function request_input(): array
@@ -73,4 +79,22 @@ function route_param(string $name, mixed $default = null): mixed
     $params = route_params();
 
     return $params[$name] ?? $default;
+}
+
+function current_user_id(): string
+{
+    if (session_status() === PHP_SESSION_NONE) {
+        session_start();
+    }
+
+    return (string) ($_SESSION['user_id'] ?? '');
+}
+
+function current_user_role(): string
+{
+    if (session_status() === PHP_SESSION_NONE) {
+        session_start();
+    }
+
+    return strtolower((string) ($_SESSION['role'] ?? ''));
 }

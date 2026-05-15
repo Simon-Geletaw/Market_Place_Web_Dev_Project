@@ -74,6 +74,9 @@ require_once __DIR__ . '/../app/repositories/OfferRepository.php';
 require_once __DIR__ . '/../app/repositories/ReviewRepository.php';
 require_once __DIR__ . '/../app/repositories/AuditLogRepository.php';
 require_once __DIR__ . '/../app/repositories/StatusHistoryRepository.php';
+require_once __DIR__ . '/../app/repositories/NotificationRepository.php';
+require_once __DIR__ . '/../app/repositories/PasswordResetRepository.php';
+require_once __DIR__ . '/../app/repositories/MetricsRepository.php';
 
 // ------------------------------------------------------------------
 // Services
@@ -83,6 +86,7 @@ require_once __DIR__ . '/../app/services/RequestService.php';
 require_once __DIR__ . '/../app/services/OfferService.php';
 require_once __DIR__ . '/../app/services/ReviewService.php';
 require_once __DIR__ . '/../app/services/AdminService.php';
+require_once __DIR__ . '/../app/services/NotificationService.php';
 
 // ------------------------------------------------------------------
 // Controllers
@@ -94,6 +98,7 @@ require_once __DIR__ . '/../app/controllers/OfferController.php';
 require_once __DIR__ . '/../app/controllers/ReviewController.php';
 require_once __DIR__ . '/../app/controllers/AdminController.php';
 require_once __DIR__ . '/../app/controllers/DashboardController.php';
+require_once __DIR__ . '/../app/controllers/NotificationController.php';
 
 // ------------------------------------------------------------------
 // Route registry
@@ -125,6 +130,15 @@ try {
         }
         if (str_starts_with($middleware, 'role:')) {
             require_role(substr($middleware, 5));
+            continue;
+        }
+        if (str_starts_with($middleware, 'validate:')) {
+            $validator = substr($middleware, 9);
+            $errors = run_named_validator($validator, request_json_body(), route_params());
+            if ($errors !== []) {
+                send_json(validation_error_response($errors));
+                exit;
+            }
         }
     }
 

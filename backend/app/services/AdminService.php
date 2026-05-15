@@ -5,6 +5,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/../repositories/UserRepository.php';
 require_once __DIR__ . '/../repositories/AuditLogRepository.php';
 require_once __DIR__ . '/../repositories/CategoryRepository.php';
+require_once __DIR__ . '/../repositories/MetricsRepository.php';
 
 /**
  * AdminService
@@ -17,15 +18,18 @@ final class AdminService
     private UserRepository     $users;
     private AuditLogRepository $audit;
     private CategoryRepository $categories;
+    private ?MetricsRepository $metrics;
 
     public function __construct(
         UserRepository     $users,
         AuditLogRepository $audit,
-        CategoryRepository $categories
+        CategoryRepository $categories,
+        ?MetricsRepository $metrics = null
     ) {
         $this->users      = $users;
         $this->audit      = $audit;
         $this->categories = $categories;
+        $this->metrics    = $metrics;
     }
 
     // ------------------------------------------------------------------
@@ -147,5 +151,18 @@ final class AdminService
         $this->audit->log($adminId, 'category_updated', 'service_category', $categoryId);
 
         return ['success' => true, 'message' => 'Category updated.'];
+    }
+
+    public function metrics(): array
+    {
+        if ($this->metrics === null) {
+            return [];
+        }
+
+        return array_merge($this->metrics->totals(), [
+            'users_by_role' => $this->metrics->usersByRole(),
+            'requests_by_status' => $this->metrics->requestsByStatus(),
+            'requests_by_category' => $this->metrics->requestsByCategory(),
+        ]);
     }
 }

@@ -16,10 +16,36 @@ declare(strict_types=1);
 final class RequestRepository
 {
     private PDO $db;
+    private ?array $columns = null;
 
     public function __construct(PDO $db)
     {
         $this->db = $db;
+    }
+
+    public function transaction(callable $callback): mixed
+    {
+        $alreadyInTransaction = $this->db->inTransaction();
+
+        if (!$alreadyInTransaction) {
+            $this->db->beginTransaction();
+        }
+
+        try {
+            $result = $callback();
+
+            if (!$alreadyInTransaction) {
+                $this->db->commit();
+            }
+
+            return $result;
+        } catch (Throwable $exception) {
+            if (!$alreadyInTransaction && $this->db->inTransaction()) {
+                $this->db->rollBack();
+            }
+
+            throw $exception;
+        }
     }
 
     // ------------------------------------------------------------------
@@ -37,21 +63,35 @@ final class RequestRepository
     {
         $uuid = $this->generateUuid();
 
-        $sql = 'INSERT INTO SERVICE_REQUESTS
-                    (REQUEST_ID, CUSTOMER_ID, CATEGORY_ID, DESCRIPTION, LOCATION, PREFERRED_DATE, STATUS)
-                VALUES
-                    (:id, :customer_id, :category_id, :description, :location, :preferred_date, :status)';
-
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute([
+        $fields = ['REQUEST_ID', 'CUSTOMER_ID', 'CATEGORY_ID', 'DESCRIPTION', 'LOCATION', 'PREFERRED_DATE', 'STATUS'];
+        $values = [':id', ':customer_id', ':category_id', ':description', ':location', ':preferred_date', ':status'];
+        $params = [
             ':id'             => $uuid,
             ':customer_id'    => $customerId,
             ':category_id'    => $categoryId,
-            ':description'    => trim($data['description'] ?? ''),
+            ':description'    => trim((string) ($data['description'] ?? $data['title'] ?? '')),
             ':location'       => trim($data['location'] ?? ''),
             ':preferred_date' => !empty($data['preferred_date']) ? $data['preferred_date'] : null,
             ':status'         => 'Requested',
-        ]);
+        ];
+
+        $columns = $this->columns();
+        if (in_array('TITLE', $columns, true)) {
+            $fields[] = 'TITLE';
+            $values[] = ':title';
+            $params[':title'] = trim((string) ($data['title'] ?? substr($params[':description'], 0, 80)));
+        }
+        if (in_array('BUDGET', $columns, true)) {
+            $fields[] = 'BUDGET';
+            $values[] = ':budget';
+            $params[':budget'] = isset($data['budget']) && $data['budget'] !== '' ? (float) $data['budget'] : null;
+        }
+
+        $sql = 'INSERT INTO SERVICE_REQUESTS (' . implode(', ', $fields) . ')
+                VALUES (' . implode(', ', $values) . ')';
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($params);
 
         return $uuid;
     }
@@ -113,10 +153,13 @@ final class RequestRepository
         $sql = 'SELECT sr.*,
                        sc.NAME AS CATEGORY_NAME,
                        u.NAME  AS CUSTOMER_NAME,
-                       u.PHONE AS CUSTOMER_PHONE
+                       u.PHONE AS CUSTOMER_PHONE,
+                       ao.PRICE AS ACCEPTED_PRICE,
+                       (SELECT COUNT(*) FROM OFFERS o WHERE o.REQUEST_ID = sr.REQUEST_ID) AS OFFER_COUNT
                 FROM SERVICE_REQUESTS sr
                 JOIN SERVICE_CATEGORIES sc ON sr.CATEGORY_ID  = sc.CATEGORY_ID
                 JOIN USERS             u  ON sr.CUSTOMER_ID   = u.USER_ID
+                LEFT JOIN OFFERS       ao ON sr.ACCEPTED_OFFER_ID = ao.OFFER_ID
                 WHERE sr.REQUEST_ID = :id
                 LIMIT 1';
 
@@ -266,5 +309,17 @@ final class RequestRepository
         $data[6] = chr((ord($data[6]) & 0x0f) | 0x40);
         $data[8] = chr((ord($data[8]) & 0x3f) | 0x80);
         return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($data), 4));
+    }
+
+    private function columns(): array
+    {
+        if ($this->columns !== null) {
+            return $this->columns;
+        }
+
+        $rows = $this->db->query('SHOW COLUMNS FROM SERVICE_REQUESTS')->fetchAll();
+        $this->columns = array_map(static fn(array $row): string => strtoupper((string) $row['Field']), $rows);
+
+        return $this->columns;
     }
 }

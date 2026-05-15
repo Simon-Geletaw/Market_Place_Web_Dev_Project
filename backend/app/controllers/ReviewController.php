@@ -8,6 +8,7 @@ require_once __DIR__ . '/../repositories/RequestRepository.php';
 require_once __DIR__ . '/../repositories/OfferRepository.php';
 require_once __DIR__ . '/../repositories/UserRepository.php';
 require_once __DIR__ . '/../repositories/AuditLogRepository.php';
+require_once __DIR__ . '/../repositories/StatusHistoryRepository.php';
 require_once __DIR__ . '/../repositories/DatabaseConnector.php';
 require_once __DIR__ . '/../helpers/response.php';
 require_once __DIR__ . '/../helpers/request.php';
@@ -30,7 +31,8 @@ final class ReviewController
             new RequestRepository($db),
             new OfferRepository($db),
             new UserRepository($db),
-            new AuditLogRepository($db)
+            new AuditLogRepository($db),
+            new StatusHistoryRepository($db)
         );
     }
 
@@ -79,5 +81,18 @@ final class ReviewController
         $customerId = $this->currentUserId();
         $reviews    = $this->reviewService->getCustomerReviews($customerId);
         return success_response('Your reviews retrieved.', $reviews);
+    }
+
+    public function given(): array
+    {
+        return $this->myReviews();
+    }
+
+    public function received(): array
+    {
+        $providerId = $this->currentUserId();
+        $reviews = $this->reviewService->getProviderReviews($providerId);
+
+        return success_response('Reviews received retrieved.', $reviews);
     }
 }

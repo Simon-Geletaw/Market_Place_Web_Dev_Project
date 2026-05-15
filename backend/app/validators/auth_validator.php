@@ -54,8 +54,11 @@ function validate_register_payload(array $payload): array
         $errors['password'] = 'Password is required.';
     } elseif (strlen($payload['password']) < 8) {
         $errors['password'] = 'Password must be at least 8 characters.';
-    }
-    elseif(strlen($payload['password']) > 255){
+    } elseif (!preg_match('/[A-Z]/', (string) $payload['password'])) {
+        $errors['password'] = 'Password must contain at least one uppercase letter.';
+    } elseif (!preg_match('/\d/', (string) $payload['password'])) {
+        $errors['password'] = 'Password must contain at least one number.';
+    } elseif (strlen($payload['password']) > 255) {
         $errors['password'] = 'Password must not exceed 255 characters.';
     }
 

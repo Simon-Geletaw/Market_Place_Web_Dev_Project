@@ -9,6 +9,8 @@ require_once __DIR__ . '/../repositories/AuditLogRepository.php';
 require_once __DIR__ . '/../repositories/CategoryRepository.php';
 require_once __DIR__ . '/../repositories/RequestRepository.php';
 require_once __DIR__ . '/../repositories/StatusHistoryRepository.php';
+require_once __DIR__ . '/../repositories/OfferRepository.php';
+require_once __DIR__ . '/../repositories/MetricsRepository.php';
 require_once __DIR__ . '/../repositories/DatabaseConnector.php';
 require_once __DIR__ . '/../helpers/response.php';
 require_once __DIR__ . '/../helpers/request.php';
@@ -30,14 +32,16 @@ final class AdminController
         $this->adminService = new AdminService(
             new UserRepository($db),
             new AuditLogRepository($db),
-            new CategoryRepository($db)
+            new CategoryRepository($db),
+            new MetricsRepository($db)
         );
 
         $this->requestService = new RequestService(
             new RequestRepository($db),
             new CategoryRepository($db),
             new StatusHistoryRepository($db),
-            new AuditLogRepository($db)
+            new AuditLogRepository($db),
+            new OfferRepository($db)
         );
     }
 
@@ -57,6 +61,11 @@ final class AdminController
             'total_providers'     => count($providers),
             'unverified_providers' => $unverified,
         ]);
+    }
+
+    public function metrics(): array
+    {
+        return success_response('Admin metrics retrieved.', $this->adminService->metrics());
     }
 
     // GET /api/admin/audit-logs

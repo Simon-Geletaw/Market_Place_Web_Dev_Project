@@ -7,6 +7,7 @@ require_once __DIR__ . '/../repositories/RequestRepository.php';
 require_once __DIR__ . '/../repositories/OfferRepository.php';
 require_once __DIR__ . '/../repositories/UserRepository.php';
 require_once __DIR__ . '/../repositories/AuditLogRepository.php';
+require_once __DIR__ . '/../repositories/StatusHistoryRepository.php';
 
 /**
  * ReviewService
@@ -21,19 +22,22 @@ final class ReviewService
     private OfferRepository   $offers;
     private UserRepository    $users;
     private AuditLogRepository $audit;
+    private ?StatusHistoryRepository $statusHistory;
 
     public function __construct(
         ReviewRepository  $reviews,
         RequestRepository $requests,
         OfferRepository   $offers,
         UserRepository    $users,
-        AuditLogRepository $audit
+        AuditLogRepository $audit,
+        ?StatusHistoryRepository $statusHistory = null
     ) {
         $this->reviews  = $reviews;
         $this->requests = $requests;
         $this->offers   = $offers;
         $this->users    = $users;
         $this->audit    = $audit;
+        $this->statusHistory = $statusHistory;
     }
 
     /**
@@ -87,15 +91,19 @@ final class ReviewService
         $providerId = $offer['PROVIDER_ID'];
 
         try {
-            $reviewId = $this->reviews->create($requestId, $customerId, $providerId, $rating, $comment);
+            $reviewId = $this->reviews->transaction(function () use ($requestId, $customerId, $providerId, $rating, $comment): string {
+                $reviewId = $this->reviews->create($requestId, $customerId, $providerId, $rating, $comment);
+                $this->requests->markReviewed($requestId);
 
-            // Move request to Reviewed.
-            $this->requests->markReviewed($requestId);
+                if ($this->statusHistory !== null) {
+                    $this->statusHistory->record($requestId, 'Completed', 'Reviewed', $customerId, 'Customer submitted review');
+                }
 
-            // Update provider's aggregate rating.
-            $this->users->refreshProviderRating($providerId);
+                $this->users->refreshProviderRating($providerId);
+                $this->audit->log($customerId, 'review_submitted', 'review', $reviewId, "Rating: $rating, Provider: $providerId");
 
-            $this->audit->log($customerId, 'review_submitted', 'review', $reviewId, "Rating: $rating, Provider: $providerId");
+                return $reviewId;
+            });
 
             return ['success' => true, 'review_id' => $reviewId];
         } catch (\Throwable $e) {
@@ -138,6 +146,7 @@ final class ReviewService
             'customer_name'       => $row['CUSTOMER_NAME']        ?? null,
             'provider_name'       => $row['PROVIDER_NAME']        ?? null,
             'request_description' => $row['REQUEST_DESCRIPTION']  ?? null,
+            'request_title'       => $row['REQUEST_TITLE'] ?? $row['REQUEST_DESCRIPTION'] ?? null,
             'category_name'       => $row['CATEGORY_NAME']        ?? null,
             'created_at'          => $row['CREATED_AT'],
         ];

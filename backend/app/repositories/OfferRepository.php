@@ -17,6 +17,31 @@ final class OfferRepository
         $this->db = $db;
     }
 
+    public function transaction(callable $callback): mixed
+    {
+        $alreadyInTransaction = $this->db->inTransaction();
+
+        if (!$alreadyInTransaction) {
+            $this->db->beginTransaction();
+        }
+
+        try {
+            $result = $callback();
+
+            if (!$alreadyInTransaction) {
+                $this->db->commit();
+            }
+
+            return $result;
+        } catch (Throwable $exception) {
+            if (!$alreadyInTransaction && $this->db->inTransaction()) {
+                $this->db->rollBack();
+            }
+
+            throw $exception;
+        }
+    }
+
     // ------------------------------------------------------------------
     // Write operations
     // ------------------------------------------------------------------
@@ -74,6 +99,24 @@ final class OfferRepository
                  WHERE o.OFFER_ID = :id LIMIT 1';
         $stmt = $this->db->prepare($sql);
         $stmt->execute([':id' => $offerId]);
+        return $stmt->fetch() ?: null;
+    }
+
+    public function findAcceptedByRequestAndProvider(string $requestId, string $providerId): ?array
+    {
+        $sql = 'SELECT *
+                FROM OFFERS
+                WHERE REQUEST_ID = :request_id
+                  AND PROVIDER_ID = :provider_id
+                  AND STATUS = :status
+                LIMIT 1';
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([
+            ':request_id' => $requestId,
+            ':provider_id' => $providerId,
+            ':status' => 'Accepted',
+        ]);
+
         return $stmt->fetch() ?: null;
     }
 

@@ -190,3 +190,7 @@
 [07-May-2026 19:56:01 Europe/Berlin] Requested route key: GET /auth/me
 [07-May-2026 19:56:01 Europe/Berlin] Requested route key: GET /marketplace/requests
 [07-May-2026 20:33:24 Europe/Berlin] Requested route key: POST /auth/login
+[12-May-2026 12:45:11 Europe/Berlin] [DB] Connection failed: SQLSTATE[HY000] [1045] Access denied for user 'admin'@'localhost' (using password: YES)
+[12-May-2026 12:45:11 Europe/Berlin] [500] Database connection failed. Check configuration. in C:\xampp\htdocs\Market_Place_Web_Dev_Project\backend\app\repositories\DatabaseConnector.php:44
+[12-May-2026 12:45:38 Europe/Berlin] [DB] Connection failed: SQLSTATE[HY000] [1045] Access denied for user 'market'@'localhost' (using password: YES)
+[12-May-2026 12:45:38 Europe/Berlin] [500] Database connection failed. Check configuration. in C:\xampp\htdocs\Market_Place_Web_Dev_Project\backend\app\repositories\DatabaseConnector.php:44

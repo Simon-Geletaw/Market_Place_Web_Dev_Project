@@ -10,16 +10,21 @@ function validate_request_create(array $data): array
 {
     $errors = [];
 
-    if (empty($data['category'])) {
+    if (empty($data['category']) && empty($data['category_id'])) {
         $errors['category'] = 'Category is required.';
     }
 
-    if (empty($data['description'])) {
+    $description = trim((string) ($data['description'] ?? $data['title'] ?? ''));
+    if ($description === '') {
         $errors['description'] = 'Description is required.';
-    } elseif (strlen($data['description']) < 10) {
+    } elseif (strlen($description) < 10) {
         $errors['description'] = 'Description must be at least 10 characters.';
-    } elseif (strlen($data['description']) > 2000) {
+    } elseif (strlen($description) > 2000) {
         $errors['description'] = 'Description must not exceed 2000 characters.';
+    }
+
+    if (isset($data['budget']) && $data['budget'] !== '' && (!is_numeric($data['budget']) || (float) $data['budget'] < 0)) {
+        $errors['budget'] = 'Budget must be a valid positive number.';
     }
 
     if (empty($data['location'])) {

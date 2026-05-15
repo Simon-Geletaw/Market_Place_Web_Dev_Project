@@ -2,12 +2,13 @@
 
 declare(strict_types=1);
 
-function json_response(bool $success, string $message, array $data = [], int $statusCode = 200): array
+function json_response(bool $success, string $message, array $data = [], int $statusCode = 200, array $errors = []): array
 {
     return [
         'success' => $success,
         'message' => $message,
         'data' => $data,
+        'errors' => $errors,
         'status_code' => $statusCode,
     ];
 }
@@ -29,7 +30,12 @@ function success_response(string $message, array $data = [], int $statusCode = 2
     return json_response(true, $message, $data, $statusCode);
 }
 
-function error_response(string $message, array $data = [], int $statusCode = 400): array
+function error_response(string $message, array $errors = [], int $statusCode = 400, array $data = []): array
 {
-    return json_response(false, $message, $data, $statusCode);
+    return json_response(false, $message, $data, $statusCode, $errors);
+}
+
+function validation_error_response(array $errors, string $message = 'Validation failed.'): array
+{
+    return error_response($message, $errors, 422);
 }

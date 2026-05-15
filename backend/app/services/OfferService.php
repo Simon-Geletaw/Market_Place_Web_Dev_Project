@@ -61,15 +61,18 @@ final class OfferService
         }
 
         try {
-            $offerId = $this->offers->create($requestId, $providerId, $price, $message);
+            $offerId = $this->offers->transaction(function () use ($requestId, $providerId, $price, $message, $request): string {
+                $offerId = $this->offers->create($requestId, $providerId, $price, $message);
 
-            // Move request to Negotiating if it is still in Requested state.
-            if ($request['STATUS'] === 'Requested') {
-                $this->requests->updateStatus($requestId, 'Negotiating');
-                $this->statusHistory->record($requestId, 'Requested', 'Negotiating', $providerId, 'First offer received');
-            }
+                if ($request['STATUS'] === 'Requested') {
+                    $this->requests->updateStatus($requestId, 'Negotiating');
+                    $this->statusHistory->record($requestId, 'Requested', 'Negotiating', $providerId, 'First offer received');
+                }
 
-            $this->audit->log($providerId, 'offer_submitted', 'offer', $offerId, "Request: $requestId, Price: $price");
+                $this->audit->log($providerId, 'offer_submitted', 'offer', $offerId, "Request: $requestId, Price: $price");
+
+                return $offerId;
+            });
 
             return ['success' => true, 'offer_id' => $offerId];
         } catch (\Throwable $e) {
@@ -108,13 +111,19 @@ final class OfferService
         }
 
         try {
-            // Atomically: accept this offer, assign the request, reject all others.
-            $this->offers->updateStatus($offerId, 'Accepted');
-            $this->requests->assignOffer($offer['REQUEST_ID'], $offerId);
-            $this->offers->rejectOthers($offer['REQUEST_ID'], $offerId);
+            $this->offers->transaction(function () use ($offer, $offerId, $customerId): void {
+                $freshRequest = $this->requests->findById($offer['REQUEST_ID']);
+                if (!$freshRequest || $freshRequest['STATUS'] !== 'Negotiating') {
+                    throw new RuntimeException('Request is no longer negotiable.');
+                }
 
-            $this->statusHistory->record($offer['REQUEST_ID'], 'Negotiating', 'Assigned', $customerId, "Offer $offerId accepted");
-            $this->audit->log($customerId, 'offer_accepted', 'offer', $offerId, "Request: {$offer['REQUEST_ID']}");
+                $this->offers->updateStatus($offerId, 'Accepted');
+                $this->requests->assignOffer($offer['REQUEST_ID'], $offerId);
+                $this->offers->rejectOthers($offer['REQUEST_ID'], $offerId);
+
+                $this->statusHistory->record($offer['REQUEST_ID'], 'Negotiating', 'Assigned', $customerId, "Offer $offerId accepted");
+                $this->audit->log($customerId, 'offer_accepted', 'offer', $offerId, "Request: {$offer['REQUEST_ID']}");
+            });
 
             return ['success' => true, 'message' => 'Offer accepted. Request is now Assigned.'];
         } catch (\Throwable $e) {
@@ -212,6 +221,7 @@ final class OfferService
             'provider_id'      => $row['PROVIDER_ID'],
             'provider_name'    => $row['PROVIDER_NAME']    ?? null,
             'rating_average'   => (float) ($row['RATING_AVERAGE'] ?? 0.0),
+            'provider_rating'  => (float) ($row['RATING_AVERAGE'] ?? 0.0),
             'is_verified'      => (bool) ($row['IS_VERIFIED']     ?? false),
             'price'            => (float) $row['PRICE'],
             'message'          => $row['MESSAGE']          ?? '',

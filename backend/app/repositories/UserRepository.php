@@ -147,6 +147,12 @@ final class UserRepository
         $stmt->execute($params);
         return $stmt->rowCount() > 0;
     }
+    public function updatePassword(string $userId, string $passwordHash): bool
+    {
+        $stmt = $this->db->prepare('UPDATE USERS SET PASSWORD_HASH = :hash WHERE USER_ID = :id');
+        $stmt->execute([':hash' => $passwordHash, ':id' => $userId]);
+        return $stmt->rowCount() > 0;
+    }
 
     /**
      * Update a provider's rating aggregate after a new review.
