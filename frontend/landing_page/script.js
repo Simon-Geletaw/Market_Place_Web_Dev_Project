@@ -17,6 +17,11 @@
 document.addEventListener('DOMContentLoaded', () => {
   /* --- 1. STICKY NAVBAR --- */
   const navbar = document.getElementById('navbar');
+  const navToggle = document.getElementById('navToggle');
+  const navMenu = document.getElementById('navbarMenu');
+  const backToTop = document.getElementById('backToTop');
+
+  if (!navbar) return;
 
   function handleNavbarScroll() {
     if (window.scrollY > 20) {
@@ -28,27 +33,26 @@ document.addEventListener('DOMContentLoaded', () => {
   window.addEventListener('scroll', handleNavbarScroll, { passive: true });
 
   /* --- 2. MOBILE MENU TOGGLE --- */
-  const navToggle = document.getElementById('navToggle');
-  const navMenu = document.getElementById('navbarMenu');
+  if (navToggle && navMenu) {
+    navToggle.addEventListener('click', () => {
+      const isOpen = navToggle.classList.toggle('navbar__toggle--active');
+      navMenu.classList.toggle('navbar__nav--open');
+      navToggle.setAttribute('aria-expanded', String(isOpen));
 
-  navToggle.addEventListener('click', () => {
-    const isOpen = navToggle.classList.toggle('navbar__toggle--active');
-    navMenu.classList.toggle('navbar__nav--open');
-    navToggle.setAttribute('aria-expanded', String(isOpen));
-
-    // Prevent body scroll when menu is open
-    document.body.style.overflow = isOpen ? 'hidden' : '';
-  });
-
-  // Close menu when a nav link is clicked
-  navMenu.querySelectorAll('.navbar__link').forEach(link => {
-    link.addEventListener('click', () => {
-      navToggle.classList.remove('navbar__toggle--active');
-      navMenu.classList.remove('navbar__nav--open');
-      navToggle.setAttribute('aria-expanded', 'false');
-      document.body.style.overflow = '';
+      // Prevent body scroll when menu is open
+      document.body.style.overflow = isOpen ? 'hidden' : '';
     });
-  });
+
+    // Close menu when a nav link is clicked
+    navMenu.querySelectorAll('.navbar__link').forEach(link => {
+      link.addEventListener('click', () => {
+        navToggle.classList.remove('navbar__toggle--active');
+        navMenu.classList.remove('navbar__nav--open');
+        navToggle.setAttribute('aria-expanded', 'false');
+        document.body.style.overflow = '';
+      });
+    });
+  }
 
   /* --- 3. SMOOTH SCROLL --- */
   document.querySelectorAll('a[href^="#"]').forEach(anchor => {
@@ -143,12 +147,13 @@ document.addEventListener('DOMContentLoaded', () => {
   revealElements.forEach(el => revealObserver.observe(el));
 
   /* --- 8. BACK TO TOP --- */
-  const backToTop = document.getElementById('backToTop');
-  window.addEventListener('scroll', () => {
-    backToTop.classList.toggle('back-to-top--visible', window.scrollY > 500);
-  }, { passive: true });
+  if (backToTop) {
+    window.addEventListener('scroll', () => {
+      backToTop.classList.toggle('back-to-top--visible', window.scrollY > 500);
+    }, { passive: true });
 
-  backToTop.addEventListener('click', () => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  });
+    backToTop.addEventListener('click', () => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+  }
 });

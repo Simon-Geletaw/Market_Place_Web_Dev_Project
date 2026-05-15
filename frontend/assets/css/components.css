@@ -118,6 +118,31 @@
 .timeline__item:not(:last-child)::before{content:'';position:absolute;left:11px;top:24px;bottom:0;width:2px;background:var(--color-border)}
 .timeline__dot{width:24px;height:24px;border-radius:50%;border:2px solid var(--color-border);background:var(--color-bg-white);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:12px}
 .timeline__item.done .timeline__dot{border-color:var(--color-success);background:var(--color-success);color:#fff}
+
+/* ── Shared Logo Alignment ── */
+.navbar__logo-icon{flex-shrink:0}
+.navbar__logo-text{display:inline-flex;align-items:center;line-height:1}
+
+/* ── Marketplace Page ── */
+.marketplace-page{padding-top:var(--navbar-height)}
+.marketplace-page__container{padding-top:var(--space-xl);padding-bottom:var(--space-xl)}
+.marketplace-page__search{max-width:640px;margin:0 auto var(--space-xl)}
+.marketplace-page__content{display:flex;gap:var(--space-xl);align-items:flex-start}
+.marketplace-page__sidebar{width:220px;flex-shrink:0}
+.marketplace-page__sidebar-title{font-size:14px;line-height:1.3}
+.marketplace-page__filters{display:flex;flex-direction:column;gap:var(--space-md)}
+.marketplace-page__field{margin-bottom:0}
+.marketplace-page__results{flex:1;min-width:0}
+
+@media (max-width: 992px){
+	.marketplace-page__content{flex-direction:column}
+	.marketplace-page__sidebar{width:100%}
+	.marketplace-page__search{max-width:none}
+}
+
+@media (max-width: 576px){
+	.marketplace-page__container{padding-top:var(--space-lg)}
+}
 .timeline__item.active .timeline__dot{border-color:var(--color-primary);background:var(--color-primary);color:#fff}
 .timeline__body{flex:1;padding-top:2px}
 .timeline__label{font-size:14px;font-weight:600}

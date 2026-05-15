@@ -21,6 +21,10 @@ function url(path) {
   return getRootPrefix() + path;
 }
 
+function ensureLeadingSlash(path) {
+  return path.startsWith('/') ? path : `/${path}`;
+}
+
 const Layout = {
   renderNavbar(containerId = 'app-header', activeMenu = '') {
     const container = document.getElementById(containerId);
@@ -32,8 +36,9 @@ const Layout = {
 
     container.innerHTML = `
       <div class="navbar-container">
-        <a href="${url('/frontend/landing_page/index.html')}" class="navbar__logo">
-          <div class="navbar__logo-icon">S</div>Service<span class="navbar__logo-accent">Link</span>
+        <a href="${url('/frontend/landing_page/index.html')}" class="navbar__logo" aria-label="ServiceLink home">
+          <div class="navbar__logo-icon">S</div>
+          <span class="navbar__logo-text">Service<span class="navbar__logo-accent">Link</span></span>
         </a>
         <nav class="navbar__nav">
           <a href="${url('/frontend/pages/marketplace.html')}"

@@ -12,42 +12,42 @@
 <body>
 <header id="app-header"></header>
 
-<div style="padding-top:var(--navbar-height)">
-  <div class="container" style="padding-top:var(--space-xl);padding-bottom:var(--space-xl)">
+<main class="marketplace-page">
+  <div class="container marketplace-page__container">
 
     <!-- Search -->
-    <div style="max-width:640px;margin:0 auto var(--space-xl)">
+    <div class="marketplace-page__search">
       <div class="search-bar">
-        <input type="text" id="searchInput" placeholder="What service do you need?">
+        <input type="text" id="searchInput" placeholder="What service do you need?" aria-label="Search services">
         <button class="search-bar__btn" id="searchBtn">Search</button>
       </div>
     </div>
 
     <!-- Filters + Grid -->
-    <div style="display:flex;gap:var(--space-xl);align-items:flex-start">
+    <div class="marketplace-page__content">
       <!-- Filters (sidebar) -->
-      <aside style="width:220px;flex-shrink:0">
+      <aside class="marketplace-page__sidebar">
         <div class="card">
-          <div class="card__header"><h4 style="font-size:14px">Filters</h4></div>
-          <div class="card__body" style="display:flex;flex-direction:column;gap:var(--space-md)">
-            <div class="form-group" style="margin-bottom:0">
-              <label class="form-label">Category</label>
+          <div class="card__header"><h4 class="marketplace-page__sidebar-title">Filters</h4></div>
+          <div class="card__body marketplace-page__filters">
+            <div class="form-group marketplace-page__field">
+              <label class="form-label" for="fCategory">Category</label>
               <select class="form-select" id="fCategory">
                 <option value="">All</option>
                 <option>Electrician</option><option>Plumber</option><option>Carpenter</option>
                 <option>Painter</option><option>Cleaner</option><option>General Handyman</option>
               </select>
             </div>
-            <div class="form-group" style="margin-bottom:0">
-              <label class="form-label">Location</label>
+            <div class="form-group marketplace-page__field">
+              <label class="form-label" for="fLocation">Location</label>
               <select class="form-select" id="fLocation">
                 <option value="">All Sub-cities</option>
                 <option>Bole</option><option>Kirkos</option><option>Addis Ketema</option>
                 <option>Akaki Kaliti</option><option>Arada</option><option>Yeka</option>
               </select>
             </div>
-            <div class="form-group" style="margin-bottom:0">
-              <label class="form-label">Sort By</label>
+            <div class="form-group marketplace-page__field">
+              <label class="form-label" for="fSort">Sort By</label>
               <select class="form-select" id="fSort">
                 <option value="desc">Newest First</option>
                 <option value="asc">Oldest First</option>
@@ -59,7 +59,7 @@
       </aside>
 
       <!-- Results -->
-      <div style="flex:1">
+      <div class="marketplace-page__results">
         <div class="flex-between mb-md">
           <p id="resultsCount" class="text-muted text-sm">Loading...</p>
         </div>
@@ -68,7 +68,7 @@
       </div>
     </div>
   </div>
-</div>
+</main>
 
 <script type="module">
 import Api from '../core/api.js';
@@ -78,6 +78,14 @@ import Layout from '../core/layout.js';
 const BADGE = { Requested:'badge--requested', Negotiating:'badge--negotiating', Assigned:'badge--assigned', Completed:'badge--completed' };
 let debounceTimer;
 function esc(s){const d=document.createElement('div');d.textContent=s||'';return d.innerHTML}
+
+function normalizeCategoryValue(category) {
+  if (!category) return '';
+  if (typeof category === 'object') {
+    return category.id || category.CATEGORY_ID || category.value || category.name || '';
+  }
+  return category;
+}
 
 function debounceLoad() { clearTimeout(debounceTimer); debounceTimer = setTimeout(loadRequests, 400); }
 
@@ -90,7 +98,10 @@ async function loadRequests() {
   grid.innerHTML = '<div class="empty-state"><div class="spinner spinner--dark"></div></div>';
 
   try {
-    const res = await Api.get(`/marketplace?category_id=${encodeURIComponent(category)}&location=${encodeURIComponent(location)}`);
+    const params = new URLSearchParams();
+    if (category) params.set('category_id', normalizeCategoryValue(category));
+    if (location) params.set('location', location);
+    const res = await Api.get(`/marketplace?${params.toString()}`);
     const requests = res.data || [];
 
     const user = Auth.getUser();
@@ -137,6 +148,19 @@ function clearFilters() {
   loadRequests();
 }
 
+function loadCategories() {
+  return Api.get('/categories').then(res => {
+    const categories = Array.isArray(res.data) ? res.data : [];
+    const select = document.getElementById('fCategory');
+    if (!select || !categories.length) return;
+    select.innerHTML = '<option value="">All</option>' + categories.map(category => {
+      const value = normalizeCategoryValue(category);
+      const label = category.name || category.NAME || value;
+      return `<option value="${esc(value)}">${esc(label)}</option>`;
+    }).join('');
+  }).catch(() => {});
+}
+
 function timeAgo(ts) {
   const diff = (Date.now() - new Date(ts)) / 1000;
   if (diff < 3600) return `${Math.floor(diff/60)}m ago`;
@@ -155,6 +179,7 @@ async function init() {
   document.getElementById('fSort').addEventListener('change', loadRequests);
   document.getElementById('clearFiltersBtn').addEventListener('click', clearFilters);
 
+  await loadCategories();
   loadRequests();
 }
 
