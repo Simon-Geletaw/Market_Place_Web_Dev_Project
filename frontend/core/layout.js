@@ -94,6 +94,7 @@ const Layout = {
         { id: 'dashboard',     label: '📊 Overview',             href: url('/frontend/pages/dashboard/admin.html') },
         { id: 'verification',  label: '🛡️ Provider Verification', href: url('/frontend/pages/admin/verification.html') },
         { id: 'audit-logs',    label: '📋 Audit Logs',           href: url('/frontend/pages/admin/audit-logs.html') },
+        { id: 'metrics',       label: '📈 Metrics',              href: url('/frontend/pages/admin/metrics.html') },
         { id: 'settings',      label: '⚙️ Settings',             href: url('/frontend/pages/settings.html') },
       ],
     };
