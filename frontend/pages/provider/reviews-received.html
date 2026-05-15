@@ -1,31 +1,21 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Reviews Received — ServiceLink</title>
   <link rel="stylesheet" href="../../assets/css/main.css">
   <link rel="stylesheet" href="../../assets/css/components.css">
+  <style>
+    @media (max-width: 768px) {
+      .flex-between { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
+    }
+  </style>
 </head>
 <body>
-<header class="app-navbar">
-  <div class="navbar">
-    <a href="../../landing_page/index.html" class="navbar__logo"><div class="navbar__logo-icon">S</div>Service<span class="navbar__logo-accent">Link</span></a>
-    <div class="navbar__actions"><div class="navbar__user" id="navUser"></div><button class="btn btn--secondary btn--sm" onclick="Auth.logout()">Logout</button></div>
-  </div>
-</header>
+<div id="app-header"></div>
 <div class="app-shell">
-  <aside class="app-sidebar">
-    <div class="sidebar">
-      <div class="sidebar__label">Provider Menu</div>
-      <a href="../dashboard/provider.html" class="sidebar__item">📊 Dashboard</a>
-      <a href="../marketplace.html" class="sidebar__item">🔍 Browse Requests</a>
-      <a href="my-offers.html" class="sidebar__item">📤 My Offers</a>
-      <a href="assigned-jobs.html" class="sidebar__item">✅ Assigned Jobs</a>
-      <a href="completed-jobs.html" class="sidebar__item">🎉 Completed Jobs</a>
-      <a href="reviews-received.html" class="sidebar__item active">⭐ Reviews Received</a>
-      <div class="sidebar__footer"><button class="btn btn--secondary btn--sm btn--full" onclick="Auth.logout()">Sign Out</button></div>
-    </div>
-  </aside>
+  <div id="app-sidebar"></div>
   <main class="app-content">
     <div class="page-header">
       <div><div class="page-header__title">Reviews Received</div><div class="page-header__subtitle" id="avgLine">Your customer feedback</div></div>
@@ -33,17 +23,34 @@
     <div id="list"></div>
   </main>
 </div>
-<script src="../../assets/js/modules/api.js"></script>
-<script src="../../assets/js/modules/auth.js"></script>
-<script>
+<script type="module">
+import Layout from '../../core/layout.js';
+import Auth from '../../core/auth.js';
+import Api from '../../core/api.js';
+
 function esc(s){const d=document.createElement('div');d.textContent=s||'';return d.innerHTML}
 function stars(n){return '★'.repeat(n)+'☆'.repeat(5-n)}
-async function init(){await Auth.load();if(!Auth.requireAuth())return;Auth.renderNavUser(document.getElementById('navUser'));
-  const el=document.getElementById('list');el.innerHTML='<div class="empty-state"><div class="spinner spinner--dark"></div></div>';
-  try{
-    const res=await api.get('/reviews/received');const reviews=res.data||[];
-    if(reviews.length){const avg=(reviews.reduce((s,r)=>s+r.rating,0)/reviews.length).toFixed(1);document.getElementById('avgLine').textContent=`Average rating: ${avg} ⭐ (${reviews.length} review${reviews.length!==1?'s':''})`;}
-    if(!reviews.length){el.innerHTML='<div class="empty-state"><div class="empty-state__icon">⭐</div><div class="empty-state__title">No reviews yet</div><p class="empty-state__text">Complete jobs to receive customer reviews.</p></div>';return;}
+
+async function init(){
+  await Auth.load();
+  if(!Auth.requireAuth(['provider'])) return;
+  Layout.renderShell('provider', 'reviews', 'dashboard');
+
+  const el=document.getElementById('list');
+  el.innerHTML='<div class="empty-state"><div class="spinner spinner--dark"></div></div>';
+  
+  try {
+    const res=await Api.get('/reviews/received');
+    const reviews=res.data||[];
+    
+    if(reviews.length){
+      const avg=(reviews.reduce((s,r)=>s+r.rating,0)/reviews.length).toFixed(1);
+      document.getElementById('avgLine').textContent=`Average rating: ${avg} ⭐ (${reviews.length} review${reviews.length!==1?'s':''})`;
+    } else {
+      el.innerHTML='<div class="empty-state"><div class="empty-state__icon">⭐</div><div class="empty-state__title">No reviews yet</div><p class="empty-state__text">Complete jobs to receive customer reviews.</p></div>';
+      return;
+    }
+    
     el.innerHTML=reviews.map(rv=>`<div class="card mb-md">
       <div class="card__body">
         <div class="flex-between mb-md">
@@ -57,7 +64,9 @@ async function init(){await Auth.load();if(!Auth.requireAuth())return;Auth.rende
         <div class="text-sm text-muted mt-sm">${new Date(rv.created_at).toLocaleDateString()}</div>
       </div>
     </div>`).join('');
-  }catch{el.innerHTML='<div class="empty-state"><p class="text-muted">Could not load reviews.</p></div>';}
+  } catch (err) {
+    el.innerHTML='<div class="empty-state"><p class="text-muted">Could not load reviews.</p></div>';
+  }
 }
 init();
 </script>
