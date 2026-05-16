@@ -46,7 +46,7 @@ const Auth = {
       const base = this._resolveApiBase();
       const res  = await fetch(base + '/auth/me', {
         method: 'GET',
-        credentials: 'same-origin',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
       });
 
@@ -113,7 +113,7 @@ const Auth = {
     try {
       await fetch(this._resolveApiBase() + '/auth/logout', {
         method: 'POST',
-        credentials: 'same-origin',
+        credentials: 'include',
       });
     } catch { /* fire and forget */ }
     this._clearSession();

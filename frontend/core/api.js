@@ -13,6 +13,9 @@ import Auth from './auth.js';
 
 // Resolve backend base URL. Allow override via window.__API_BASE__ for non-standard deployments.
 function resolveBase() {
+  if (typeof window.__API_BASE__ === 'string' && window.__API_BASE__.length > 0) {
+    return window.__API_BASE__;
+  }
   const origin = window.location.origin;
   const path   = window.location.pathname;
   // Detect if served under a sub-directory (e.g. /Market_Place_Web_Dev_Project/frontend/...)
@@ -21,16 +24,14 @@ function resolveBase() {
   return `${origin}${prefix}/backend/public/api`;
 }
 
-const BASE_URL = (typeof window.__API_BASE__ === 'string' && window.__API_BASE__.length > 0)
-  ? window.__API_BASE__
-  : resolveBase();
+const BASE_URL = resolveBase();
 
 const Api = {
   async _request(method, path, data = null, isFile = false) {
     const url  = BASE_URL + path;
     const opts = {
       method,
-      credentials: 'same-origin',
+      credentials: 'include',
       headers: {},
     };
 

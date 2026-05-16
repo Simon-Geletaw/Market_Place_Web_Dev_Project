@@ -4,6 +4,7 @@
  * ============================================================
  */
 import Api from '../core/api.js';
+import Auth from '../core/auth.js';
 import Toast from '../core/toast.js';
 
 const DOM = {
@@ -339,29 +340,25 @@ const Handlers = {
       UI.setLoading(false);
       
       if (result.success) {
-        const container = document.querySelector('.auth-form-container');
-        if (container) {
-          const header = container.querySelector('.auth-form__header');
-          const footer = container.querySelector('.auth-form__footer');
-          UI.announceStatus(result.message || 'Account created successfully!');
-          
-          DOM.form.innerHTML = `
-            <div style="text-align:center; padding: 32px 0;">
-              <svg width="56" height="56" viewBox="0 0 24 24" fill="none" style="margin: 0 auto 16px;">
-                <circle cx="12" cy="12" r="10" stroke="#28A745" stroke-width="2"/>
-                <path d="M8 12l3 3 5-5" stroke="#28A745" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-              <h2 style="font-size:1.25rem; font-weight:700; color:#1A1A1A; margin-bottom:8px;">Account Created!</h2>
-              <p style="font-size:0.9rem; color:#666; margin-bottom: 24px;">Welcome to ServiceLink, ${Sanitizer.escapeHTML(data.name)}!</p>
-              <a href="../login/index.html" 
-                 style="display:inline-block; padding:12px 32px; background:#0066CC; color:#fff; border-radius:8px; font-weight:600; text-decoration:none; font-size:0.95rem;">
-                Go to Login
-              </a>
-            </div>
-          `;
-          if (header) header.style.display = 'none';
-          if (footer) footer.style.display = 'none';
-          Toast.success('Account created successfully!');
+        UI.announceStatus(result.message || 'Account created successfully!');
+        Toast.success('Account created successfully!');
+
+        // The backend creates a session on registration — store user & redirect by role
+        const user = result.data && result.data.user;
+        if (user) {
+          Auth.storeUser(user);
+          const role = (user.role || data.role || 'customer').toLowerCase();
+          setTimeout(() => {
+            const base = window.location.pathname.split('/frontend/')[0];
+            if (role === 'admin')         window.location.href = base + '/frontend/pages/dashboard/admin.html';
+            else if (role === 'provider') window.location.href = base + '/frontend/pages/dashboard/provider.html';
+            else                          window.location.href = base + '/frontend/pages/dashboard/customer.html';
+          }, 400);
+        } else {
+          // Fallback: user object not returned — redirect to login
+          setTimeout(() => {
+            window.location.href = '../login/index.html';
+          }, 1200);
         }
       } else {
         const errorMsg = result.message || 'Registration failed. Please try again.';

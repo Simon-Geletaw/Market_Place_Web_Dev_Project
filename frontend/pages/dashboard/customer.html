@@ -9,6 +9,100 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../../assets/css/main.css">
   <link rel="stylesheet" href="../../assets/css/components.css">
+  <style>
+    /* ── Customer Dashboard Specific ── */
+    .welcome-banner {
+      background: linear-gradient(135deg, #0052A3 0%, #0077E6 100%);
+      border-radius: var(--radius-lg);
+      padding: 28px 32px;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-lg);
+      margin-bottom: var(--space-xl);
+      position: relative;
+      overflow: hidden;
+    }
+    .welcome-banner::after {
+      content: '';
+      position: absolute;
+      right: -40px; top: -40px;
+      width: 180px; height: 180px;
+      background: rgba(255,255,255,0.06);
+      border-radius: 50%;
+    }
+    .welcome-banner__content { position: relative; z-index: 1; }
+    .welcome-banner__title { font-size: 22px; font-weight: 700; margin-bottom: 4px; }
+    .welcome-banner__subtitle { font-size: 14px; opacity: 0.85; }
+    .welcome-banner__actions { position: relative; z-index: 1; flex-shrink: 0; }
+    .welcome-banner__actions .btn {
+      background: rgba(255,255,255,0.15); color: #fff;
+      border: 1px solid rgba(255,255,255,0.3);
+    }
+    .welcome-banner__actions .btn:hover { background: rgba(255,255,255,0.25); color: #fff; }
+
+    .stat-card__icon-wrap {
+      width: 44px; height: 44px;
+      border-radius: var(--radius-md);
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: var(--space-sm);
+    }
+    .stat-card__icon-wrap svg { width: 22px; height: 22px; }
+
+    .section-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: var(--space-md);
+    }
+    .section-header__title {
+      font-size: 16px; font-weight: 700;
+      display: flex; align-items: center; gap: var(--space-sm);
+    }
+    .section-header__title svg { opacity: 0.5; }
+
+    .job-card {
+      background: var(--color-bg-white);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      padding: 20px;
+      margin-bottom: var(--space-md);
+      transition: box-shadow var(--transition), border-color var(--transition);
+    }
+    .job-card:hover { box-shadow: var(--shadow-hover); border-color: #ccc; }
+    .job-card__top {
+      display: flex; align-items: flex-start; justify-content: space-between;
+      gap: var(--space-md); margin-bottom: 10px;
+    }
+    .job-card__title { font-size: 15px; font-weight: 600; line-height: 1.4; }
+    .job-card__meta {
+      display: flex; align-items: center; gap: var(--space-lg);
+      font-size: 12px; color: var(--color-text-secondary);
+      margin-bottom: 12px; flex-wrap: wrap;
+    }
+    .job-card__meta-item { display: inline-flex; align-items: center; gap: 4px; }
+    .job-card__meta-item svg { width: 14px; height: 14px; opacity: 0.5; }
+    .job-card__desc {
+      font-size: 13px; color: var(--color-text-secondary); line-height: 1.5;
+      margin-bottom: 12px;
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+    }
+    .job-card__actions { display: flex; gap: var(--space-sm); }
+
+    .empty-card {
+      background: var(--color-bg-white);
+      border: 1px dashed var(--color-border);
+      border-radius: var(--radius-md);
+      padding: var(--space-xl) var(--space-lg);
+      text-align: center;
+    }
+    .empty-card__icon { width: 48px; height: 48px; margin: 0 auto var(--space-md); color: var(--color-text-muted); opacity: 0.3; }
+    .empty-card__text { color: var(--color-text-secondary); font-size: 14px; line-height: 1.6; }
+    .empty-card__text a { font-weight: 600; }
+
+    @media (max-width: 768px) {
+      .welcome-banner { flex-direction: column; align-items: flex-start; padding: 20px 24px; }
+    }
+  </style>
   <script src="../../core/guard.js"></script>
 </head>
 <body>
@@ -19,34 +113,49 @@
   <aside id="app-sidebar"></aside>
 
   <main class="app-content">
-    <div class="page-header">
-      <div>
-        <div class="page-header__title" id="welcomeMsg">My Dashboard</div>
-        <div class="page-header__subtitle">Track your service requests and offers</div>
+
+    <!-- Welcome Banner -->
+    <div class="welcome-banner">
+      <div class="welcome-banner__content">
+        <div class="welcome-banner__title" id="welcomeMsg">My Dashboard</div>
+        <div class="welcome-banner__subtitle">Track your service requests and offers</div>
       </div>
-      <button class="btn btn--primary" id="openCreateTopBtn">+ Post New Request</button>
+      <div class="welcome-banner__actions">
+        <button class="btn" id="openCreateTopBtn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Post New Request
+        </button>
+      </div>
     </div>
 
     <!-- Stat Cards -->
     <div class="grid-4 mb-lg" id="statCards">
       <div class="stat-card stat-card--requested" data-filter="Requested">
-        <div class="stat-card__icon" style="background:#e8f4ff">📋</div>
-        <div class="stat-card__value" id="cntRequested">—</div>
+        <div class="stat-card__icon-wrap" style="background:#e8f4ff;color:#0066CC">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        </div>
+        <div class="stat-card__value" id="cntRequested">&mdash;</div>
         <div class="stat-card__label">Requested</div>
       </div>
       <div class="stat-card stat-card--negotiating" data-filter="Negotiating">
-        <div class="stat-card__icon" style="background:#fff4e0">💬</div>
-        <div class="stat-card__value" id="cntNegotiating">—</div>
+        <div class="stat-card__icon-wrap" style="background:#fff4e0;color:#b36a00">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+        </div>
+        <div class="stat-card__value" id="cntNegotiating">&mdash;</div>
         <div class="stat-card__label">Negotiating</div>
       </div>
       <div class="stat-card stat-card--assigned" data-filter="Assigned">
-        <div class="stat-card__icon" style="background:#e8f5eb">✅</div>
-        <div class="stat-card__value" id="cntAssigned">—</div>
+        <div class="stat-card__icon-wrap" style="background:#e8f5eb;color:#1a7a32">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        </div>
+        <div class="stat-card__value" id="cntAssigned">&mdash;</div>
         <div class="stat-card__label">Assigned</div>
       </div>
       <div class="stat-card stat-card--completed" data-filter="Completed">
-        <div class="stat-card__icon" style="background:#e0faf4">🎉</div>
-        <div class="stat-card__value" id="cntCompleted">—</div>
+        <div class="stat-card__icon-wrap" style="background:#e0faf4;color:#0f7a5a">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+        </div>
+        <div class="stat-card__value" id="cntCompleted">&mdash;</div>
         <div class="stat-card__label">Completed</div>
       </div>
     </div>
@@ -65,7 +174,7 @@
         <option value="desc">Newest First</option>
         <option value="asc">Oldest First</option>
       </select>
-      <button class="btn btn--secondary btn--sm" id="refreshBtn">↻ Refresh</button>
+      <button class="btn btn--secondary btn--sm" id="refreshBtn">Refresh</button>
     </div>
 
     <!-- Requests List -->
@@ -78,7 +187,7 @@
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitleDashboardCreate">
     <div class="modal__header">
       <h2 class="modal__title" id="modalTitleDashboardCreate">Post a New Service Request</h2>
-      <button class="modal__close" id="closeCreateTopBtn" aria-label="Close new request modal">✕</button>
+      <button class="modal__close" id="closeCreateTopBtn" aria-label="Close new request modal">&times;</button>
     </div>
     <div class="modal__body">
       <form id="createForm" novalidate>
@@ -87,6 +196,10 @@
           <select class="form-select" id="crCategory">
             <option value="">Loading categories...</option>
           </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Title</label>
+          <input class="form-input" type="text" id="crTitle" placeholder="Brief title for your request (optional)" maxlength="160">
         </div>
         <div class="form-group">
           <label class="form-label">Description *</label>
@@ -108,7 +221,11 @@
             <input class="form-input" type="date" id="crDate">
           </div>
         </div>
-        <div id="createFormError" class="form-error" style="display:none;color:#dc3545;font-size:0.875rem;margin-top:4px;"></div>
+        <div class="form-group">
+          <label class="form-label">Budget (ETB)</label>
+          <input class="form-input" type="number" id="crBudget" placeholder="Optional estimated budget" min="0" step="0.01">
+        </div>
+        <div id="createFormError" class="form-error" style="display:none"></div>
       </form>
     </div>
     <div class="modal__footer">
@@ -117,8 +234,6 @@
     </div>
   </div>
 </div>
-
-<div class="toast-container" id="toastContainer"></div>
 
 <script type="module">
 import Api   from '../../core/api.js';
@@ -132,22 +247,36 @@ const BADGE = {
   Reviewed: 'badge--reviewed'
 };
 
+/* ── Inline SVG icons ── */
+const IC = {
+  pin: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>',
+  tag: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>',
+  cal: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>',
+  offers: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>',
+  empty: '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>',
+};
+
 // -----------------------------------------------------------------------
-// Load dynamic categories from API into the create-request form
+// Load dynamic categories from API
 // -----------------------------------------------------------------------
 async function loadCategories() {
   try {
     const res  = await Api.get('/categories');
     const cats = res.data || [];
     const sel  = document.getElementById('crCategory');
+    // Use category ID as value — backend checks category_id first
     sel.innerHTML = '<option value="">Select category...</option>' +
-      cats.map(c => `<option value="${esc(c.name)}">${esc(c.name)}</option>`).join('');
+      cats.map(c => `<option value="${esc(c.id)}" data-name="${esc(c.name)}">${esc(c.name)}</option>`).join('');
   } catch {
-    // Fallback to hardcoded list if API unavailable
+    // Fallback to hardcoded list (name-based — backend falls back to findByName)
     document.getElementById('crCategory').innerHTML = `
       <option value="">Select category...</option>
-      <option>Electrician</option><option>Plumber</option><option>Carpenter</option>
-      <option>Painter</option><option>Cleaner</option><option>General Handyman</option>`;
+      <option value="Electrician">Electrician</option>
+      <option value="Plumber">Plumber</option>
+      <option value="Carpenter">Carpenter</option>
+      <option value="Painter">Painter</option>
+      <option value="Cleaner">Cleaner</option>
+      <option value="General Handyman">General Handyman</option>`;
   }
 }
 
@@ -158,24 +287,24 @@ async function loadRequests() {
   const status = document.getElementById('statusFilter').value;
   const sort   = document.getElementById('sortFilter').value;
   const list   = document.getElementById('requestsList');
-  list.innerHTML = '<div class="empty-state"><div class="spinner spinner--dark"></div><p>Loading your requests...</p></div>';
+  list.innerHTML = '<div class="empty-card"><div class="spinner spinner--dark" style="margin:0 auto"></div><p class="empty-card__text mt-sm">Loading your requests...</p></div>';
   try {
     const res      = await Api.get(`/requests?status=${encodeURIComponent(status)}&sort=${sort}`);
     const requests = Array.isArray(res.data) ? res.data : [];
     updateStats(requests);
     if (!requests.length) {
-      list.innerHTML = `<div class="empty-state">
-        <div class="empty-state__icon">📋</div>
-        <div class="empty-state__title">No requests found</div>
-        <p class="empty-state__text">Post your first service request to get started.</p>
-        <button class="btn btn--primary" id="emptyCreateBtn">Post a Request</button>
+      list.innerHTML = `<div class="empty-card">
+        <div class="empty-card__icon">${IC.empty}</div>
+        <div style="font-size:16px;font-weight:600;margin-bottom:8px">No requests found</div>
+        <p class="empty-card__text">Post your first service request to get started.</p>
+        <button class="btn btn--primary mt-md" id="emptyCreateBtn">Post a Request</button>
       </div>`;
       document.getElementById('emptyCreateBtn')?.addEventListener('click', openCreateModal);
       return;
     }
     list.innerHTML = requests.map(renderCard).join('');
   } catch (err) {
-    list.innerHTML = `<div class="empty-state"><p class="text-muted">${esc(err.message || 'Could not load requests.')}</p></div>`;
+    list.innerHTML = `<div class="empty-card"><p class="empty-card__text">${esc(err.message || 'Could not load requests.')}</p></div>`;
   }
 }
 
@@ -188,10 +317,9 @@ function updateStats(requests) {
 }
 
 function renderCard(r) {
-  // Backend has no TITLE — use first 60 chars of description as card heading
-  const heading = (r.description || '').length > 60
+  const heading = r.title || ((r.description || '').length > 60
     ? r.description.substring(0, 60) + '...'
-    : (r.description || '—');
+    : (r.description || 'Untitled'));
 
   const actionMap = {
     Negotiating: `<a href="../request-detail.html?id=${r.id}" class="btn btn--ghost btn--sm">Manage Offers</a>`,
@@ -200,25 +328,21 @@ function renderCard(r) {
   };
 
   return `
-  <div class="request-card mb-md">
-    <div class="request-card__header">
-      <div>
-        <div class="request-card__title">${esc(heading)}</div>
-        <div class="request-card__meta">
-          <span>📍 ${esc(r.location || '—')}</span>
-          <span>🗂 ${esc(r.category_name || r.category || '—')}</span>
-          <span>📅 ${r.created_at ? new Date(r.created_at).toLocaleDateString() : '—'}</span>
-          ${r.offer_count > 0 ? `<span>💬 ${r.offer_count} offer${r.offer_count > 1 ? 's' : ''}</span>` : ''}
-        </div>
-      </div>
+  <div class="job-card">
+    <div class="job-card__top">
+      <div class="job-card__title">${esc(heading)}</div>
       <span class="badge ${BADGE[r.status] || ''}">${esc(r.status)}</span>
     </div>
-    <p class="request-card__desc">${esc(r.description || '')}</p>
-    <div class="request-card__footer">
-      <div class="request-card__actions">
-        <a href="../request-detail.html?id=${r.id}" class="btn btn--primary btn--sm">View Details</a>
-        ${actionMap[r.status] || ''}
-      </div>
+    <div class="job-card__meta">
+      <span class="job-card__meta-item">${IC.pin} ${esc(r.location || 'N/A')}</span>
+      <span class="job-card__meta-item">${IC.tag} ${esc(r.category_name || r.category || 'N/A')}</span>
+      <span class="job-card__meta-item">${IC.cal} ${r.created_at ? new Date(r.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'N/A'}</span>
+      ${r.offer_count > 0 ? `<span class="job-card__meta-item">${IC.offers} ${r.offer_count} offer${r.offer_count > 1 ? 's' : ''}</span>` : ''}
+    </div>
+    <p class="job-card__desc">${esc(r.description || '')}</p>
+    <div class="job-card__actions">
+      <a href="../request-detail.html?id=${r.id}" class="btn btn--primary btn--sm">View Details</a>
+      ${actionMap[r.status] || ''}
     </div>
   </div>`;
 }
@@ -237,23 +361,43 @@ function closeCreateModal() { document.getElementById('createModal').classList.r
 function filterRequests(s)  { document.getElementById('statusFilter').value = s; loadRequests(); }
 
 // -----------------------------------------------------------------------
-// Submit new request
+// Submit new request — aligned with backend requirements
 // -----------------------------------------------------------------------
 async function submitRequest() {
-  const btn  = document.getElementById('createBtn');
+  const btn   = document.getElementById('createBtn');
   const errEl = document.getElementById('createFormError');
+  const categorySelect = document.getElementById('crCategory');
+  const categoryValue  = categorySelect.value;
+
+  // Determine if value is a UUID (category_id) or a name (fallback)
+  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(categoryValue);
+
   const body = {
-    category:       document.getElementById('crCategory').value,
     description:    document.getElementById('crDesc').value.trim(),
     location:       document.getElementById('crLocation').value,
     preferred_date: document.getElementById('crDate').value || null,
   };
 
+  // Add title if provided
+  const title = document.getElementById('crTitle').value.trim();
+  if (title) body.title = title;
+
+  // Add budget if provided
+  const budget = document.getElementById('crBudget').value;
+  if (budget !== '' && budget !== null) body.budget = parseFloat(budget);
+
+  // Send category_id (preferred) or category name (fallback)
+  if (isUuid) {
+    body.category_id = categoryValue;
+  } else {
+    body.category = categoryValue;
+  }
+
   // Client-side validation
   const errs = [];
-  if (!body.category)    errs.push('Please select a category.');
+  if (!categoryValue)          errs.push('Please select a category.');
   if (body.description.length < 10) errs.push('Description must be at least 10 characters.');
-  if (!body.location)    errs.push('Please select a location.');
+  if (!body.location)          errs.push('Please select a location.');
   if (errs.length) {
     errEl.textContent = errs[0];
     errEl.style.display = 'block';
@@ -291,8 +435,10 @@ async function init() {
   if (!ok || !Auth.requireAuth(['customer'])) return;
 
   Layout.renderShell('customer', 'dashboard', 'dashboard');
-  document.getElementById('welcomeMsg').textContent =
-    `Welcome, ${Auth.user?.name || 'User'}! 👋`;
+
+  const user = Auth.getUser();
+  const firstName = (user?.name || 'User').split(' ')[0];
+  document.getElementById('welcomeMsg').textContent = `Welcome back, ${firstName}`;
 
   document.getElementById('statusFilter').addEventListener('change', loadRequests);
   document.getElementById('sortFilter').addEventListener('change', loadRequests);

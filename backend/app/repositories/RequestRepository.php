@@ -318,7 +318,7 @@ final class RequestRepository
         }
 
         $rows = $this->db->query('SHOW COLUMNS FROM SERVICE_REQUESTS')->fetchAll();
-        $this->columns = array_map(static fn(array $row): string => strtoupper((string) $row['Field']), $rows);
+        $this->columns = array_map(static fn(array $row): string => strtoupper((string) ($row['FIELD'] ?? $row['Field'] ?? '')), $rows);
 
         return $this->columns;
     }
