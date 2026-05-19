@@ -62,14 +62,19 @@ async function load() {
     el.innerHTML = `<div class="table-wrapper"><table class="data-table">
       <thead><tr><th>Request</th><th>Your Price (ETB)</th><th>Status</th><th>Counter Offer</th><th>Submitted</th><th></th></tr></thead>
       <tbody>
-      ${offers.map(o => `<tr>
+      ${offers.map(o => `<tr ${o.status === 'Rejected' ? 'style="opacity: 0.6; background: #fafafa;"' : ''}>
         <td>
-          <a href="../request-detail-provider.html?id=${o.request_id}">${esc(o.request_description ? o.request_description.substring(0,50)+'...' : 'View Request')}</a>
-          <div class="text-sm text-muted">📍 ${esc(o.request_location || '—')}</div>
+          <a href="../request-detail-provider.html?id=${o.request_id}" style="font-weight:600">${esc(o.request_description ? o.request_description.substring(0,50)+'...' : 'View Request')}</a>
+          <div class="text-sm text-muted" style="margin-top:4px">📍 ${esc(o.request_location || '—')}</div>
         </td>
         <td><strong>${parseFloat(o.price||0).toLocaleString()}</strong></td>
         <td><span class="badge ${BADGE[o.status]||''}">${esc(o.status)}</span></td>
-        <td>${o.counter_price ? `ETB ${parseFloat(o.counter_price).toLocaleString()}<br><small class="text-muted">${esc(o.counter_message||'')}</small>` : '—'}</td>
+        <td>${o.counter_price ? `
+          <div style="background:#fff4e0; border-left:3px solid #f59e0b; padding:6px 10px; border-radius:4px;">
+            <strong style="color:#b45309">ETB ${parseFloat(o.counter_price).toLocaleString()}</strong><br>
+            <small style="color:#78350f; font-style:italic">"${esc(o.counter_message||'No message')}"</small>
+          </div>
+        ` : '<span class="text-muted">—</span>'}</td>
         <td class="text-sm text-muted">${o.created_at ? new Date(o.created_at).toLocaleDateString() : '—'}</td>
         <td><a href="../request-detail-provider.html?id=${o.request_id}" class="btn btn--ghost btn--sm">View</a></td>
       </tr>`).join('')}

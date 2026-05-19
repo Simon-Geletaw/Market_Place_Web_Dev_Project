@@ -138,14 +138,60 @@ function render() {
 function renderOfferPanel(isOpen) {
   const panel = document.getElementById('offerPanel');
 
+  // If this provider won the job and it is currently Assigned
+  if (myOffer && myOffer.status === 'Accepted' && request.status === 'Assigned') {
+    panel.innerHTML = `
+      <div class="card" style="border: 2px solid var(--color-primary);">
+        <div class="card__header" style="background:#f8f9fa; border-bottom:1px solid #eee;">
+          <h3 style="font-size:15px; color:var(--color-primary)">✅ Job Assigned to You</h3>
+        </div>
+        <div class="card__body">
+          <p class="text-muted mb-md" style="font-size:.9rem">The customer has accepted your offer. Please review the final schedule details below.</p>
+          
+          <div style="background:#f8f9fa; border-radius:6px; padding:12px; margin-bottom:16px;">
+            <div style="margin-bottom:8px">
+              <span class="text-muted text-sm">Agreed Price:</span><br>
+              <strong style="color:var(--color-primary); font-size:1.1rem">ETB ${parseFloat(myOffer.price||0).toLocaleString()}</strong>
+            </div>
+            <div style="margin-bottom:8px">
+              <span class="text-muted text-sm">Scheduled Date & Time:</span><br>
+              <strong>📅 ${esc(request.preferred_date || 'Pending')}</strong>
+            </div>
+            <div>
+              <span class="text-muted text-sm">Customer Location:</span><br>
+              <strong>📍 ${esc(request.location || 'Pending')}</strong>
+            </div>
+          </div>
+          
+          <button class="btn btn--primary btn--full" id="markCompleteBtn">✓ Mark Job as Complete</button>
+        </div>
+      </div>`;
+    document.getElementById('markCompleteBtn').addEventListener('click', markJobComplete);
+    return;
+  }
+
+  // If the job is already completed or reviewed
+  if (myOffer && myOffer.status === 'Accepted' && ['Completed', 'Reviewed'].includes(request.status)) {
+    panel.innerHTML = `<div class="card">
+      <div class="card__body text-center">
+        <div style="font-size:32px; margin-bottom:10px">🏆</div>
+        <h3 style="font-size:16px; margin-bottom:8px">Job Completed</h3>
+        <p class="text-muted text-sm">You have successfully completed this service request.</p>
+      </div>
+    </div>`;
+    return;
+  }
+
+  // If the request is closed and provider didn't win
   if (!isOpen) {
     panel.innerHTML = `<div class="card"><div class="card__body">
-      <p class="text-muted" style="font-size:.9rem">This request is <strong>${esc(request.status)}</strong> and is no longer accepting offers.</p>
+      <p class="text-muted" style="font-size:.9rem">This request is <strong>${esc(request.status)}</strong> and is no longer open.</p>
       <a href="marketplace.html" class="btn btn--secondary btn--sm btn--full" style="margin-top:12px">← Back to Marketplace</a>
     </div></div>`;
     return;
   }
 
+  // If it's open and provider already submitted an offer
   if (myOffer) {
     const OBADGE = { Pending:'badge--negotiating', Accepted:'badge--assigned', Rejected:'badge--danger', Countered:'badge--requested' };
     panel.innerHTML = `
@@ -165,9 +211,8 @@ function renderOfferPanel(isOpen) {
           </div>
           <p class="text-muted" style="font-size:.8rem;margin-top:10px;text-align:center">
             ${myOffer.status === 'Pending' ? 'Waiting for the customer to respond.' : ''}
-            ${myOffer.status === 'Accepted' ? '🎉 Your offer was accepted! Check your dashboard.' : ''}
             ${myOffer.status === 'Rejected' ? 'Your offer was not accepted this time.' : ''}
-            ${myOffer.status === 'Countered' ? 'The customer sent a counter offer. Accept or negotiate.' : ''}
+            ${myOffer.status === 'Countered' ? 'The customer sent a counter offer. Check your messages or submit a new offer.' : ''}
           </p>
         </div>
       </div>`;
@@ -194,6 +239,20 @@ function renderOfferPanel(isOpen) {
 
   document.getElementById('submitOfferBtn').addEventListener('click', submitOffer);
 }
+
+window.markJobComplete = async function() {
+  if (!confirm('Are you sure you want to mark this job as complete?')) return;
+  const btn = document.getElementById('markCompleteBtn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Completing...'; }
+  try {
+    await Api.post(`/requests/${requestId}/complete`, {});
+    Toast.success('Job marked as complete!');
+    loadAll();
+  } catch (err) {
+    Toast.error(err.message || 'Failed to complete job.');
+    if (btn) { btn.disabled = false; btn.textContent = '✓ Mark Job as Complete'; }
+  }
+};
 
 async function submitOffer() {
   const priceEl   = document.getElementById('offerPrice');

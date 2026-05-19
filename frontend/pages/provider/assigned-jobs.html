@@ -66,18 +66,29 @@ async function init() {
         <div>
           <div class="request-card__title">${esc(j.title)}</div>
           <div class="request-card__meta">
-            <span>📍${esc(j.location)}</span>
-            <span>🗂${esc(j.category_name||j.category)}</span>
-            <span>${new Date(j.created_at).toLocaleDateString()}</span>
+            <span>🗂 ${esc(j.category_name||j.category)}</span>
+            <span>📅 Scheduled: <strong>${j.preferred_date ? esc(j.preferred_date) : 'Pending'}</strong></span>
           </div>
         </div>
         <span class="badge badge--assigned">Assigned</span>
       </div>
       <p class="request-card__desc">${esc(j.description)}</p>
+      
+      <div style="background:#f8f9fa; border-radius:6px; padding:12px; margin:12px 0; display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+        <div>
+          <div class="text-sm text-muted">Customer Location</div>
+          <div style="font-weight:600">📍 ${esc(j.location || '—')}</div>
+        </div>
+        <div>
+          <div class="text-sm text-muted">Agreed Price</div>
+          <div style="font-weight:600; color:var(--color-primary)">ETB ${parseFloat(j.accepted_price||0).toLocaleString()}</div>
+        </div>
+      </div>
+
       <div class="request-card__footer">
         <span class="text-sm text-muted">Customer: ${esc(j.customer_name||'—')}</span>
         <div class="request-card__actions">
-          <a href="../request-detail-provider.html?id=${j.id}" class="btn btn--primary btn--sm">View & Complete</a>
+          <a href="../request-detail-provider.html?id=${j.id}" class="btn btn--primary btn--sm">View & Complete Job</a>
         </div>
       </div>
     </div>`).join('');
