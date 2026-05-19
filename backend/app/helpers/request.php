@@ -14,8 +14,28 @@ function request_path(): string
     $scriptName = str_replace('\\', '/', (string) ($_SERVER['SCRIPT_NAME'] ?? ''));
     $baseDir = rtrim(dirname($scriptName), '/');
 
+    // If SCRIPT_NAME is /public/index.php, baseDir would be /public
+    // Try to strip it from the path if present
     if ($baseDir !== '' && $baseDir !== '/' && str_starts_with($path, $baseDir)) {
         $path = substr($path, strlen($baseDir));
+    }
+
+    // Also handle case where REQUEST_URI includes the full path structure
+    // e.g., /Market_Place_Web_Dev_Project/backend/public/api/auth/register
+    // should become /api/auth/register
+    $basePatterns = [
+        '/backend/public',
+        '/public',
+    ];
+
+    foreach ($basePatterns as $pattern) {
+        if (str_contains($path, $pattern . '/') || str_ends_with($path, $pattern)) {
+            $pos = strpos($path, $pattern);
+            if ($pos !== false) {
+                $path = substr($path, $pos + strlen($pattern));
+                break;
+            }
+        }
     }
 
     $path = '/' . trim($path, '/');

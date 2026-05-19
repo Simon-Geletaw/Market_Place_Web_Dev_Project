@@ -194,3 +194,149 @@
 [12-May-2026 12:45:11 Europe/Berlin] [500] Database connection failed. Check configuration. in C:\xampp\htdocs\Market_Place_Web_Dev_Project\backend\app\repositories\DatabaseConnector.php:44
 [12-May-2026 12:45:38 Europe/Berlin] [DB] Connection failed: SQLSTATE[HY000] [1045] Access denied for user 'market'@'localhost' (using password: YES)
 [12-May-2026 12:45:38 Europe/Berlin] [500] Database connection failed. Check configuration. in C:\xampp\htdocs\Market_Place_Web_Dev_Project\backend\app\repositories\DatabaseConnector.php:44
+[15-May-2026 12:28:23 Europe/Berlin] [DB] Connection failed: SQLSTATE[HY000] [1045] Access denied for user 'market'@'localhost' (using password: YES)
+[15-May-2026 12:28:23 Europe/Berlin] [500] Database connection failed. Check configuration. in C:\xampp\htdocs\Market_Place_Web_Dev_Project\backend\app\repositories\DatabaseConnector.php:44
+[15-May-2026 12:28:25 Europe/Berlin] [DB] Connection failed: SQLSTATE[HY000] [1045] Access denied for user 'market'@'localhost' (using password: YES)
+[15-May-2026 12:28:25 Europe/Berlin] [500] Database connection failed. Check configuration. in C:\xampp\htdocs\Market_Place_Web_Dev_Project\backend\app\repositories\DatabaseConnector.php:44
+[15-May-2026 12:33:00 Europe/Berlin] [DB] Connection failed: SQLSTATE[HY000] [1045] Access denied for user 'market'@'localhost' (using password: YES)
+[15-May-2026 12:33:00 Europe/Berlin] [500] Database connection failed. Check configuration. in C:\xampp\htdocs\Market_Place_Web_Dev_Project\backend\app\repositories\DatabaseConnector.php:44
+[15-May-2026 12:34:28 Europe/Berlin] [DB] Connection failed: SQLSTATE[HY000] [1045] Access denied for user 'market'@'localhost' (using password: YES)
+[15-May-2026 12:34:28 Europe/Berlin] [500] Database connection failed. Check configuration. in C:\xampp\htdocs\Market_Place_Web_Dev_Project\backend\app\repositories\DatabaseConnector.php:44
+[15-May-2026 12:35:22 Europe/Berlin] [DB] Connection failed: SQLSTATE[HY000] [1045] Access denied for user 'market'@'localhost' (using password: YES)
+[15-May-2026 12:35:22 Europe/Berlin] [500] Database connection failed. Check configuration. in C:\xampp\htdocs\Market_Place_Web_Dev_Project\backend\app\repositories\DatabaseConnector.php:44
+[15-May-2026 12:35:23 Europe/Berlin] [DB] Connection failed: SQLSTATE[HY000] [1045] Access denied for user 'market'@'localhost' (using password: YES)
+[15-May-2026 12:35:23 Europe/Berlin] [500] Database connection failed. Check configuration. in C:\xampp\htdocs\Market_Place_Web_Dev_Project\backend\app\repositories\DatabaseConnector.php:44
+[15-May-2026 12:35:30 Europe/Berlin] [DB] Connection failed: SQLSTATE[HY000] [1045] Access denied for user 'market'@'localhost' (using password: YES)
+[15-May-2026 12:35:30 Europe/Berlin] [500] Database connection failed. Check configuration. in C:\xampp\htdocs\Market_Place_Web_Dev_Project\backend\app\repositories\DatabaseConnector.php:44
+[15-May-2026 12:35:31 Europe/Berlin] [DB] Connection failed: SQLSTATE[HY000] [1045] Access denied for user 'market'@'localhost' (using password: YES)
+[15-May-2026 12:35:31 Europe/Berlin] [500] Database connection failed. Check configuration. in C:\xampp\htdocs\Market_Place_Web_Dev_Project\backend\app\repositories\DatabaseConnector.php:44
+[15-May-2026 12:40:02 Europe/Berlin] [DB] Connection failed: SQLSTATE[HY000] [1045] Access denied for user 'market'@'localhost' (using password: YES)
+[15-May-2026 12:40:02 Europe/Berlin] [500] Database connection failed. Check configuration. in C:\xampp\htdocs\Market_Place_Web_Dev_Project\backend\app\repositories\DatabaseConnector.php:44
+[15-May-2026 12:40:03 Europe/Berlin] [DB] Connection failed: SQLSTATE[HY000] [1045] Access denied for user 'market'@'localhost' (using password: YES)
+[15-May-2026 12:40:03 Europe/Berlin] [500] Database connection failed. Check configuration. in C:\xampp\htdocs\Market_Place_Web_Dev_Project\backend\app\repositories\DatabaseConnector.php:44
+[15-May-2026 12:40:07 Europe/Berlin] [DB] Connection failed: SQLSTATE[HY000] [1045] Access denied for user 'market'@'localhost' (using password: YES)
+[15-May-2026 12:40:07 Europe/Berlin] [500] Database connection failed. Check configuration. in C:\xampp\htdocs\Market_Place_Web_Dev_Project\backend\app\repositories\DatabaseConnector.php:44
+[15-May-2026 12:40:08 Europe/Berlin] [DB] Connection failed: SQLSTATE[HY000] [1045] Access denied for user 'market'@'localhost' (using password: YES)
+[15-May-2026 12:40:08 Europe/Berlin] [500] Database connection failed. Check configuration. in C:\xampp\htdocs\Market_Place_Web_Dev_Project\backend\app\repositories\DatabaseConnector.php:44
+[15-May-2026 12:40:08 Europe/Berlin] [DB] Connection failed: SQLSTATE[HY000] [1045] Access denied for user 'market'@'localhost' (using password: YES)
+[15-May-2026 12:40:08 Europe/Berlin] [500] Database connection failed. Check configuration. in C:\xampp\htdocs\Market_Place_Web_Dev_Project\backend\app\repositories\DatabaseConnector.php:44
+[15-May-2026 12:40:09 Europe/Berlin] [DB] Connection failed: SQLSTATE[HY000] [1045] Access denied for user 'market'@'localhost' (using password: YES)
+[15-May-2026 12:40:09 Europe/Berlin] [500] Database connection failed. Check configuration. in C:\xampp\htdocs\Market_Place_Web_Dev_Project\backend\app\repositories\DatabaseConnector.php:44
+[15-May-2026 12:41:14 Europe/Berlin] [DB] Connection failed: SQLSTATE[HY000] [1045] Access denied for user 'market'@'localhost' (using password: YES)
+[15-May-2026 12:41:14 Europe/Berlin] [500] Database connection failed. Check configuration. in C:\xampp\htdocs\Market_Place_Web_Dev_Project\backend\app\repositories\DatabaseConnector.php:44
+[15-May-2026 12:42:37 Europe/Berlin] [DB] Connection failed: SQLSTATE[HY000] [1045] Access denied for user 'market'@'localhost' (using password: YES)
+[15-May-2026 12:42:37 Europe/Berlin] [500] Database connection failed. Check configuration. in C:\xampp\htdocs\Market_Place_Web_Dev_Project\backend\app\repositories\DatabaseConnector.php:44
+[15-May-2026 12:42:38 Europe/Berlin] [DB] Connection failed: SQLSTATE[HY000] [1045] Access denied for user 'market'@'localhost' (using password: YES)
+[15-May-2026 12:42:38 Europe/Berlin] [500] Database connection failed. Check configuration. in C:\xampp\htdocs\Market_Place_Web_Dev_Project\backend\app\repositories\DatabaseConnector.php:44
+[15-May-2026 12:42:39 Europe/Berlin] [DB] Connection failed: SQLSTATE[HY000] [1045] Access denied for user 'market'@'localhost' (using password: YES)
+[15-May-2026 12:42:39 Europe/Berlin] [500] Database connection failed. Check configuration. in C:\xampp\htdocs\Market_Place_Web_Dev_Project\backend\app\repositories\DatabaseConnector.php:44
+[15-May-2026 12:42:39 Europe/Berlin] [DB] Connection failed: SQLSTATE[HY000] [1045] Access denied for user 'market'@'localhost' (using password: YES)
+[15-May-2026 12:42:39 Europe/Berlin] [500] Database connection failed. Check configuration. in C:\xampp\htdocs\Market_Place_Web_Dev_Project\backend\app\repositories\DatabaseConnector.php:44
+[15-May-2026 12:49:01 Europe/Berlin] [DB] Connection failed: SQLSTATE[HY000] [2006] MySQL server has gone away
+[15-May-2026 12:49:01 Europe/Berlin] [500] Database connection failed. Check configuration. in C:\xampp\htdocs\Market_Place_Web_Dev_Project\backend\app\repositories\DatabaseConnector.php:44
+[15-May-2026 12:49:09 Europe/Berlin] [DB] Connection failed: SQLSTATE[HY000] [2002] No connection could be made because the target machine actively refused it
+[15-May-2026 12:49:09 Europe/Berlin] [500] Database connection failed. Check configuration. in C:\xampp\htdocs\Market_Place_Web_Dev_Project\backend\app\repositories\DatabaseConnector.php:44
+[15-May-2026 12:49:20 Europe/Berlin] [DB] Connection failed: SQLSTATE[HY000] [2002] No connection could be made because the target machine actively refused it
+[15-May-2026 12:49:20 Europe/Berlin] [500] Database connection failed. Check configuration. in C:\xampp\htdocs\Market_Place_Web_Dev_Project\backend\app\repositories\DatabaseConnector.php:44
+[15-May-2026 12:52:47 Europe/Berlin] [DB] Connection failed: SQLSTATE[HY000] [2002] No connection could be made because the target machine actively refused it
+[15-May-2026 12:52:47 Europe/Berlin] [500] Database connection failed. Check configuration. in C:\xampp\htdocs\Market_Place_Web_Dev_Project\backend\app\repositories\DatabaseConnector.php:44
+[15-May-2026 13:02:58 Europe/Berlin] [DB] Connection failed: SQLSTATE[HY000] [1044] Access denied for user 'market'@'localhost' to database 'market_place'
+[15-May-2026 13:02:58 Europe/Berlin] [500] Database connection failed. Check configuration. in C:\xampp\htdocs\Market_Place_Web_Dev_Project\backend\app\repositories\DatabaseConnector.php:44
+[15-May-2026 13:02:59 Europe/Berlin] [DB] Connection failed: SQLSTATE[HY000] [1044] Access denied for user 'market'@'localhost' to database 'market_place'
+[15-May-2026 13:02:59 Europe/Berlin] [500] Database connection failed. Check configuration. in C:\xampp\htdocs\Market_Place_Web_Dev_Project\backend\app\repositories\DatabaseConnector.php:44
+[15-May-2026 13:04:52 Europe/Berlin] [DB] Connection failed: SQLSTATE[HY000] [1044] Access denied for user 'market'@'localhost' to database 'market_place'
+[15-May-2026 13:04:52 Europe/Berlin] [500] Database connection failed. Check configuration. in C:\xampp\htdocs\Market_Place_Web_Dev_Project\backend\app\repositories\DatabaseConnector.php:44
+[15-May-2026 13:04:53 Europe/Berlin] [DB] Connection failed: SQLSTATE[HY000] [1044] Access denied for user 'market'@'localhost' to database 'market_place'
+[15-May-2026 13:04:53 Europe/Berlin] [500] Database connection failed. Check configuration. in C:\xampp\htdocs\Market_Place_Web_Dev_Project\backend\app\repositories\DatabaseConnector.php:44
+[15-May-2026 13:05:32 Europe/Berlin] [DB] Connection failed: SQLSTATE[HY000] [1044] Access denied for user 'market'@'localhost' to database 'market_place'
+[15-May-2026 13:05:32 Europe/Berlin] [500] Database connection failed. Check configuration. in C:\xampp\htdocs\Market_Place_Web_Dev_Project\backend\app\repositories\DatabaseConnector.php:44
+[15-May-2026 13:06:34 Europe/Berlin] [DB] Connection failed: SQLSTATE[HY000] [1044] Access denied for user 'market'@'localhost' to database 'market_place'
+[15-May-2026 13:06:34 Europe/Berlin] [500] Database connection failed. Check configuration. in C:\xampp\htdocs\Market_Place_Web_Dev_Project\backend\app\repositories\DatabaseConnector.php:44
+[15-May-2026 13:07:22 Europe/Berlin] [DB] Connection failed: SQLSTATE[HY000] [1044] Access denied for user 'market'@'localhost' to database 'market_place'
+[15-May-2026 13:07:22 Europe/Berlin] [500] Database connection failed. Check configuration. in C:\xampp\htdocs\Market_Place_Web_Dev_Project\backend\app\repositories\DatabaseConnector.php:44
+[15-May-2026 13:07:25 Europe/Berlin] [DB] Connection failed: SQLSTATE[HY000] [1044] Access denied for user 'market'@'localhost' to database 'market_place'
+[15-May-2026 13:07:25 Europe/Berlin] [500] Database connection failed. Check configuration. in C:\xampp\htdocs\Market_Place_Web_Dev_Project\backend\app\repositories\DatabaseConnector.php:44
+[15-May-2026 13:10:46 Europe/Berlin] [DB] Connection failed: SQLSTATE[HY000] [1044] Access denied for user 'market'@'localhost' to database 'market_place'
+[15-May-2026 13:10:46 Europe/Berlin] [500] Database connection failed. Check configuration. in C:\xampp\htdocs\Market_Place_Web_Dev_Project\backend\app\repositories\DatabaseConnector.php:44
+[15-May-2026 13:12:05 Europe/Berlin] [DB] Connection failed: SQLSTATE[HY000] [1044] Access denied for user 'market'@'localhost' to database 'market_place'
+[15-May-2026 13:12:05 Europe/Berlin] [500] Database connection failed. Check configuration. in C:\xampp\htdocs\Market_Place_Web_Dev_Project\backend\app\repositories\DatabaseConnector.php:44
+[15-May-2026 13:12:07 Europe/Berlin] [DB] Connection failed: SQLSTATE[HY000] [1044] Access denied for user 'market'@'localhost' to database 'market_place'
+[15-May-2026 13:12:07 Europe/Berlin] [500] Database connection failed. Check configuration. in C:\xampp\htdocs\Market_Place_Web_Dev_Project\backend\app\repositories\DatabaseConnector.php:44
+[15-May-2026 13:16:44 Europe/Berlin] [DB] Connection failed: SQLSTATE[HY000] [1044] Access denied for user 'market'@'localhost' to database 'market_place'
+[15-May-2026 13:16:44 Europe/Berlin] [500] Database connection failed. Check configuration. in C:\xampp\htdocs\Market_Place_Web_Dev_Project\backend\app\repositories\DatabaseConnector.php:44
+[15-May-2026 13:16:47 Europe/Berlin] [DB] Connection failed: SQLSTATE[HY000] [1044] Access denied for user 'market'@'localhost' to database 'market_place'
+[15-May-2026 13:16:47 Europe/Berlin] [500] Database connection failed. Check configuration. in C:\xampp\htdocs\Market_Place_Web_Dev_Project\backend\app\repositories\DatabaseConnector.php:44
+[15-May-2026 13:17:25 Europe/Berlin] [DB] Connection failed: SQLSTATE[HY000] [1044] Access denied for user 'market'@'localhost' to database 'market_place'
+[15-May-2026 13:17:25 Europe/Berlin] [500] Database connection failed. Check configuration. in C:\xampp\htdocs\Market_Place_Web_Dev_Project\backend\app\repositories\DatabaseConnector.php:44
+[15-May-2026 13:18:27 Europe/Berlin] [DB] Connection failed: SQLSTATE[HY000] [1044] Access denied for user 'market'@'localhost' to database 'market_place'
+[15-May-2026 13:18:27 Europe/Berlin] [500] Database connection failed. Check configuration. in C:\xampp\htdocs\Market_Place_Web_Dev_Project\backend\app\repositories\DatabaseConnector.php:44
+[15-May-2026 13:18:46 Europe/Berlin] [DB] Connection failed: SQLSTATE[HY000] [1044] Access denied for user 'market'@'localhost' to database 'market_place'
+[15-May-2026 13:18:46 Europe/Berlin] [500] Database connection failed. Check configuration. in C:\xampp\htdocs\Market_Place_Web_Dev_Project\backend\app\repositories\DatabaseConnector.php:44
+[15-May-2026 13:18:47 Europe/Berlin] [DB] Connection failed: SQLSTATE[HY000] [1044] Access denied for user 'market'@'localhost' to database 'market_place'
+[15-May-2026 13:18:47 Europe/Berlin] [500] Database connection failed. Check configuration. in C:\xampp\htdocs\Market_Place_Web_Dev_Project\backend\app\repositories\DatabaseConnector.php:44
+[15-May-2026 13:18:48 Europe/Berlin] [DB] Connection failed: SQLSTATE[HY000] [1044] Access denied for user 'market'@'localhost' to database 'market_place'
+[15-May-2026 13:18:48 Europe/Berlin] [500] Database connection failed. Check configuration. in C:\xampp\htdocs\Market_Place_Web_Dev_Project\backend\app\repositories\DatabaseConnector.php:44
+[15-May-2026 13:18:48 Europe/Berlin] [DB] Connection failed: SQLSTATE[HY000] [1044] Access denied for user 'market'@'localhost' to database 'market_place'
+[15-May-2026 13:18:48 Europe/Berlin] [500] Database connection failed. Check configuration. in C:\xampp\htdocs\Market_Place_Web_Dev_Project\backend\app\repositories\DatabaseConnector.php:44
+[15-May-2026 13:19:05 Europe/Berlin] [DB] Connection failed: SQLSTATE[HY000] [1044] Access denied for user 'market'@'localhost' to database 'market_place'
+[15-May-2026 13:19:05 Europe/Berlin] [500] Database connection failed. Check configuration. in C:\xampp\htdocs\Market_Place_Web_Dev_Project\backend\app\repositories\DatabaseConnector.php:44
+[15-May-2026 13:19:07 Europe/Berlin] [DB] Connection failed: SQLSTATE[HY000] [1044] Access denied for user 'market'@'localhost' to database 'market_place'
+[15-May-2026 13:19:07 Europe/Berlin] [500] Database connection failed. Check configuration. in C:\xampp\htdocs\Market_Place_Web_Dev_Project\backend\app\repositories\DatabaseConnector.php:44
+[15-May-2026 13:19:30 Europe/Berlin] [DB] Connection failed: SQLSTATE[HY000] [1044] Access denied for user 'market'@'localhost' to database 'market_place'
+[15-May-2026 13:19:30 Europe/Berlin] [500] Database connection failed. Check configuration. in C:\xampp\htdocs\Market_Place_Web_Dev_Project\backend\app\repositories\DatabaseConnector.php:44
+[15-May-2026 13:19:34 Europe/Berlin] [DB] Connection failed: SQLSTATE[HY000] [1044] Access denied for user 'market'@'localhost' to database 'market_place'
+[15-May-2026 13:19:34 Europe/Berlin] [500] Database connection failed. Check configuration. in C:\xampp\htdocs\Market_Place_Web_Dev_Project\backend\app\repositories\DatabaseConnector.php:44
+[15-May-2026 13:19:43 Europe/Berlin] [DB] Connection failed: SQLSTATE[HY000] [1044] Access denied for user 'market'@'localhost' to database 'market_place'
+[15-May-2026 13:19:43 Europe/Berlin] [500] Database connection failed. Check configuration. in C:\xampp\htdocs\Market_Place_Web_Dev_Project\backend\app\repositories\DatabaseConnector.php:44
+[15-May-2026 13:22:50 Europe/Berlin] [DB] Connection failed: SQLSTATE[HY000] [1044] Access denied for user 'market'@'localhost' to database 'market_place'
+[15-May-2026 13:22:50 Europe/Berlin] [500] Database connection failed. Check configuration. in C:\xampp\htdocs\Market_Place_Web_Dev_Project\backend\app\repositories\DatabaseConnector.php:44
+[15-May-2026 13:26:46 Europe/Berlin] [DB] Connection failed: SQLSTATE[HY000] [1044] Access denied for user 'market'@'localhost' to database 'market_place'
+[15-May-2026 13:26:46 Europe/Berlin] [500] Database connection failed. Check configuration. in C:\xampp\htdocs\Market_Place_Web_Dev_Project\backend\app\repositories\DatabaseConnector.php:44
+[15-May-2026 13:26:48 Europe/Berlin] [DB] Connection failed: SQLSTATE[HY000] [1044] Access denied for user 'market'@'localhost' to database 'market_place'
+[15-May-2026 13:26:48 Europe/Berlin] [500] Database connection failed. Check configuration. in C:\xampp\htdocs\Market_Place_Web_Dev_Project\backend\app\repositories\DatabaseConnector.php:44
+[15-May-2026 13:26:56 Europe/Berlin] [DB] Connection failed: SQLSTATE[HY000] [1044] Access denied for user 'market'@'localhost' to database 'market_place'
+[15-May-2026 13:26:56 Europe/Berlin] [500] Database connection failed. Check configuration. in C:\xampp\htdocs\Market_Place_Web_Dev_Project\backend\app\repositories\DatabaseConnector.php:44
+[15-May-2026 13:33:42 Europe/Berlin] [DB] Connection failed: SQLSTATE[HY000] [1044] Access denied for user 'market'@'localhost' to database 'market_place'
+[15-May-2026 13:33:42 Europe/Berlin] [500] Database connection failed. Check configuration. in C:\xampp\htdocs\Market_Place_Web_Dev_Project\backend\app\repositories\DatabaseConnector.php:44
+[15-May-2026 13:33:43 Europe/Berlin] [DB] Connection failed: SQLSTATE[HY000] [1044] Access denied for user 'market'@'localhost' to database 'market_place'
+[15-May-2026 13:33:43 Europe/Berlin] [500] Database connection failed. Check configuration. in C:\xampp\htdocs\Market_Place_Web_Dev_Project\backend\app\repositories\DatabaseConnector.php:44
+[15-May-2026 13:35:55 Europe/Berlin] [DB] Connection failed: SQLSTATE[HY000] [1044] Access denied for user 'market'@'localhost' to database 'market_place'
+[15-May-2026 13:35:55 Europe/Berlin] [500] Database connection failed. Check configuration. in C:\xampp\htdocs\Market_Place_Web_Dev_Project\backend\app\repositories\DatabaseConnector.php:44
+[15-May-2026 22:09:06 Europe/Berlin] [500] SQLSTATE[42S02]: Base table or view not found: 1932 Table 'market_place.users' doesn't exist in engine in C:\xampp\htdocs\Market_Place_Web_Dev_Project\backend\app\repositories\UserRepository.php:72
+[15-May-2026 22:12:11 Europe/Berlin] [500] SQLSTATE[42S02]: Base table or view not found: 1932 Table 'market_place.users' doesn't exist in engine in C:\xampp\htdocs\Market_Place_Web_Dev_Project\backend\app\repositories\UserRepository.php:72
+[15-May-2026 22:12:43 Europe/Berlin] [500] SQLSTATE[42S02]: Base table or view not found: 1932 Table 'market_place.users' doesn't exist in engine in C:\xampp\htdocs\Market_Place_Web_Dev_Project\backend\app\repositories\UserRepository.php:72
+[15-May-2026 22:20:19 Europe/Berlin] PHP Warning:  Undefined array key "USER_ID" in C:\xampp\htdocs\Market_Place_Web_Dev_Project\backend\app\services\AuthService.php on line 116
+[15-May-2026 22:20:19 Europe/Berlin] PHP Warning:  Undefined array key "ROLE" in C:\xampp\htdocs\Market_Place_Web_Dev_Project\backend\app\services\AuthService.php on line 117
+[15-May-2026 22:20:19 Europe/Berlin] PHP Warning:  Undefined array key "NAME" in C:\xampp\htdocs\Market_Place_Web_Dev_Project\backend\app\services\AuthService.php on line 118
+[15-May-2026 22:20:19 Europe/Berlin] PHP Warning:  Undefined array key "USER_ID" in C:\xampp\htdocs\Market_Place_Web_Dev_Project\backend\app\services\AuthService.php on line 268
+[15-May-2026 22:20:19 Europe/Berlin] PHP Warning:  Undefined array key "NAME" in C:\xampp\htdocs\Market_Place_Web_Dev_Project\backend\app\services\AuthService.php on line 269
+[15-May-2026 22:20:19 Europe/Berlin] PHP Warning:  Undefined array key "EMAIL" in C:\xampp\htdocs\Market_Place_Web_Dev_Project\backend\app\services\AuthService.php on line 270
+[15-May-2026 22:20:19 Europe/Berlin] PHP Warning:  Undefined array key "ROLE" in C:\xampp\htdocs\Market_Place_Web_Dev_Project\backend\app\services\AuthService.php on line 271
+[15-May-2026 22:20:19 Europe/Berlin] [AuthService] Registration failed: strtolower(): Argument #1 ($string) must be of type string, null given
+[15-May-2026 22:25:16 Europe/Berlin] PHP Warning:  Undefined array key "USER_ID" in C:\xampp\htdocs\Market_Place_Web_Dev_Project\backend\app\services\AuthService.php on line 116
+[15-May-2026 22:25:16 Europe/Berlin] PHP Warning:  Undefined array key "ROLE" in C:\xampp\htdocs\Market_Place_Web_Dev_Project\backend\app\services\AuthService.php on line 117
+[15-May-2026 22:25:16 Europe/Berlin] PHP Warning:  Undefined array key "NAME" in C:\xampp\htdocs\Market_Place_Web_Dev_Project\backend\app\services\AuthService.php on line 118
+[15-May-2026 22:25:16 Europe/Berlin] PHP Warning:  Undefined array key "USER_ID" in C:\xampp\htdocs\Market_Place_Web_Dev_Project\backend\app\services\AuthService.php on line 268
+[15-May-2026 22:25:16 Europe/Berlin] PHP Warning:  Undefined array key "NAME" in C:\xampp\htdocs\Market_Place_Web_Dev_Project\backend\app\services\AuthService.php on line 269
+[15-May-2026 22:25:16 Europe/Berlin] PHP Warning:  Undefined array key "EMAIL" in C:\xampp\htdocs\Market_Place_Web_Dev_Project\backend\app\services\AuthService.php on line 270
+[15-May-2026 22:25:16 Europe/Berlin] PHP Warning:  Undefined array key "ROLE" in C:\xampp\htdocs\Market_Place_Web_Dev_Project\backend\app\services\AuthService.php on line 271
+[15-May-2026 22:25:16 Europe/Berlin] [AuthService] Registration failed: strtolower(): Argument #1 ($string) must be of type string, null given
+[15-May-2026 23:37:22 Europe/Berlin] PHP Warning:  Undefined array key "USER_ID" in C:\xampp\htdocs\Market_Place_Web_Dev_Project\backend\app\services\AuthService.php on line 116
+[15-May-2026 23:37:22 Europe/Berlin] PHP Warning:  Undefined array key "ROLE" in C:\xampp\htdocs\Market_Place_Web_Dev_Project\backend\app\services\AuthService.php on line 117
+[15-May-2026 23:37:22 Europe/Berlin] PHP Warning:  Undefined array key "NAME" in C:\xampp\htdocs\Market_Place_Web_Dev_Project\backend\app\services\AuthService.php on line 118
+[15-May-2026 23:37:22 Europe/Berlin] PHP Warning:  Undefined array key "USER_ID" in C:\xampp\htdocs\Market_Place_Web_Dev_Project\backend\app\services\AuthService.php on line 268
+[15-May-2026 23:37:22 Europe/Berlin] PHP Warning:  Undefined array key "NAME" in C:\xampp\htdocs\Market_Place_Web_Dev_Project\backend\app\services\AuthService.php on line 269
+[15-May-2026 23:37:22 Europe/Berlin] PHP Warning:  Undefined array key "EMAIL" in C:\xampp\htdocs\Market_Place_Web_Dev_Project\backend\app\services\AuthService.php on line 270
+[15-May-2026 23:37:22 Europe/Berlin] PHP Warning:  Undefined array key "ROLE" in C:\xampp\htdocs\Market_Place_Web_Dev_Project\backend\app\services\AuthService.php on line 271
+[15-May-2026 23:37:22 Europe/Berlin] [AuthService] Registration failed: strtolower(): Argument #1 ($string) must be of type string, null given
+[16-May-2026 01:42:35 Europe/Berlin] PHP Warning:  Undefined array key "Field" in C:\xampp\htdocs\Market_Place_Web_Dev_Project\backend\app\repositories\RequestRepository.php on line 321
+[16-May-2026 01:42:35 Europe/Berlin] PHP Warning:  Undefined array key "Field" in C:\xampp\htdocs\Market_Place_Web_Dev_Project\backend\app\repositories\RequestRepository.php on line 321
+[16-May-2026 01:42:35 Europe/Berlin] PHP Warning:  Undefined array key "Field" in C:\xampp\htdocs\Market_Place_Web_Dev_Project\backend\app\repositories\RequestRepository.php on line 321
+[16-May-2026 01:42:35 Europe/Berlin] PHP Warning:  Undefined array key "Field" in C:\xampp\htdocs\Market_Place_Web_Dev_Project\backend\app\repositories\RequestRepository.php on line 321
+[16-May-2026 01:42:35 Europe/Berlin] PHP Warning:  Undefined array key "Field" in C:\xampp\htdocs\Market_Place_Web_Dev_Project\backend\app\repositories\RequestRepository.php on line 321
+[16-May-2026 01:42:35 Europe/Berlin] PHP Warning:  Undefined array key "Field" in C:\xampp\htdocs\Market_Place_Web_Dev_Project\backend\app\repositories\RequestRepository.php on line 321
+[16-May-2026 01:42:35 Europe/Berlin] PHP Warning:  Undefined array key "Field" in C:\xampp\htdocs\Market_Place_Web_Dev_Project\backend\app\repositories\RequestRepository.php on line 321
+[16-May-2026 01:42:35 Europe/Berlin] PHP Warning:  Undefined array key "Field" in C:\xampp\htdocs\Market_Place_Web_Dev_Project\backend\app\repositories\RequestRepository.php on line 321
+[16-May-2026 01:42:35 Europe/Berlin] PHP Warning:  Undefined array key "Field" in C:\xampp\htdocs\Market_Place_Web_Dev_Project\backend\app\repositories\RequestRepository.php on line 321
+[16-May-2026 01:42:35 Europe/Berlin] PHP Warning:  Undefined array key "Field" in C:\xampp\htdocs\Market_Place_Web_Dev_Project\backend\app\repositories\RequestRepository.php on line 321
+[16-May-2026 01:42:35 Europe/Berlin] PHP Warning:  Undefined array key "Field" in C:\xampp\htdocs\Market_Place_Web_Dev_Project\backend\app\repositories\RequestRepository.php on line 321
