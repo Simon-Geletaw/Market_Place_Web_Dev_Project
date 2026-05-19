@@ -55,12 +55,50 @@
   </main>
 </div>
 
+<!-- Accept Offer Modal -->
+<div class="modal-overlay" id="acceptModal">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitleAccept">
+    <div class="modal__header">
+      <h2 class="modal__title" id="modalTitleAccept">Accept Offer & Schedule</h2>
+      <button class="modal__close" onclick="closeModal('acceptModal')" aria-label="Close modal">✕</button>
+    </div>
+    <div class="modal__body">
+      <p class="text-muted mb-md" id="acceptFor">Provide location and scheduling details to proceed.</p>
+      <input type="hidden" id="acceptOfferId">
+      <div class="form-group">
+        <label class="form-label">Location *</label>
+        <select class="form-select" id="acceptLocation">
+          <option value="">Select sub-city...</option>
+          <option>Addis Ketema</option><option>Akaki Kaliti</option><option>Arada</option>
+          <option>Bole</option><option>Gulele</option><option>Kirkos</option>
+          <option>Kolfe Keranio</option><option>Lideta</option><option>Nifas Silk-Lafto</option>
+          <option>Yeka</option><option>Lemi Kura</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Date *</label>
+          <input class="form-input" type="date" id="acceptDate">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Time *</label>
+          <input class="form-input" type="time" id="acceptTime">
+        </div>
+      </div>
+    </div>
+    <div class="modal__footer">
+      <button class="btn btn--secondary" onclick="closeModal('acceptModal')">Cancel</button>
+      <button class="btn btn--primary" id="confirmAcceptBtn">Confirm & Accept</button>
+    </div>
+  </div>
+</div>
+
 <!-- Review Modal -->
 <div class="modal-overlay" id="reviewModal">
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitleReview">
     <div class="modal__header">
       <h2 class="modal__title" id="modalTitleReview">Leave a Review</h2>
-      <button class="modal__close" id="closeReviewTopBtn" aria-label="Close review modal">✕</button>
+      <button class="modal__close" onclick="closeModal('reviewModal')" aria-label="Close review modal">✕</button>
     </div>
     <div class="modal__body">
       <p class="text-muted mb-md" id="reviewFor">Rate your provider</p>
@@ -80,7 +118,7 @@
       </div>
     </div>
     <div class="modal__footer">
-      <button class="btn btn--secondary" id="closeReviewBtn">Cancel</button>
+      <button class="btn btn--secondary" onclick="closeModal('reviewModal')">Cancel</button>
       <button class="btn btn--primary" id="submitReviewBtn">Submit Review</button>
     </div>
   </div>
@@ -247,8 +285,9 @@ function renderActionPanel(isOwner) {
                   <strong>Counter offer:</strong> ETB ${parseFloat(o.counter_price).toLocaleString()}
                   ${o.counter_message ? `<br><em>${esc(o.counter_message)}</em>` : ''}
                 </div>` : ''}
+                ${['Pending', 'Countered'].includes(o.status) ? `
                 <div class="offer-card__actions">
-                  <button class="btn btn--success btn--sm" onclick="acceptOffer('${o.id}','${esc(o.provider_name||'Provider')}',${o.price||0})">✓ Accept</button>
+                  <button class="btn btn--success btn--sm" onclick="acceptOffer('${o.id}')">✓ Accept</button>
                   <button class="btn btn--danger btn--sm" onclick="rejectOffer('${o.id}')">✗ Reject</button>
                   <button class="btn btn--ghost btn--sm" onclick="toggleCounter('counter-${o.id}')">↔ Counter</button>
                 </div>
@@ -260,6 +299,7 @@ function renderActionPanel(isOwner) {
                     <button class="btn btn--ghost btn--sm" onclick="toggleCounter('counter-${o.id}')">Cancel</button>
                   </div>
                 </div>
+                ` : `<div style="margin-top:10px;"><span class="badge" style="background:#eee;color:#555">${esc(o.status)}</span></div>`}
               </div>`).join('')
           }
         </div>
@@ -275,19 +315,43 @@ function renderActionPanel(isOwner) {
 // -----------------------------------------------------------------------
 // Offer actions (exposed globally for onclick handlers)
 // -----------------------------------------------------------------------
-window.acceptOffer = async function(offerId, providerName, price) {
-  if (!confirm(`Accept offer from ${providerName} for ETB ${parseFloat(price).toLocaleString()}?`)) return;
+window.acceptOffer = function(offerId) {
+  const o = offers.find(x => x.id === offerId);
+  if (!o) return;
+  document.getElementById('acceptOfferId').value = offerId;
+  document.getElementById('acceptFor').textContent = `Accept offer from ${o.provider_name || 'Provider'} for ETB ${parseFloat(o.price || 0).toLocaleString()}`;
+  document.getElementById('acceptModal').classList.add('open');
+};
+
+window.confirmAccept = async function() {
+  const offerId = document.getElementById('acceptOfferId').value;
+  const location = document.getElementById('acceptLocation').value;
+  const date = document.getElementById('acceptDate').value;
+  const time = document.getElementById('acceptTime').value;
+
+  if (!location) { Toast.error('Please select a location.'); return; }
+  if (!date) { Toast.error('Please select a date.'); return; }
+  if (!time) { Toast.error('Please select a time.'); return; }
+
+  const btn = document.getElementById('confirmAcceptBtn');
+  btn.disabled = true; btn.textContent = 'Accepting...';
+
   try {
-    await Api.patch(`/offers/${offerId}/accept`);
+    await Api.patch(`/offers/${offerId}/accept`, { location, date, time });
     Toast.success('Offer accepted! Job assigned.');
+    closeModal('acceptModal');
     loadAll();
-  } catch (err) { Toast.error(err.message || 'Failed to accept offer.'); }
+  } catch (err) { 
+    Toast.error(err.message || 'Failed to accept offer.');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Confirm & Accept';
+  }
 };
 
 window.rejectOffer = async function(offerId) {
   if (!confirm('Reject this offer?')) return;
   try {
-    await Api.patch(`/offers/${offerId}/reject`);
+    await Api.patch(`/offers/${offerId}/reject`, {});
     Toast.success('Offer rejected.');
     loadAll();
   } catch (err) { Toast.error(err.message || 'Failed.'); }
@@ -320,7 +384,7 @@ function openReviewModal() {
     `Rate your experience for: ${(request?.description||'').substring(0,50)}`;
   document.getElementById('reviewModal').classList.add('open');
 }
-function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+window.closeModal = function(id) { document.getElementById(id).classList.remove('open'); };
 
 document.getElementById('starRating').addEventListener('click', e => {
   const star = e.target.closest('.star');
@@ -364,8 +428,7 @@ async function init() {
 
   Layout.renderShell('customer', 'requests', 'dashboard');
 
-  document.getElementById('closeReviewTopBtn').addEventListener('click', () => closeModal('reviewModal'));
-  document.getElementById('closeReviewBtn').addEventListener('click',    () => closeModal('reviewModal'));
+  document.getElementById('confirmAcceptBtn').addEventListener('click', confirmAccept);
   document.getElementById('submitReviewBtn').addEventListener('click',   submitReview);
 
   loadAll();

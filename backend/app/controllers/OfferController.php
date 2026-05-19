@@ -12,6 +12,8 @@ require_once __DIR__ . '/../helpers/response.php';
 require_once __DIR__ . '/../helpers/request.php';
 require_once __DIR__ . '/../validators/offer_validator.php';
 
+require_once __DIR__ . '/../repositories/NotificationRepository.php';
+
 /**
  * OfferController
  *
@@ -28,7 +30,8 @@ final class OfferController
             new OfferRepository($db),
             new RequestRepository($db),
             new StatusHistoryRepository($db),
-            new AuditLogRepository($db)
+            new AuditLogRepository($db),
+            new NotificationRepository($db)
         );
     }
 
@@ -88,8 +91,9 @@ final class OfferController
     {
         $offerId    = route_param('id', '');
         $customerId = $this->currentUserId();
+        $input      = request_json_body();
 
-        $result = $this->offerService->acceptOffer($offerId, $customerId);
+        $result = $this->offerService->acceptOffer($offerId, $customerId, $input);
         $code   = $result['http_code'] ?? ($result['success'] ? 200 : 400);
 
         if (!$result['success']) {

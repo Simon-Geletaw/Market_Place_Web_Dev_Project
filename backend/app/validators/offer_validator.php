@@ -46,7 +46,21 @@ function validate_offer_counter(array $data): array
 
 function validate_offer_accept(array $data): array
 {
-    return []; // No body required for accept.
+    $errors = [];
+
+    if (empty($data['location'])) {
+        $errors['location'] = 'Location is required.';
+    }
+
+    if (empty($data['date'])) {
+        $errors['date'] = 'Date is required.';
+    }
+
+    if (empty($data['time'])) {
+        $errors['time'] = 'Time is required.';
+    }
+
+    return $errors;
 }
 
 function validate_offer_reject(array $data): array

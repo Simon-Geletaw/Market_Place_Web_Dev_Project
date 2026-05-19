@@ -59,8 +59,15 @@ const Api = {
     }
 
     if (res.status === 401) {
-      Auth.logout();
-      throw { status: 401, message: 'Session expired. Please log in again.' };
+      // Login endpoint returns 401 for invalid credentials — that is NOT a session expiry.
+      // Only trigger logout + "session expired" for authenticated endpoints.
+      const isLoginRequest = path === '/auth/login';
+      if (!isLoginRequest) {
+        Auth.logout();
+        throw { status: 401, message: 'Session expired. Please log in again.' };
+      }
+      // For login, pass through the server's real error message (e.g. "Invalid email or password.")
+      throw { status: 401, message: json.message || 'Incorrect password or email.', data: json };
     }
 
     if (!res.ok) {

@@ -27,9 +27,7 @@ function validate_request_create(array $data): array
         $errors['budget'] = 'Budget must be a valid positive number.';
     }
 
-    if (empty($data['location'])) {
-        $errors['location'] = 'Location is required.';
-    }
+    // Location and preferred date are now provided upon offer acceptance.
 
     if (!empty($data['preferred_date'])) {
         $date = \DateTime::createFromFormat('Y-m-d', $data['preferred_date']);

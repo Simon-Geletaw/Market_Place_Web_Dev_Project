@@ -19,17 +19,20 @@ final class OfferService
     private RequestRepository      $requests;
     private StatusHistoryRepository $statusHistory;
     private AuditLogRepository     $audit;
+    private ?NotificationRepository $notifications;
 
     public function __construct(
         OfferRepository        $offers,
         RequestRepository      $requests,
         StatusHistoryRepository $statusHistory,
-        AuditLogRepository     $audit
+        AuditLogRepository     $audit,
+        ?NotificationRepository $notifications = null
     ) {
         $this->offers        = $offers;
         $this->requests      = $requests;
         $this->statusHistory = $statusHistory;
         $this->audit         = $audit;
+        $this->notifications = $notifications;
     }
 
     // ------------------------------------------------------------------
@@ -85,7 +88,7 @@ final class OfferService
     // Customer: Accept an offer
     // ------------------------------------------------------------------
 
-    public function acceptOffer(string $offerId, string $customerId): array
+    public function acceptOffer(string $offerId, string $customerId, array $data = []): array
     {
         $offer = $this->offers->findById($offerId);
         if (!$offer) {
@@ -110,19 +113,37 @@ final class OfferService
             return ['success' => false, 'message' => 'This offer is no longer available to accept.', 'http_code' => 422];
         }
 
+        $location = trim((string) ($data['location'] ?? ''));
+        $date = trim((string) ($data['date'] ?? ''));
+        $time = trim((string) ($data['time'] ?? ''));
+        $preferredDate = trim("$date $time");
+
         try {
-            $this->offers->transaction(function () use ($offer, $offerId, $customerId): void {
+            $this->offers->transaction(function () use ($offer, $offerId, $customerId, $location, $preferredDate): void {
                 $freshRequest = $this->requests->findById($offer['REQUEST_ID']);
                 if (!$freshRequest || $freshRequest['STATUS'] !== 'Negotiating') {
                     throw new RuntimeException('Request is no longer negotiable.');
                 }
 
                 $this->offers->updateStatus($offerId, 'Accepted');
-                $this->requests->assignOffer($offer['REQUEST_ID'], $offerId);
+                $this->requests->assignOfferWithSchedule($offer['REQUEST_ID'], $offerId, $location, $preferredDate);
                 $this->offers->rejectOthers($offer['REQUEST_ID'], $offerId);
 
                 $this->statusHistory->record($offer['REQUEST_ID'], 'Negotiating', 'Assigned', $customerId, "Offer $offerId accepted");
                 $this->audit->log($customerId, 'offer_accepted', 'offer', $offerId, "Request: {$offer['REQUEST_ID']}");
+                
+                // Notify the provider
+                if ($this->notifications) {
+                    $message = "Your offer was accepted! Scheduled for $preferredDate at $location.";
+                    $this->notifications->create(
+                        $offer['PROVIDER_ID'], 
+                        $message, 
+                        'offer_accepted', 
+                        "../request-detail-provider.html?id={$offer['REQUEST_ID']}",
+                        'request',
+                        $offer['REQUEST_ID']
+                    );
+                }
             });
 
             return ['success' => true, 'message' => 'Offer accepted. Request is now Assigned.'];
@@ -155,6 +176,17 @@ final class OfferService
         $this->offers->updateStatus($offerId, 'Rejected');
         $this->audit->log($customerId, 'offer_rejected', 'offer', $offerId);
 
+        if ($this->notifications) {
+            $this->notifications->create(
+                $offer['PROVIDER_ID'], 
+                "Your offer for request was declined.", 
+                'offer_rejected', 
+                "../request-detail-provider.html?id={$offer['REQUEST_ID']}",
+                'request',
+                $offer['REQUEST_ID']
+            );
+        }
+
         return ['success' => true, 'message' => 'Offer rejected.'];
     }
 
@@ -185,6 +217,17 @@ final class OfferService
 
         $this->offers->storeCounter($offerId, $counterPrice, $data['counter_message'] ?? '');
         $this->audit->log($customerId, 'offer_countered', 'offer', $offerId, "Counter: $counterPrice");
+
+        if ($this->notifications) {
+            $this->notifications->create(
+                $offer['PROVIDER_ID'], 
+                "You received a counter-offer of ETB " . number_format($counterPrice) . ".", 
+                'offer_countered', 
+                "../request-detail-provider.html?id={$offer['REQUEST_ID']}",
+                'request',
+                $offer['REQUEST_ID']
+            );
+        }
 
         return ['success' => true, 'message' => 'Counter-offer sent.'];
     }

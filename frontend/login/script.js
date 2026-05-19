@@ -3,7 +3,7 @@
  * ServiceLink — Login Page Controller
  * ============================================================
  */
-import Api from '../core/api.js';
+import Api from '../core/api.js?v=2';
 import Auth from '../core/auth.js';
 import Toast from '../core/toast.js';
 
@@ -178,13 +178,16 @@ const Handlers = {
           else window.location.href = base + '/frontend/pages/dashboard/customer.html';
         }, 400);
       } else {
-        const msg = data.message || 'Invalid email or password.';
+        const msg = data.message || 'Incorrect password or email.';
+        UI.showError(DOM.emailGroup, DOM.emailInput, DOM.emailError, msg);
         UI.showError(DOM.passwordGroup, DOM.passwordInput, DOM.passwordError, msg);
         UI.announceStatus(msg);
+        Toast.error(msg);
       }
     } catch (error) {
       UI.setLoading(false);
       const msg = error.message || 'Unable to connect. Is the server running?';
+      UI.showError(DOM.emailGroup, DOM.emailInput, DOM.emailError, msg);
       UI.showError(DOM.passwordGroup, DOM.passwordInput, DOM.passwordError, msg);
       UI.announceStatus(msg);
       Toast.error(msg);

@@ -43,7 +43,7 @@ final class AuthService
 
         if (!$user || !$validPassword) {
             $this->audit->log(null, 'login_failed', 'user', '', "Email: $email");
-            return ['success' => false, 'message' => 'Invalid email or password.'];
+            return ['success' => false, 'message' => 'Incorrect password or email.'];
         }
 
         $this->startSession();

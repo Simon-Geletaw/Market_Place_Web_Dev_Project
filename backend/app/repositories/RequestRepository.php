@@ -108,15 +108,21 @@ final class RequestRepository
     }
 
     /**
-     * Link accepted offer to the request and move to Assigned.
+     * Link accepted offer to the request, set location/date, and move to Assigned.
      */
-    public function assignOffer(string $requestId, string $offerId): bool
+    public function assignOfferWithSchedule(string $requestId, string $offerId, string $location, string $preferredDate): bool
     {
         $sql  = 'UPDATE SERVICE_REQUESTS
-                 SET STATUS = :status, ACCEPTED_OFFER_ID = :offer_id
+                 SET STATUS = :status, ACCEPTED_OFFER_ID = :offer_id, LOCATION = :location, PREFERRED_DATE = :date
                  WHERE REQUEST_ID = :id';
         $stmt = $this->db->prepare($sql);
-        $stmt->execute([':status' => 'Assigned', ':offer_id' => $offerId, ':id' => $requestId]);
+        $stmt->execute([
+            ':status' => 'Assigned',
+            ':offer_id' => $offerId,
+            ':location' => trim($location),
+            ':date' => $preferredDate,
+            ':id' => $requestId
+        ]);
         return $stmt->rowCount() > 0;
     }
 
