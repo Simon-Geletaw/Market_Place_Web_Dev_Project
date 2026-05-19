@@ -257,16 +257,19 @@ function renderActionPanel(isOwner) {
 
   // ── Negotiating / Requested: show offers for customer
   if (['Negotiating','Requested'].includes(r.status) && isOwner) {
+    const activeOffers = offers.filter(o => o.status !== 'Rejected');
+    const rejectedOffers = offers.filter(o => o.status === 'Rejected');
+
     panel.innerHTML = `
       <div class="card">
         <div class="card__header">
-          <h3 style="font-size:14px">Offers Received (${offers.length})</h3>
+          <h3 style="font-size:14px">Offers Received (${activeOffers.length})</h3>
           <button class="btn btn--ghost btn--sm" onclick="loadAll()">↻</button>
         </div>
         <div class="card__body" id="offersBody">
-          ${!offers.length
-            ? `<p class="text-muted" style="font-size:.9rem;text-align:center;padding:16px 0">No offers yet.<br>Providers will submit offers soon.</p>`
-            : offers.map(o => `
+          ${!activeOffers.length
+            ? `<p class="text-muted" style="font-size:.9rem;text-align:center;padding:16px 0">No active offers.<br>Active offers will appear here.</p>`
+            : activeOffers.map(o => `
               <div class="offer-card">
                 <div class="offer-card__header">
                   <div class="offer-card__provider">
@@ -285,7 +288,6 @@ function renderActionPanel(isOwner) {
                   <strong>Counter offer:</strong> ETB ${parseFloat(o.counter_price).toLocaleString()}
                   ${o.counter_message ? `<br><em>${esc(o.counter_message)}</em>` : ''}
                 </div>` : ''}
-                ${['Pending', 'Countered'].includes(o.status) ? `
                 <div class="offer-card__actions">
                   <button class="btn btn--success btn--sm" onclick="acceptOffer('${o.id}')">✓ Accept</button>
                   <button class="btn btn--danger btn--sm" onclick="rejectOffer('${o.id}')">✗ Reject</button>
@@ -299,9 +301,44 @@ function renderActionPanel(isOwner) {
                     <button class="btn btn--ghost btn--sm" onclick="toggleCounter('counter-${o.id}')">Cancel</button>
                   </div>
                 </div>
-                ` : `<div style="margin-top:10px;"><span class="badge" style="background:#eee;color:#555">${esc(o.status)}</span></div>`}
               </div>`).join('')
           }
+
+          ${rejectedOffers.length ? `
+            <div style="margin-top:20px; border-top:1px dashed #eee; padding-top:16px;">
+              <button class="btn btn--secondary btn--sm btn--full" id="toggleRejectedBtn" onclick="
+                const el = document.getElementById('rejectedOffersList');
+                if (el.style.display === 'none') {
+                  el.style.display = 'block';
+                  this.textContent = 'Hide Rejected Offers';
+                } else {
+                  el.style.display = 'none';
+                  this.textContent = 'Show Rejected Offers (${rejectedOffers.length})';
+                }
+              ">Show Rejected Offers (${rejectedOffers.length})</button>
+              
+              <div id="rejectedOffersList" style="display:none; margin-top:12px;">
+                ${rejectedOffers.map(o => `
+                  <div class="offer-card" style="opacity: 0.7; background: #fafafa; border: 1px dashed #ddd;">
+                    <div class="offer-card__header">
+                      <div class="offer-card__provider">
+                        <div style="width:34px;height:34px;border-radius:50%;background:#ccc;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px">
+                          ${esc((o.provider_name || 'P')[0].toUpperCase())}
+                        </div>
+                        <div>
+                          <div style="font-weight:600;font-size:.9rem;color:#777;">${esc(o.provider_name || 'Provider')}</div>
+                          <div style="font-size:.8rem;color:#aaa">⭐ ${o.provider_rating ? parseFloat(o.provider_rating).toFixed(1) : 'New'}</div>
+                        </div>
+                      </div>
+                      <div class="offer-card__price" style="color:#777;">ETB ${parseFloat(o.price || 0).toLocaleString()}</div>
+                    </div>
+                    ${o.message ? `<p style="font-size:.85rem;color:#777;margin:6px 0">${esc(o.message)}</p>` : ''}
+                    <div style="margin-top:10px;"><span class="badge" style="background:#fee2e2;color:#ef4444;border: 1px solid #fca5a5;">${esc(o.status)}</span></div>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          ` : ''}
         </div>
       </div>`;
     return;
