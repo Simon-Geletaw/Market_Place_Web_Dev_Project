@@ -8,6 +8,9 @@ final class StatusController
 {
     public function ok(): array
     {
-        return json_response(true, 'OK');
+        return success_response('OK', [
+            'service' => 'marketplace-backend',
+            'php_version' => PHP_VERSION,
+        ]);
     }
 }

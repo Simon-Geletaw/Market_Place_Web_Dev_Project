@@ -1,285 +1,361 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-role="provider">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1.0">
-  <title>Request — Provider View — ServiceLink</title>
+  <title>Request Detail — ServiceLink</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../assets/css/main.css">
   <link rel="stylesheet" href="../assets/css/components.css">
+  <script src="../core/guard.js"></script>
+  <style>
+    .info-row { display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #f0f0f0; font-size:.9rem; }
+    .info-row__label { color:#666; }
+    .info-row__val { font-weight:500; }
+    .timeline { list-style:none; padding:0; margin:0; position:relative; }
+    .timeline::before { content:''; position:absolute; left:14px; top:0; bottom:0; width:2px; background:#e2e8f0; }
+    .timeline__item { display:flex; gap:16px; align-items:flex-start; padding:10px 0; position:relative; }
+    .timeline__dot { width:30px; height:30px; border-radius:50%; background:#e2e8f0; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; flex-shrink:0; z-index:1; }
+    .timeline__item.active .timeline__dot { background:var(--color-primary); color:#fff; }
+    .timeline__item.done .timeline__dot { background:#10b981; color:#fff; }
+    .offer-submitted { background:#e8f5eb; border:1px solid #a3d9a5; border-radius:10px; padding:16px; text-align:center; }
+    @media (max-width: 768px) {
+      #requestContent > div { grid-template-columns: 1fr !important; }
+      #offerPanel { position: static !important; }
+    }
+  </style>
 </head>
 <body>
-<header class="app-navbar">
-  <div class="navbar">
-    <a href="../landing_page/index.html" class="navbar__logo">
-      <div class="navbar__logo-icon">S</div>
-      Service<span class="navbar__logo-accent">Link</span>
-    </a>
-    <nav class="navbar__nav">
-      <a href="marketplace.html" class="navbar__link">Browse</a>
-      <a href="dashboard/provider.html" class="navbar__link">Dashboard</a>
-    </nav>
-    <div class="navbar__actions">
-      <div class="navbar__user" id="navUser"></div>
-      <button class="btn btn--secondary btn--sm" onclick="Auth.logout()">Logout</button>
-    </div>
-  </div>
-</header>
+<header id="app-header"></header>
 
-<div style="padding-top:var(--navbar-height)">
-  <div class="container" style="padding-top:var(--space-xl);padding-bottom:var(--space-xxl)">
+<div class="app-shell">
+  <aside id="app-sidebar"></aside>
+  <main class="app-content">
 
-    <div class="breadcrumb">
-      <a href="marketplace.html">Browse</a>
+    <div class="breadcrumb mb-md">
+      <a href="marketplace.html">Marketplace</a>
       <span class="breadcrumb__sep">›</span>
       <span id="breadTitle">Request Detail</span>
     </div>
 
-    <div style="display:grid;grid-template-columns:1fr 340px;gap:var(--space-xl);align-items:start">
-      <div id="requestContent"><div class="empty-state"><div class="spinner spinner--dark"></div></div></div>
-      <div style="position:sticky;top:calc(var(--navbar-height) + var(--space-lg))">
-        <div id="offerPanel"></div>
-      </div>
+    <div id="requestContent">
+      <div class="empty-state"><div class="spinner spinner--dark"></div><p>Loading...</p></div>
     </div>
-  </div>
+
+  </main>
 </div>
 
-<!-- Offer Modal -->
-<div class="modal-overlay" id="offerModal">
-  <div class="modal">
-    <div class="modal__header">
-      <h2 class="modal__title" id="offerModalTitle">Submit Your Offer</h2>
-      <button class="modal__close" onclick="closeModal('offerModal')">✕</button>
-    </div>
-    <div class="modal__body">
-      <div class="info-box" id="offerSummary"></div>
-      <div class="form-group">
-        <label class="form-label">Your Price (ETB) *</label>
-        <input class="form-input" type="number" id="offerPrice" placeholder="e.g., 450" min="50" max="10000">
-        <div class="form-hint" id="budgetHint"></div>
-      </div>
-      <div class="form-group">
-        <label class="form-label">Optional Message</label>
-        <textarea class="form-textarea" id="offerMessage" placeholder="Tell the customer about your experience..." maxlength="500"></textarea>
-        <div class="char-count" id="charCount">0/500</div>
-      </div>
-    </div>
-    <div class="modal__footer">
-      <button class="btn btn--secondary" onclick="closeModal('offerModal')">Cancel</button>
-      <button class="btn btn--primary" id="submitOfferBtn" onclick="submitOffer()">Submit Offer</button>
-    </div>
-  </div>
-</div>
-
-<!-- Complete Modal -->
 <div class="modal-overlay" id="completeModal">
-  <div class="modal">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="completeModalTitle">
     <div class="modal__header">
-      <h2 class="modal__title">Mark Job as Complete</h2>
-      <button class="modal__close" onclick="closeModal('completeModal')">✕</button>
+      <h2 class="modal__title" id="completeModalTitle">Mark Job Complete</h2>
+      <button class="modal__close" id="closeCompleteTopBtn" aria-label="Close">x</button>
     </div>
     <div class="modal__body">
-      <div class="info-box" id="completeSummary"></div>
+      <p class="text-muted mb-md">Upload an optional proof photo before moving this job to Completed.</p>
       <div class="form-group">
-        <label class="form-label">Upload Completion Photo *</label>
-        <div class="upload-zone" id="uploadZone" onclick="document.getElementById('photoInput').click()">
-          <div class="upload-zone__icon">📷</div>
-          <p>Click to upload (JPG/PNG, max 5MB)</p>
-        </div>
-        <input type="file" id="photoInput" accept="image/jpeg,image/png" style="display:none" onchange="previewPhoto(this)">
-        <div id="photoPreview"></div>
-      </div>
-      <div class="form-group">
-        <label class="form-label">Notes (optional)</label>
-        <textarea class="form-textarea" id="completeNotes" placeholder="Describe what was done..."></textarea>
+        <label class="form-label" for="completePhoto">Completion photo</label>
+        <input class="form-input" type="file" id="completePhoto" accept="image/png,image/jpeg,image/webp">
+        <p class="text-sm text-muted mt-xs">JPG, PNG, or WebP up to 5 MB.</p>
       </div>
     </div>
     <div class="modal__footer">
-      <button class="btn btn--secondary" onclick="closeModal('completeModal')">Cancel</button>
-      <button class="btn btn--primary" id="submitCompleteBtn" onclick="submitComplete()">Mark as Complete</button>
+      <button class="btn btn--secondary" id="closeCompleteBtn">Cancel</button>
+      <button class="btn btn--primary" id="submitCompleteBtn">Mark Complete</button>
     </div>
   </div>
 </div>
 
-<script src="../assets/js/modules/api.js"></script>
-<script src="../assets/js/modules/auth.js"></script>
-<script src="../assets/js/modules/toast.js"></script>
-<script>
-const BADGE = { Requested:'badge--requested', Negotiating:'badge--negotiating', Assigned:'badge--assigned', Completed:'badge--completed', Reviewed:'badge--reviewed' };
+<div class="toast-container" id="toastContainer"></div>
+
+<script type="module">
+import Api    from '../core/api.js';
+import Auth   from '../core/auth.js';
+import Toast  from '../core/toast.js';
+import Layout from '../core/layout.js';
+
+const BADGE    = { Requested:'badge--requested', Negotiating:'badge--negotiating', Assigned:'badge--assigned', Completed:'badge--completed', Reviewed:'badge--reviewed' };
 const TIMELINE = ['Requested','Negotiating','Assigned','Completed','Reviewed'];
-let request = null;
-function esc(s){const d=document.createElement('div');d.textContent=s||'';return d.innerHTML}
+let request    = null;
+let myOffer    = null;
 
 const requestId = new URLSearchParams(location.search).get('id');
+function esc(s) { const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
 
-async function init() {
-  await Auth.load();
-  if (!Auth.requireAuth()) return;
-  Auth.renderNavUser(document.getElementById('navUser'));
-  loadRequest();
-}
-
-async function loadRequest() {
+async function loadAll() {
+  const content = document.getElementById('requestContent');
+  content.innerHTML = '<div class="empty-state"><div class="spinner spinner--dark"></div></div>';
   try {
-    const res = await api.get(`/requests/${requestId}`);
-    request = res.data;
-    document.getElementById('breadTitle').textContent = request.title;
-    renderContent();
-    renderOfferPanel();
-  } catch {
-    document.getElementById('requestContent').innerHTML = '<div class="empty-state"><p class="text-muted">Request not found.</p></div>';
+    const res = await Api.get(`/requests/${requestId}`);
+    request   = res.data;
+
+    const heading = (request.description || '').substring(0, 60) + ((request.description || '').length > 60 ? '...' : '');
+    document.getElementById('breadTitle').textContent = heading;
+
+    // Check if this provider already submitted an offer on this request
+    try {
+      const offersRes = await Api.get('/offers');
+      const allMyOffers = Array.isArray(offersRes.data) ? offersRes.data : [];
+      myOffer = allMyOffers.find(o => o.request_id === requestId) || null;
+    } catch { myOffer = null; }
+
+    render();
+  } catch (err) {
+    content.innerHTML = `<div class="empty-state"><p class="text-muted">${esc(err.message || 'Not found.')}</p></div>`;
   }
 }
 
-function renderContent() {
+function render() {
   const r = request;
-  const si = TIMELINE.indexOf(r.status);
+  const statusIdx = TIMELINE.indexOf(r.status);
+  const isOpen = ['Requested','Negotiating'].includes(r.status);
+
   document.getElementById('requestContent').innerHTML = `
-    <div class="flex-between mb-md" style="flex-wrap:wrap;gap:var(--space-sm)">
-      <span class="badge" style="background:#f0f0f0;color:#666;font-size:11px">${esc(r.category_name||r.category)}</span>
-      <span class="badge ${BADGE[r.status]||''}">${r.status}</span>
-    </div>
-    <h1 style="font-size:22px;margin-bottom:var(--space-lg)">${esc(r.title)}</h1>
-    <div class="card mb-md">
-      <div class="card__header"><h3 style="font-size:15px">Details</h3></div>
-      <div class="card__body">
-        <div class="info-row"><span class="info-row__label">Location</span><span class="info-row__val">${esc(r.location)}</span></div>
-        <div class="info-row"><span class="info-row__label">Preferred Date</span><span class="info-row__val">${r.preferred_date||'Flexible'}</span></div>
-        <div class="info-row"><span class="info-row__label">Budget</span><span class="info-row__val">${r.budget ? r.budget + ' ETB' : 'Open'}</span></div>
-        <div class="info-row"><span class="info-row__label">Total Offers</span><span class="info-row__val">${r.offer_count||0}</span></div>
+    <div style="display:grid;grid-template-columns:1fr 320px;gap:24px;align-items:start">
+      <!-- Left: Details -->
+      <div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+          <span class="badge" style="background:#f0f0f0;color:#555">${esc(r.category_name || '—')}</span>
+          <span class="badge ${BADGE[r.status] || ''}">${esc(r.status)}</span>
+        </div>
+        <p style="font-size:1rem;line-height:1.7;margin-bottom:16px">${esc(r.description)}</p>
+
+        <div class="card mb-md">
+          <div class="card__header"><h3 style="font-size:14px">Job Details</h3></div>
+          <div class="card__body">
+            <div class="info-row"><span class="info-row__label">Location</span><span class="info-row__val">📍 ${esc(r.location || '—')}</span></div>
+            <div class="info-row"><span class="info-row__label">Preferred Date</span><span class="info-row__val">📅 ${r.preferred_date || 'Flexible'}</span></div>
+            <div class="info-row"><span class="info-row__label">Posted by</span><span class="info-row__val">${esc(r.customer_name || 'Customer')}</span></div>
+            <div class="info-row"><span class="info-row__label">Posted</span><span class="info-row__val">${r.created_at ? new Date(r.created_at).toLocaleString() : '—'}</span></div>
+            <div class="info-row"><span class="info-row__label">Competing Offers</span><span class="info-row__val">💬 ${r.offer_count || 0} offer${r.offer_count !== 1 ? 's' : ''}</span></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card__header"><h3 style="font-size:14px">Status Timeline</h3></div>
+          <div class="card__body">
+            <ul class="timeline">
+              ${TIMELINE.map((s,i) => `
+                <li class="timeline__item ${i < statusIdx ? 'done' : i === statusIdx ? 'active' : ''}">
+                  <div class="timeline__dot">${i < statusIdx ? '✓' : i+1}</div>
+                  <div>
+                    <div style="font-weight:600;font-size:.9rem">${s}</div>
+                    <div style="font-size:.8rem;color:#999">${i === statusIdx ? 'Current state' : i < statusIdx ? 'Completed' : 'Pending'}</div>
+                  </div>
+                </li>`).join('')}
+            </ul>
+          </div>
+        </div>
       </div>
-    </div>
-    <div class="card mb-md">
-      <div class="card__header"><h3 style="font-size:15px">Description</h3></div>
-      <div class="card__body" style="line-height:1.7">${esc(r.description)}</div>
-    </div>
-    <div class="card">
-      <div class="card__header"><h3 style="font-size:15px">Status Timeline</h3></div>
-      <div class="card__body">
-        <ul class="timeline">
-          ${TIMELINE.map((s,i)=>`<li class="timeline__item ${i<si?'done':i===si?'active':''}">
-            <div class="timeline__dot">${i<si?'✓':i+1}</div>
-            <div class="timeline__body"><div class="timeline__label">${s}</div>${i<=si?`<div class="timeline__time">${i===si?'Current':'Completed'}</div>`:''}</div>
-          </li>`).join('')}
-        </ul>
+
+      <!-- Right: Submit Offer or status -->
+      <div style="position:sticky;top:80px" id="offerPanel"></div>
+    </div>`;
+
+  renderOfferPanel(isOpen);
+}
+
+function renderOfferPanel(isOpen) {
+  const panel = document.getElementById('offerPanel');
+
+  // If this provider won the job and it is currently Assigned
+  if (myOffer && myOffer.status === 'Accepted' && request.status === 'Assigned') {
+    panel.innerHTML = `
+      <div class="card" style="border: 2px solid var(--color-primary);">
+        <div class="card__header" style="background:#f8f9fa; border-bottom:1px solid #eee;">
+          <h3 style="font-size:15px; color:var(--color-primary)">✅ Job Assigned to You</h3>
+        </div>
+        <div class="card__body">
+          <p class="text-muted mb-md" style="font-size:.9rem">The customer has accepted your offer. Please review the final schedule details below.</p>
+          
+          <div style="background:#f8f9fa; border-radius:6px; padding:12px; margin-bottom:16px;">
+            <div style="margin-bottom:8px">
+              <span class="text-muted text-sm">Agreed Price:</span><br>
+              <strong style="color:var(--color-primary); font-size:1.1rem">ETB ${parseFloat(myOffer.price||0).toLocaleString()}</strong>
+            </div>
+            <div style="margin-bottom:8px">
+              <span class="text-muted text-sm">Scheduled Date & Time:</span><br>
+              <strong>📅 ${esc(request.preferred_date || 'Pending')}</strong>
+            </div>
+            <div>
+              <span class="text-muted text-sm">Customer Location:</span><br>
+              <strong>📍 ${esc(request.location || 'Pending')}</strong>
+            </div>
+          </div>
+          
+          <button class="btn btn--primary btn--full" id="markCompleteBtn">✓ Mark Job as Complete</button>
+        </div>
+      </div>`;
+    document.getElementById('markCompleteBtn').addEventListener('click', markJobComplete);
+    return;
+  }
+
+  // If the job is already completed or reviewed
+  if (myOffer && myOffer.status === 'Accepted' && ['Completed', 'Reviewed'].includes(request.status)) {
+    panel.innerHTML = `<div class="card">
+      <div class="card__body text-center">
+        <div style="font-size:32px; margin-bottom:10px">🏆</div>
+        <h3 style="font-size:16px; margin-bottom:8px">Job Completed</h3>
+        <p class="text-muted text-sm">You have successfully completed this service request.</p>
       </div>
     </div>`;
-}
-
-function renderOfferPanel() {
-  const r = request;
-  const panel = document.getElementById('offerPanel');
-  const myOffer = (r.offers||[]).find(o => o.provider_id === Auth.user?.id);
-
-  if (r.status === 'Assigned' && r.assigned_provider_id === Auth.user?.id) {
-    panel.innerHTML = `
-      <div class="card">
-        <div class="card__header"><h3 style="font-size:15px">Your Job ✅</h3></div>
-        <div class="card__body">
-          <p class="text-muted mb-md">You are assigned to this job. Mark it complete when done.</p>
-          <button class="btn btn--primary btn--full" onclick="openCompleteModal()">Mark as Complete</button>
-        </div>
-      </div>`;
     return;
   }
 
+  // If the request is closed and provider didn't win
+  if (!isOpen) {
+    panel.innerHTML = `<div class="card"><div class="card__body">
+      <p class="text-muted" style="font-size:.9rem">This request is <strong>${esc(request.status)}</strong> and is no longer open.</p>
+      <a href="marketplace.html" class="btn btn--secondary btn--sm btn--full" style="margin-top:12px">← Back to Marketplace</a>
+    </div></div>`;
+    return;
+  }
+
+  // If it's open and provider already submitted an offer
   if (myOffer) {
+    const OBADGE = { Pending:'badge--negotiating', Accepted:'badge--assigned', Rejected:'badge--danger', Countered:'badge--requested' };
     panel.innerHTML = `
       <div class="card">
-        <div class="card__header"><h3 style="font-size:15px">Your Offer</h3></div>
+        <div class="card__header"><h3 style="font-size:14px">Your Offer</h3></div>
         <div class="card__body">
-          <div class="info-row"><span class="info-row__label">Price</span><span class="info-row__val offer-card__price">${parseFloat(myOffer.price_offered).toLocaleString()} ETB</span></div>
-          <div class="info-row"><span class="info-row__label">Status</span><span class="info-row__val"><span class="badge badge--${myOffer.status}">${myOffer.status}</span></span></div>
-          ${myOffer.message ? `<p class="text-sm text-muted mt-md">${esc(myOffer.message)}</p>` : ''}
+          <div class="offer-submitted">
+            <div style="font-size:1.4rem;font-weight:700;margin-bottom:4px">ETB ${parseFloat(myOffer.price||0).toLocaleString()}</div>
+            <span class="badge ${OBADGE[myOffer.status]||''}">${esc(myOffer.status)}</span>
+            ${myOffer.message ? `<p style="font-size:.85rem;color:#555;margin-top:8px">${esc(myOffer.message)}</p>` : ''}
+            ${myOffer.counter_price ? `
+              <div style="background:#fff4e0;border-radius:6px;padding:8px;margin-top:10px;text-align:left;font-size:.85rem">
+                <strong>Counter offer from customer:</strong><br>
+                ETB ${parseFloat(myOffer.counter_price).toLocaleString()}
+                ${myOffer.counter_message ? `<br><em>${esc(myOffer.counter_message)}</em>` : ''}
+              </div>` : ''}
+          </div>
+          <p class="text-muted" style="font-size:.8rem;margin-top:10px;text-align:center">
+            ${myOffer.status === 'Pending' ? 'Waiting for the customer to respond.' : ''}
+            ${myOffer.status === 'Rejected' ? 'Your offer was not accepted this time.' : ''}
+            ${myOffer.status === 'Countered' ? 'The customer sent a counter offer. They can still accept or reject this negotiated offer.' : ''}
+          </p>
         </div>
       </div>`;
     return;
   }
 
-  if (['Requested','Negotiating'].includes(r.status)) {
-    panel.innerHTML = `
-      <div class="card">
-        <div class="card__header"><h3 style="font-size:15px">Submit an Offer</h3></div>
-        <div class="card__body">
-          <p class="text-muted mb-md">Interested in this job? Submit your price.</p>
-          <button class="btn btn--primary btn--full" onclick="openOfferModal()">Submit Offer</button>
+  // No offer yet — show submit form
+  panel.innerHTML = `
+    <div class="card">
+      <div class="card__header"><h3 style="font-size:14px">Submit Your Offer</h3></div>
+      <div class="card__body">
+        <div class="form-group">
+          <label class="form-label">Your Price (ETB) *</label>
+          <input class="form-input" type="number" id="offerPrice" placeholder="e.g. 1500" min="1" max="999999">
         </div>
-      </div>`;
-    return;
-  }
+        <div class="form-group">
+          <label class="form-label">Message to Customer *</label>
+          <textarea class="form-textarea" id="offerMessage" rows="4" placeholder="Describe your experience, approach, and availability..."></textarea>
+        </div>
+        <div id="offerError" style="display:none;color:#dc3545;font-size:.875rem;margin-bottom:8px"></div>
+        <button class="btn btn--primary btn--full" id="submitOfferBtn">Submit Offer</button>
+      </div>
+    </div>`;
 
-  panel.innerHTML = `<div class="card"><div class="card__body"><p class="text-muted text-sm">This request is no longer accepting offers.</p></div></div>`;
+  document.getElementById('submitOfferBtn').addEventListener('click', submitOffer);
 }
 
-function openOfferModal() {
-  const r = request;
-  document.getElementById('offerSummary').innerHTML = `
-    <div class="info-row"><span class="info-row__label">Request</span><span class="info-row__val">${esc(r.title)}</span></div>
-    <div class="info-row"><span class="info-row__label">Location</span><span class="info-row__val">${esc(r.location)}</span></div>
-    <div class="info-row"><span class="info-row__label">Budget</span><span class="info-row__val">${r.budget ? r.budget + ' ETB' : 'Open'}</span></div>`;
-  if (r.budget) document.getElementById('budgetHint').textContent = `Customer budget: ${r.budget} ETB`;
-  document.getElementById('offerModal').classList.add('open');
-}
-
-function openCompleteModal() {
-  const r = request;
-  document.getElementById('completeSummary').innerHTML = `<div class="info-row"><span class="info-row__label">Job</span><span class="info-row__val">${esc(r.title)}</span></div>`;
+window.markJobComplete = async function() {
+  document.getElementById('completePhoto').value = '';
   document.getElementById('completeModal').classList.add('open');
+  return;
+  if (!confirm('Are you sure you want to mark this job as complete?')) return;
+  const btn = document.getElementById('markCompleteBtn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Completing...'; }
+  try {
+    await Api.post(`/requests/${requestId}/complete`, {});
+    Toast.success('Job marked as complete!');
+    loadAll();
+  } catch (err) {
+    Toast.error(err.message || 'Failed to complete job.');
+    if (btn) { btn.disabled = false; btn.textContent = '✓ Mark Job as Complete'; }
+  }
+};
+
+function closeCompleteModal() {
+  document.getElementById('completeModal').classList.remove('open');
 }
 
-function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+async function submitCompletion() {
+  if (!confirm('Mark this job as completed? The customer will be able to leave a review.')) return;
 
-document.getElementById('offerMessage').addEventListener('input', function() {
-  document.getElementById('charCount').textContent = `${this.value.length}/500`;
-});
+  const btn = document.getElementById('submitCompleteBtn');
+  const photo = document.getElementById('completePhoto').files[0] || null;
+  btn.disabled = true;
+  btn.textContent = 'Completing...';
+
+  try {
+    if (photo) {
+      const formData = new FormData();
+      formData.append('completion_photo', photo);
+      await Api.upload(`/requests/${requestId}/complete`, formData);
+    } else {
+      await Api.post(`/requests/${requestId}/complete`, {});
+    }
+    Toast.success('Job marked as complete!');
+    closeCompleteModal();
+    loadAll();
+  } catch (err) {
+    Toast.error(err.message || 'Failed to complete job.');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Mark Complete';
+  }
+}
 
 async function submitOffer() {
-  const price = document.getElementById('offerPrice').value;
-  if (!price || price < 50) { Toast.error('Enter a valid price (min 50 ETB).'); return; }
-  const btn = document.getElementById('submitOfferBtn');
-  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Submitting...';
+  const priceEl   = document.getElementById('offerPrice');
+  const msgEl     = document.getElementById('offerMessage');
+  const errEl     = document.getElementById('offerError');
+  const btn       = document.getElementById('submitOfferBtn');
+  const price     = parseFloat(priceEl.value);
+  const message   = msgEl.value.trim();
+
+  const errs = [];
+  if (!price || price < 1)   errs.push('Please enter a valid price.');
+  if (message.length < 10)   errs.push('Message must be at least 10 characters.');
+
+  if (errs.length) {
+    errEl.textContent = errs[0];
+    errEl.style.display = 'block';
+    return;
+  }
+  errEl.style.display = 'none';
+
+  btn.disabled = true; btn.textContent = 'Submitting...';
   try {
-    await api.post(`/requests/${requestId}/offers`, { price_offered: parseFloat(price), message: document.getElementById('offerMessage').value });
-    Toast.success('Offer submitted!');
-    closeModal('offerModal');
-    loadRequest();
+    await Api.post(`/requests/${requestId}/offers`, { price, message });
+    Toast.success('Offer submitted successfully!');
+    loadAll(); // reload to show the submitted offer
   } catch (err) {
-    Toast.error(err.message || 'Failed to submit offer.');
+    errEl.textContent = err.message || 'Failed to submit offer.';
+    errEl.style.display = 'block';
     btn.disabled = false; btn.textContent = 'Submit Offer';
   }
 }
 
-function previewPhoto(input) {
-  const file = input.files[0];
-  if (!file) return;
-  if (file.size > 5 * 1024 * 1024) { Toast.error('File too large (max 5MB).'); input.value=''; return; }
-  const reader = new FileReader();
-  reader.onload = e => {
-    document.getElementById('photoPreview').innerHTML = `<div class="upload-preview"><img src="${e.target.result}" alt="Preview"><br><a href="#" onclick="clearPhoto()">Remove</a></div>`;
-  };
-  reader.readAsDataURL(file);
-}
-function clearPhoto() { document.getElementById('photoInput').value=''; document.getElementById('photoPreview').innerHTML=''; }
-
-async function submitComplete() {
-  const fileInput = document.getElementById('photoInput');
-  if (!fileInput.files[0]) { Toast.error('Please upload a completion photo.'); return; }
-  const btn = document.getElementById('submitCompleteBtn');
-  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Submitting...';
-  const fd = new FormData();
-  fd.append('photo', fileInput.files[0]);
-  fd.append('notes', document.getElementById('completeNotes').value);
-  try {
-    await api.upload(`/requests/${requestId}/complete`, fd);
-    Toast.success('Job marked as complete!');
-    closeModal('completeModal');
-    loadRequest();
-  } catch (err) {
-    Toast.error(err.message || 'Failed.');
-    btn.disabled = false; btn.textContent = 'Mark as Complete';
-  }
+async function init() {
+  if (!requestId) { window.history.back(); return; }
+  const ok = await Auth.load();
+  if (!ok || !Auth.requireAuth(['provider'])) return;
+  Layout.renderShell('provider', 'browse', 'browse');
+  document.getElementById('closeCompleteTopBtn').addEventListener('click', closeCompleteModal);
+  document.getElementById('closeCompleteBtn').addEventListener('click', closeCompleteModal);
+  document.getElementById('submitCompleteBtn').addEventListener('click', submitCompletion);
+  document.getElementById('completeModal').addEventListener('click', e => {
+    if (e.target === e.currentTarget) closeCompleteModal();
+  });
+  loadAll();
 }
 
-init();
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+else init();
 </script>
 </body>
 </html>

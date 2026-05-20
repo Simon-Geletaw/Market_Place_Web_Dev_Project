@@ -1,69 +1,120 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-role="admin">
 <head>
   <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
   <title>Audit Logs — ServiceLink Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../../assets/css/main.css">
   <link rel="stylesheet" href="../../assets/css/components.css">
+  <script src="../../core/guard.js"></script>
 </head>
 <body>
-<header class="app-navbar">
-  <div class="navbar">
-    <a href="../../landing_page/index.html" class="navbar__logo"><div class="navbar__logo-icon">S</div>Service<span class="navbar__logo-accent">Link</span> <span class="badge badge--verified" style="font-size:10px;margin-left:4px">Admin</span></a>
-    <div class="navbar__actions"><div class="navbar__user" id="navUser"></div><button class="btn btn--secondary btn--sm" onclick="Auth.logout()">Logout</button></div>
-  </div>
-</header>
+<header id="app-header"></header>
 <div class="app-shell">
-  <aside class="app-sidebar">
-    <div class="sidebar">
-      <div class="sidebar__label">Admin Panel</div>
-      <a href="../dashboard/admin.html" class="sidebar__item">📊 Overview</a>
-      <a href="verification.html" class="sidebar__item">🔒 Verification</a>
-      <a href="audit-logs.html" class="sidebar__item active">📋 Audit Logs</a>
-      <a href="metrics.html" class="sidebar__item">📈 Metrics</a>
-      <div class="sidebar__footer"><button class="btn btn--secondary btn--sm btn--full" onclick="Auth.logout()">Sign Out</button></div>
-    </div>
-  </aside>
+  <aside id="app-sidebar"></aside>
   <main class="app-content">
     <div class="page-header">
-      <div><div class="page-header__title">Audit Logs</div><div class="page-header__subtitle">System activity trail for all users</div></div>
-      <button class="btn btn--secondary btn--sm" onclick="load()">Refresh</button>
+      <div>
+        <div class="page-header__title">Audit Logs</div>
+        <div class="page-header__subtitle">Full system activity trail</div>
+      </div>
+      <button class="btn btn--secondary btn--sm" id="refreshBtn">↻ Refresh</button>
     </div>
     <div class="filter-bar">
-      <input class="form-input" id="searchLog" placeholder="Search by action or user..." oninput="debounce()">
-      <select class="form-select" id="limitLog" onchange="load()">
-        <option value="50">50 rows</option><option value="100">100 rows</option><option value="200">200 rows</option>
+      <input class="form-input" id="searchLog" placeholder="Filter by action or user..." style="flex:1">
+      <select class="form-select" id="perPage" style="width:120px">
+        <option value="50">50 per page</option>
+        <option value="100">100 per page</option>
       </select>
     </div>
     <div id="list"></div>
+    <div id="pagination" style="display:flex;gap:8px;justify-content:center;margin-top:16px"></div>
   </main>
 </div>
-<script src="../../assets/js/modules/api.js"></script>
-<script src="../../assets/js/modules/auth.js"></script>
-<script>
-function esc(s){const d=document.createElement('div');d.textContent=s||'';return d.innerHTML}
-let timer;
-async function init(){await Auth.load();if(!Auth.requireRole('admin'))return;Auth.renderNavUser(document.getElementById('navUser'));load();}
-function debounce(){clearTimeout(timer);timer=setTimeout(load,400);}
-async function load(){
-  const q=document.getElementById('searchLog').value;
-  const lim=document.getElementById('limitLog').value;
-  const el=document.getElementById('list');el.innerHTML='<div class="empty-state"><div class="spinner spinner--dark"></div></div>';
-  try{
-    const res=await api.get(`/admin/audit-logs?limit=${lim}&search=${encodeURIComponent(q)}`);const logs=res.data||[];
-    if(!logs.length){el.innerHTML='<div class="empty-state"><div class="empty-state__icon">📋</div><div class="empty-state__title">No logs found</div></div>';return;}
-    el.innerHTML=`<div class="table-wrap"><table class="table"><thead><tr><th>Action</th><th>User</th><th>Role</th><th>Details</th><th>Time</th></tr></thead><tbody>
-      ${logs.map(l=>`<tr>
-        <td><strong>${esc(l.action)}</strong></td>
-        <td>${esc(l.user_name||'System')}</td>
-        <td><span class="badge badge--${l.user_role==='admin'?'verified':l.user_role==='provider'?'accepted':'pending'}">${esc(l.user_role||'—')}</span></td>
-        <td class="text-sm text-muted">${esc(l.details||'—')}</td>
-        <td class="text-sm text-muted" style="white-space:nowrap">${new Date(l.created_at).toLocaleString()}</td>
-      </tr>`).join('')}
+<div class="toast-container" id="toastContainer"></div>
+<script type="module">
+import Api    from '../../core/api.js';
+import Auth   from '../../core/auth.js';
+import Layout from '../../core/layout.js';
+
+function esc(s) { const d = document.createElement('div'); d.textContent = s||''; return d.innerHTML; }
+
+let allLogs = [];
+let currentPage = 1;
+let debounceTimer;
+
+function renderLogs() {
+  const q   = document.getElementById('searchLog').value.toLowerCase();
+  const per = parseInt(document.getElementById('perPage').value, 10);
+  const el  = document.getElementById('list');
+
+  const filtered = q
+    ? allLogs.filter(l => (l.action||'').toLowerCase().includes(q) || (l.user_name||'').toLowerCase().includes(q))
+    : allLogs;
+
+  const total    = filtered.length;
+  const pages    = Math.ceil(total / per);
+  currentPage    = Math.min(currentPage, pages || 1);
+  const start    = (currentPage - 1) * per;
+  const pageData = filtered.slice(start, start + per);
+
+  if (!pageData.length) {
+    el.innerHTML = '<div class="empty-state"><div class="empty-state__icon">📋</div><p class="empty-state__text">No audit events found.</p></div>';
+    document.getElementById('pagination').innerHTML = '';
+    return;
+  }
+
+  el.innerHTML = `<div class="table-wrapper"><table class="data-table">
+    <thead><tr><th>Action</th><th>User</th><th>Role</th><th>Entity</th><th>Details</th><th>Time</th></tr></thead>
+    <tbody>
+    ${pageData.map(l => `<tr>
+      <td><code>${esc(l.action)}</code></td>
+      <td>${esc(l.user_name || 'System')}</td>
+      <td>${l.user_role ? `<span class="badge badge--${l.user_role === 'Admin' ? 'assigned' : 'negotiating'}">${esc(l.user_role)}</span>` : '—'}</td>
+      <td class="text-sm">${l.entity_type ? `${esc(l.entity_type)}<br><small class="text-muted">#${(l.entity_id||'').substring(0,8)}</small>` : '—'}</td>
+      <td class="text-sm text-muted">${esc(l.details || '—')}</td>
+      <td class="text-sm text-muted" style="white-space:nowrap">${l.created_at ? new Date(l.created_at).toLocaleString() : '—'}</td>
+    </tr>`).join('')}
     </tbody></table></div>`;
-  }catch{el.innerHTML='<div class="empty-state"><p class="text-muted">Could not load logs.</p></div>';}
+
+  // Pagination
+  const pg = document.getElementById('pagination');
+  if (pages <= 1) { pg.innerHTML = ''; return; }
+  pg.innerHTML = Array.from({length: pages}, (_, i) => `
+    <button class="btn btn--sm ${i+1===currentPage ? 'btn--primary' : 'btn--ghost'}" data-page="${i+1}">${i+1}</button>`
+  ).join('');
+  pg.querySelectorAll('[data-page]').forEach(btn => {
+    btn.addEventListener('click', () => { currentPage = parseInt(btn.dataset.page,10); renderLogs(); });
+  });
 }
-init();
+
+async function load() {
+  const el = document.getElementById('list');
+  el.innerHTML = '<div class="empty-state"><div class="spinner spinner--dark"></div><p>Loading audit logs...</p></div>';
+  try {
+    const res = await Api.get('/admin/audit-logs?per_page=500');
+    allLogs = res.data?.logs || [];
+    renderLogs();
+  } catch (err) {
+    el.innerHTML = `<div class="empty-state"><p class="text-muted">${esc(err.message || 'Could not load logs.')}</p></div>`;
+  }
+}
+
+async function init() {
+  const ok = await Auth.load();
+  if (!ok || !Auth.requireAuth(['admin'])) return;
+  Layout.renderShell('admin', 'audit-logs', 'admin');
+  document.getElementById('refreshBtn').addEventListener('click', load);
+  document.getElementById('searchLog').addEventListener('input', () => {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(() => { currentPage = 1; renderLogs(); }, 300);
+  });
+  document.getElementById('perPage').addEventListener('change', () => { currentPage = 1; renderLogs(); });
+  load();
+}
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+else init();
 </script>
 </body>
 </html>

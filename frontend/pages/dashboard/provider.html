@@ -1,190 +1,450 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-role="provider">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <meta name="description" content="Browse open service requests, manage your offers, and track assigned jobs.">
   <title>Provider Dashboard — ServiceLink</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../../assets/css/main.css">
   <link rel="stylesheet" href="../../assets/css/components.css">
+  <style>
+    /* ── Provider Dashboard Specific ── */
+    .welcome-banner {
+      background: linear-gradient(135deg, #0052A3 0%, #0077E6 100%);
+      border-radius: var(--radius-lg);
+      padding: 28px 32px;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-lg);
+      margin-bottom: var(--space-xl);
+      position: relative;
+      overflow: hidden;
+    }
+    .welcome-banner::after {
+      content: '';
+      position: absolute;
+      right: -40px;
+      top: -40px;
+      width: 180px;
+      height: 180px;
+      background: rgba(255,255,255,0.06);
+      border-radius: 50%;
+    }
+    .welcome-banner::before {
+      content: '';
+      position: absolute;
+      right: 80px;
+      bottom: -60px;
+      width: 140px;
+      height: 140px;
+      background: rgba(255,255,255,0.04);
+      border-radius: 50%;
+    }
+    .welcome-banner__content { position: relative; z-index: 1; }
+    .welcome-banner__title {
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: 4px;
+      line-height: 1.3;
+    }
+    .welcome-banner__subtitle {
+      font-size: 14px;
+      opacity: 0.85;
+      line-height: 1.5;
+    }
+    .welcome-banner__actions { position: relative; z-index: 1; flex-shrink: 0; }
+    .welcome-banner__actions .btn {
+      background: rgba(255,255,255,0.15);
+      color: #fff;
+      border: 1px solid rgba(255,255,255,0.3);
+      backdrop-filter: blur(4px);
+    }
+    .welcome-banner__actions .btn:hover {
+      background: rgba(255,255,255,0.25);
+      color: #fff;
+    }
+
+    .stat-card { position: relative; overflow: hidden; }
+    .stat-card__icon-wrap {
+      width: 44px;
+      height: 44px;
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: var(--space-sm);
+    }
+    .stat-card__icon-wrap svg { width: 22px; height: 22px; }
+    .stat-card__trend {
+      font-size: 11px;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 2px;
+      margin-top: 6px;
+      padding: 2px 8px;
+      border-radius: var(--radius-pill);
+    }
+    .stat-card__trend--neutral { background: #f0f0f0; color: var(--color-text-secondary); }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: var(--space-md);
+    }
+    .section-header__title {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--color-text-primary);
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+    }
+    .section-header__title svg { opacity: 0.5; }
+    .section-header__link {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--color-primary);
+    }
+
+    .job-card {
+      background: var(--color-bg-white);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      padding: 20px;
+      margin-bottom: var(--space-md);
+      transition: box-shadow var(--transition), border-color var(--transition);
+    }
+    .job-card:hover {
+      box-shadow: var(--shadow-hover);
+      border-color: #ccc;
+    }
+    .job-card__top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: var(--space-md);
+      margin-bottom: 10px;
+    }
+    .job-card__title {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--color-text-primary);
+      line-height: 1.4;
+    }
+    .job-card__meta {
+      display: flex;
+      align-items: center;
+      gap: var(--space-lg);
+      font-size: 12px;
+      color: var(--color-text-secondary);
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+    .job-card__meta-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .job-card__meta-item svg {
+      width: 14px;
+      height: 14px;
+      opacity: 0.5;
+    }
+    .job-card__actions {
+      display: flex;
+      gap: var(--space-sm);
+      align-items: center;
+    }
+
+    .offer-row {
+      background: var(--color-bg-white);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      padding: 16px 20px;
+      margin-bottom: var(--space-sm);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-md);
+      transition: box-shadow var(--transition);
+    }
+    .offer-row:hover { box-shadow: var(--shadow-hover); }
+    .offer-row__info { flex: 1; min-width: 0; }
+    .offer-row__title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--color-text-primary);
+      margin-bottom: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .offer-row__sub {
+      font-size: 12px;
+      color: var(--color-text-secondary);
+    }
+    .offer-row__price {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--color-primary);
+      white-space: nowrap;
+    }
+
+    .empty-card {
+      background: var(--color-bg-white);
+      border: 1px dashed var(--color-border);
+      border-radius: var(--radius-md);
+      padding: var(--space-xl) var(--space-lg);
+      text-align: center;
+    }
+    .empty-card__icon {
+      width: 48px;
+      height: 48px;
+      margin: 0 auto var(--space-md);
+      color: var(--color-text-muted);
+      opacity: 0.3;
+    }
+    .empty-card__text {
+      color: var(--color-text-secondary);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+    .empty-card__text a {
+      font-weight: 600;
+    }
+
+    @media (max-width: 768px) {
+      .welcome-banner { flex-direction: column; align-items: flex-start; padding: 20px 24px; }
+      .offer-row { flex-direction: column; align-items: flex-start; }
+    }
+  </style>
+  <script src="../../core/guard.js"></script>
 </head>
 <body>
 
-<header class="app-navbar">
-  <div class="navbar">
-    <a href="../../landing_page/index.html" class="navbar__logo">
-      <div class="navbar__logo-icon">S</div>
-      Service<span class="navbar__logo-accent">Link</span>
-    </a>
-    <nav class="navbar__nav">
-      <a href="../marketplace.html" class="navbar__link">Browse Requests</a>
-      <a href="provider.html" class="navbar__link navbar__link--active">Dashboard</a>
-    </nav>
-    <div class="navbar__actions">
-      <div class="navbar__user" id="navUser"></div>
-      <button class="btn btn--secondary btn--sm" onclick="Auth.logout()">Logout</button>
-    </div>
-  </div>
-</header>
+<header id="app-header"></header>
 
 <div class="app-shell">
-  <aside class="app-sidebar">
-    <div class="sidebar">
-      <div class="sidebar__label">Menu</div>
-      <a href="provider.html" class="sidebar__item active">
-        <svg class="sidebar__icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-        Dashboard
-      </a>
-      <a href="../marketplace.html" class="sidebar__item">
-        <svg class="sidebar__icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
-        Browse Requests
-      </a>
-      <a href="../provider/my-offers.html" class="sidebar__item">
-        <svg class="sidebar__icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-        My Offers
-      </a>
-      <a href="../provider/assigned-jobs.html" class="sidebar__item">
-        <svg class="sidebar__icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="9,11 12,14 22,4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
-        Assigned Jobs
-      </a>
-      <a href="../provider/completed-jobs.html" class="sidebar__item">
-        <svg class="sidebar__icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/></svg>
-        Completed Jobs
-      </a>
-      <a href="../provider/reviews-received.html" class="sidebar__item">
-        <svg class="sidebar__icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg>
-        Reviews Received
-      </a>
-      <a href="../settings.html" class="sidebar__item">
-        <svg class="sidebar__icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06A1.65 1.65 0 0015 19.4a1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
-        Settings
-      </a>
-      <div class="sidebar__footer">
-        <button class="btn btn--secondary btn--sm btn--full" onclick="Auth.logout()">Sign Out</button>
-      </div>
-    </div>
-  </aside>
+  <aside id="app-sidebar"></aside>
 
   <main class="app-content">
-    <div class="page-header">
-      <div>
-        <div class="page-header__title" id="welcomeMsg">Provider Dashboard</div>
-        <div class="page-header__subtitle" id="ratingLine">Find and complete service jobs</div>
+
+    <!-- Welcome Banner -->
+    <div class="welcome-banner">
+      <div class="welcome-banner__content">
+        <div class="welcome-banner__title" id="welcomeMsg">Welcome back</div>
+        <div class="welcome-banner__subtitle">Find jobs, submit offers, and grow your business.</div>
       </div>
-      <a href="../marketplace.html" class="btn btn--primary">Browse Available Jobs</a>
+      <div class="welcome-banner__actions">
+        <a href="../marketplace.html" class="btn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          Browse Marketplace
+        </a>
+      </div>
     </div>
 
     <!-- Stat Cards -->
     <div class="grid-4 mb-lg">
-      <div class="stat-card stat-card--negotiating">
-        <div class="stat-card__icon" style="background:#fff4e0">📤</div>
-        <div class="stat-card__value" id="cntPending">—</div>
-        <div class="stat-card__label">Pending Offers</div>
+      <div class="stat-card stat-card--requested">
+        <div class="stat-card__icon-wrap" style="background:#e8f4ff;color:#0066CC">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+        </div>
+        <div class="stat-card__value" id="cntPending">&mdash;</div>
+        <div class="stat-card__label">Active Offers</div>
       </div>
       <div class="stat-card stat-card--assigned">
-        <div class="stat-card__icon" style="background:#e8f5eb">✅</div>
-        <div class="stat-card__value" id="cntAccepted">—</div>
-        <div class="stat-card__label">Accepted Offers</div>
+        <div class="stat-card__icon-wrap" style="background:#e8f5eb;color:#1a7a32">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        </div>
+        <div class="stat-card__value" id="cntAssigned">&mdash;</div>
+        <div class="stat-card__label">Assigned Jobs</div>
       </div>
       <div class="stat-card stat-card--completed">
-        <div class="stat-card__icon" style="background:#e0faf4">🎉</div>
-        <div class="stat-card__value" id="cntCompleted">—</div>
-        <div class="stat-card__label">Completed Jobs</div>
+        <div class="stat-card__icon-wrap" style="background:#e0faf4;color:#0f7a5a">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+        </div>
+        <div class="stat-card__value" id="cntCompleted">&mdash;</div>
+        <div class="stat-card__label">Completed</div>
       </div>
-      <div class="stat-card stat-card--reviewed" style="border-left-color:var(--status-reviewed)">
-        <div class="stat-card__icon" style="background:#eef0ff">⭐</div>
-        <div class="stat-card__value" id="avgRating">—</div>
-        <div class="stat-card__label">Avg Rating</div>
+      <div class="stat-card stat-card--reviewed">
+        <div class="stat-card__icon-wrap" style="background:#eef0ff;color:#3a5acc">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        </div>
+        <div class="stat-card__value" id="ratingAvg">&mdash;</div>
+        <div class="stat-card__label">Your Rating</div>
       </div>
     </div>
 
-    <!-- Recent Offers -->
-    <h3 style="margin-bottom:var(--space-md)">My Recent Offers</h3>
-    <div id="offersList"></div>
-
-    <!-- Nearby Open Requests -->
-    <h3 style="margin:var(--space-xl) 0 var(--space-md)">Open Requests Near You</h3>
-    <div class="filter-bar">
-      <select class="form-select" id="catFilter">
-        <option value="">All Categories</option>
-        <option>Electrician</option><option>Plumber</option><option>Carpenter</option>
-        <option>Painter</option><option>Cleaner</option><option>General Handyman</option>
-      </select>
-      <button class="btn btn--primary btn--sm" onclick="loadNearby()">Filter</button>
+    <!-- Assigned Jobs Section -->
+    <div class="mb-lg">
+      <div class="section-header">
+        <h3 class="section-header__title">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          Active Assigned Jobs
+        </h3>
+        <a href="../provider/assigned-jobs.html" class="section-header__link">View all</a>
+      </div>
+      <div id="assignedList">
+        <div class="empty-card">
+          <div class="spinner spinner--dark" style="margin:0 auto"></div>
+          <p class="empty-card__text mt-sm">Loading assigned jobs...</p>
+        </div>
+      </div>
     </div>
-    <div id="nearbyList"></div>
+
+    <!-- Recent Offers Section -->
+    <div>
+      <div class="section-header">
+        <h3 class="section-header__title">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+          Recent Offers
+        </h3>
+        <a href="../provider/my-offers.html" class="section-header__link">View all</a>
+      </div>
+      <div id="offersList">
+        <div class="empty-card">
+          <div class="spinner spinner--dark" style="margin:0 auto"></div>
+          <p class="empty-card__text mt-sm">Loading offers...</p>
+        </div>
+      </div>
+    </div>
+
   </main>
 </div>
 
-<script src="../../assets/js/modules/api.js"></script>
-<script src="../../assets/js/modules/auth.js"></script>
-<script src="../../assets/js/modules/toast.js"></script>
-<script>
-const BADGE = { pending:'badge--pending', accepted:'badge--accepted', rejected:'badge--rejected', countered:'badge--countered' };
-function esc(s){const d=document.createElement('div');d.textContent=s||'';return d.innerHTML}
+<script type="module">
+import Api    from '../../core/api.js';
+import Auth   from '../../core/auth.js';
+import Toast  from '../../core/toast.js';
+import Layout from '../../core/layout.js';
+
+function esc(s) { const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
+
+const OFFER_BADGE = {
+  Pending:   'badge--negotiating',
+  Accepted:  'badge--assigned',
+  Rejected:  'badge--rejected',
+  Countered: 'badge--countered',
+};
+
+/* ── Inline SVG icons for cards ── */
+const IC = {
+  pin: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>',
+  tag: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>',
+  cal: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>',
+  empty_jobs: '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>',
+  empty_offers: '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>',
+};
+
+async function loadDashboard() {
+  try {
+    const [dashRes, offersRes] = await Promise.all([
+      Api.get('/provider/dashboard'),
+      Api.get('/offers'),
+    ]);
+
+    const data   = dashRes.data  || {};
+    const offers = offersRes.data || [];
+
+    // Stats
+    document.getElementById('cntPending').textContent   = offers.filter(o => o.status === 'Pending').length;
+    document.getElementById('cntAssigned').textContent  = data.assigned_count  ?? '0';
+    document.getElementById('cntCompleted').textContent = data.completed_count ?? '0';
+
+    const user = Auth.getUser();
+    const rating = user?.rating_average ? parseFloat(user.rating_average) : 0;
+    document.getElementById('ratingAvg').textContent = rating > 0 ? rating.toFixed(1) : 'New';
+
+    // Assigned jobs
+    const assignedList = document.getElementById('assignedList');
+    const recent = data.recent_assigned || [];
+    if (!recent.length) {
+      assignedList.innerHTML = `<div class="empty-card">
+        <div class="empty-card__icon">${IC.empty_jobs}</div>
+        <p class="empty-card__text">No active assigned jobs right now.<br><a href="../marketplace.html">Browse the marketplace</a> to find work.</p>
+      </div>`;
+    } else {
+      assignedList.innerHTML = recent.map(r => `
+        <div class="job-card">
+          <div class="job-card__top">
+            <div class="job-card__title">${esc(r.title || (r.description || '').substring(0, 80))}</div>
+            <span class="badge badge--assigned">Assigned</span>
+          </div>
+          <div class="job-card__meta">
+            <span class="job-card__meta-item">${IC.pin} ${esc(r.location || 'N/A')}</span>
+            <span class="job-card__meta-item">${IC.tag} ${esc(r.category_name || 'N/A')}</span>
+            <span class="job-card__meta-item">${IC.cal} ${r.preferred_date || 'Flexible'}</span>
+          </div>
+          <div class="job-card__actions">
+            <a href="../request-detail-provider.html?id=${r.id}" class="btn btn--primary btn--sm">View Details</a>
+            <button class="btn btn--success btn--sm" onclick="markComplete('${r.id}', this)">Mark Complete</button>
+          </div>
+        </div>`).join('');
+    }
+
+    // Offers
+    const offersList = document.getElementById('offersList');
+    if (!offers.length) {
+      offersList.innerHTML = `<div class="empty-card">
+        <div class="empty-card__icon">${IC.empty_offers}</div>
+        <p class="empty-card__text">You haven't submitted any offers yet.<br><a href="../marketplace.html">Browse the marketplace</a> to find your first job.</p>
+      </div>`;
+    } else {
+      offersList.innerHTML = offers.slice(0, 6).map(o => `
+        <div class="offer-row">
+          <div class="offer-row__info">
+            <div class="offer-row__title">Offer ${esc(o.id?.substring(0, 8) || '')}</div>
+            <div class="offer-row__sub">${o.created_at ? new Date(o.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Unknown date'}${o.message ? ' · ' + esc(o.message.substring(0, 60)) : ''}</div>
+          </div>
+          <div class="offer-row__price">ETB ${parseFloat(o.price || 0).toLocaleString()}</div>
+          <span class="badge ${OFFER_BADGE[o.status] || ''}">${esc(o.status)}</span>
+        </div>`).join('');
+    }
+
+  } catch (err) {
+    Toast.error(err.message || 'Failed to load dashboard.');
+  }
+}
+
+window.markComplete = async function(requestId, btn) {
+  if (!confirm('Mark this job as completed?')) return;
+  btn.disabled = true;
+  btn.textContent = 'Updating...';
+  try {
+    await Api.post(`/requests/${requestId}/complete`, {});
+    Toast.success('Job marked as complete!');
+    loadDashboard();
+  } catch (err) {
+    Toast.error(err.message || 'Failed to mark complete.');
+    btn.disabled = false;
+    btn.textContent = 'Mark Complete';
+  }
+};
 
 async function init() {
-  await Auth.load();
-  if (!Auth.requireAuth()) return;
-  Auth.renderNavUser(document.getElementById('navUser'));
-  document.getElementById('welcomeMsg').textContent = `Welcome, ${Auth.user.full_name}`;
-  if (Auth.user.rating_average) {
-    document.getElementById('ratingLine').textContent = `Rating: ${parseFloat(Auth.user.rating_average).toFixed(1)} ⭐  ${Auth.user.is_verified ? '· ✓ Verified' : '· Pending Verification'}`;
-    document.getElementById('avgRating').textContent = parseFloat(Auth.user.rating_average).toFixed(1);
-  }
-  loadOffers();
-  loadNearby();
+  const ok = await Auth.load();
+  if (!ok || !Auth.requireAuth(['provider'])) return;
+
+  Layout.renderShell('provider', 'dashboard', 'dashboard');
+
+  const user = Auth.getUser();
+  const firstName = (user?.name || 'Provider').split(' ')[0];
+  document.getElementById('welcomeMsg').textContent = `Welcome back, ${firstName}`;
+
+  await loadDashboard();
 }
 
-async function loadOffers() {
-  const el = document.getElementById('offersList');
-  el.innerHTML = '<div class="empty-state"><div class="spinner spinner--dark"></div></div>';
-  try {
-    const res = await api.get('/offers');
-    const offers = (res.data||[]).slice(0,5);
-    document.getElementById('cntPending').textContent  = (res.data||[]).filter(o=>o.status==='pending').length;
-    document.getElementById('cntAccepted').textContent = (res.data||[]).filter(o=>o.status==='accepted').length;
-    document.getElementById('cntCompleted').textContent= (res.data||[]).filter(o=>o.status==='accepted'&&o.request_status==='Completed').length;
-    if (!offers.length) { el.innerHTML='<div class="empty-state"><p class="text-muted">No offers submitted yet.</p></div>'; return; }
-    el.innerHTML = `<div class="table-wrap"><table class="table"><thead><tr><th>Request</th><th>Price</th><th>Status</th><th>Date</th><th></th></tr></thead><tbody>
-      ${offers.map(o=>`<tr>
-        <td><a href="../request-detail-provider.html?id=${o.request_id}">${esc(o.request_title||'Request')}</a></td>
-        <td><strong>${parseFloat(o.price_offered).toLocaleString()} ETB</strong></td>
-        <td><span class="badge ${BADGE[o.status]||''}">${o.status}</span></td>
-        <td class="text-muted text-sm">${new Date(o.created_at).toLocaleDateString()}</td>
-        <td><a href="../request-detail-provider.html?id=${o.request_id}" class="btn btn--secondary btn--sm">View</a></td>
-      </tr>`).join('')}
-    </tbody></table></div>
-    <p style="margin-top:var(--space-sm)"><a href="../provider/my-offers.html">View all offers →</a></p>`;
-  } catch { el.innerHTML='<p class="text-muted">Could not load offers.</p>'; }
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', init);
+} else {
+  init();
 }
-
-async function loadNearby() {
-  const el = document.getElementById('nearbyList');
-  const cat = document.getElementById('catFilter').value;
-  el.innerHTML = '<div class="empty-state"><div class="spinner spinner--dark"></div></div>';
-  try {
-    const res = await api.get(`/marketplace/requests?category=${cat}`);
-    const items = (res.data||[]).slice(0,6);
-    if (!items.length) { el.innerHTML='<div class="empty-state"><p class="text-muted">No open requests found.</p></div>'; return; }
-    el.innerHTML = '<div class="grid-2">' + items.map(r=>`
-      <div class="request-card">
-        <div class="request-card__header">
-          <div>
-            <div class="request-card__title">${esc(r.title)}</div>
-            <div class="request-card__meta"><span>📍 ${esc(r.location)}</span><span>🗂 ${esc(r.category_name||r.category)}</span></div>
-          </div>
-          <span class="badge badge--requested">${r.status}</span>
-        </div>
-        <p class="request-card__desc">${esc(r.description)}</p>
-        <div class="request-card__footer">
-          ${r.budget ? `<span class="text-sm text-muted">Budget: ${r.budget} ETB</span>` : '<span></span>'}
-          <a href="../request-detail-provider.html?id=${r.id}" class="btn btn--primary btn--sm">View & Offer</a>
-        </div>
-      </div>`).join('') + '</div>';
-  } catch { el.innerHTML='<p class="text-muted">Could not load requests.</p>'; }
-}
-
-init();
 </script>
 </body>
 </html>

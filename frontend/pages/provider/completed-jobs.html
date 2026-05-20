@@ -1,62 +1,139 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-role="provider">
 <head>
-  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Completed Jobs — ServiceLink</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../../assets/css/main.css">
   <link rel="stylesheet" href="../../assets/css/components.css">
+  <script src="../../core/guard.js"></script>
 </head>
 <body>
-<header class="app-navbar">
-  <div class="navbar">
-    <a href="../../landing_page/index.html" class="navbar__logo"><div class="navbar__logo-icon">S</div>Service<span class="navbar__logo-accent">Link</span></a>
-    <div class="navbar__actions"><div class="navbar__user" id="navUser"></div><button class="btn btn--secondary btn--sm" onclick="Auth.logout()">Logout</button></div>
-  </div>
-</header>
+<header id="app-header"></header>
+
 <div class="app-shell">
-  <aside class="app-sidebar">
-    <div class="sidebar">
-      <div class="sidebar__label">Provider Menu</div>
-      <a href="../dashboard/provider.html" class="sidebar__item">📊 Dashboard</a>
-      <a href="../marketplace.html" class="sidebar__item">🔍 Browse Requests</a>
-      <a href="my-offers.html" class="sidebar__item">📤 My Offers</a>
-      <a href="assigned-jobs.html" class="sidebar__item">✅ Assigned Jobs</a>
-      <a href="completed-jobs.html" class="sidebar__item active">🎉 Completed Jobs</a>
-      <a href="reviews-received.html" class="sidebar__item">⭐ Reviews Received</a>
-      <div class="sidebar__footer"><button class="btn btn--secondary btn--sm btn--full" onclick="Auth.logout()">Sign Out</button></div>
-    </div>
-  </aside>
+  <aside id="app-sidebar"></aside>
   <main class="app-content">
+
     <div class="page-header">
-      <div><div class="page-header__title">Completed Jobs</div><div class="page-header__subtitle">Your full job history</div></div>
+      <div>
+        <div class="page-header__title">Completed Jobs</div>
+        <div class="page-header__subtitle">Your full job history</div>
+      </div>
+      <button class="btn btn--secondary btn--sm" id="refreshBtn">↻ Refresh</button>
     </div>
+
     <div id="list"></div>
+
   </main>
 </div>
-<script src="../../assets/js/modules/api.js"></script>
-<script src="../../assets/js/modules/auth.js"></script>
-<script>
-function esc(s){const d=document.createElement('div');d.textContent=s||'';return d.innerHTML}
-function stars(n){return n?'★'.repeat(n)+'☆'.repeat(5-n):'Not rated'}
-async function init(){await Auth.load();if(!Auth.requireAuth())return;Auth.renderNavUser(document.getElementById('navUser'));
-  const el=document.getElementById('list');el.innerHTML='<div class="empty-state"><div class="spinner spinner--dark"></div></div>';
-  try{
-    const res=await api.get('/requests/completed');const jobs=res.data||[];
-    if(!jobs.length){el.innerHTML='<div class="empty-state"><div class="empty-state__icon">🎉</div><div class="empty-state__title">No completed jobs yet</div></div>';return;}
-    el.innerHTML=jobs.map(j=>`<div class="request-card mb-md">
-      <div class="request-card__header"><div>
-        <div class="request-card__title">${esc(j.title)}</div>
-        <div class="request-card__meta"><span>📍${esc(j.location)}</span><span>${new Date(j.updated_at||j.created_at).toLocaleDateString()}</span></div>
-      </div>
-      <span class="badge ${j.status==='Reviewed'?'badge--reviewed':'badge--completed'}">${j.status}</span></div>
-      <div class="request-card__footer">
-        <div>${j.review_rating?`<span style="color:#FFA500">${stars(j.review_rating)}</span> <span class="text-sm text-muted">${esc(j.review_comment||'')}</span>`:'<span class="text-sm text-muted">Awaiting review</span>'}</div>
-        <a href="../request-detail-provider.html?id=${j.id}" class="btn btn--secondary btn--sm">View</a>
-      </div>
-    </div>`).join('');
-  }catch{el.innerHTML='<div class="empty-state"><p class="text-muted">Could not load jobs.</p></div>';}
+
+<script type="module">
+import Layout from '../../core/layout.js';
+import Auth   from '../../core/auth.js';
+import Api    from '../../core/api.js';
+
+function esc(s) { const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
+
+function heading(job) {
+  const raw = job.description || '';
+  return raw.length > 80 ? raw.substring(0, 80) + '…' : raw || 'Service Request';
 }
-init();
+
+function starDisplay(n) {
+  const count = Math.max(0, Math.min(5, Math.round(n || 0)));
+  return count > 0
+    ? `<span style="color:#FFA500">${'★'.repeat(count)}${'☆'.repeat(5 - count)}</span>`
+    : '<span class="text-muted text-sm">Not yet reviewed</span>';
+}
+
+async function load() {
+  const el = document.getElementById('list');
+  el.innerHTML = '<div class="empty-state"><div class="spinner spinner--dark"></div><p class="empty-state__text">Loading completed jobs…</p></div>';
+
+  try {
+    // Load completed jobs + reviews in parallel
+    const [jobsRes, reviewsRes] = await Promise.all([
+      Api.get('/provider/jobs/completed'),
+      Api.get('/reviews/received'),
+    ]);
+
+    const jobs    = jobsRes.data    || [];
+    const reviews = reviewsRes.data || [];
+
+    // Build a lookup: request_id → review
+    const reviewMap = {};
+    reviews.forEach(r => { reviewMap[r.request_id] = r; });
+
+    if (!jobs.length) {
+      el.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-state__icon">🎉</div>
+          <div class="empty-state__title">No completed jobs yet</div>
+          <p class="empty-state__text">Jobs you finish will appear here along with any reviews from customers.</p>
+        </div>`;
+      return;
+    }
+
+    el.innerHTML = jobs.map(j => {
+      const title    = heading(j);
+      const price    = j.accepted_price ? `ETB ${parseFloat(j.accepted_price).toLocaleString()}` : '—';
+      const date     = j.updated_at || j.created_at;
+      const review   = reviewMap[j.id] || null;
+      const isReviewed = j.status === 'Reviewed';
+
+      return `
+        <div class="request-card mb-md">
+          <div class="request-card__header">
+            <div>
+              <div class="request-card__title">${esc(title)}</div>
+              <div class="request-card__meta">
+                <span>📍 ${esc(j.location || '—')}</span>
+                <span>🗂 ${esc(j.category_name || '—')}</span>
+                <span>${date ? new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'}</span>
+              </div>
+            </div>
+            <span class="badge ${isReviewed ? 'badge--reviewed' : 'badge--completed'}">${esc(j.status)}</span>
+          </div>
+
+          <div style="display:flex;justify-content:space-between;align-items:center;margin:10px 0;flex-wrap:wrap;gap:8px">
+            <div>
+              <span class="text-sm text-muted">Agreed Price: </span>
+              <strong style="color:var(--color-primary)">${esc(price)}</strong>
+            </div>
+            <div>
+              ${review
+                ? `${starDisplay(review.rating)}
+                   ${review.comment ? `<span class="text-sm text-muted" style="margin-left:6px">"${esc(review.comment.substring(0, 80))}${review.comment.length > 80 ? '…' : ''}"</span>` : ''}`
+                : starDisplay(0)
+              }
+            </div>
+          </div>
+
+          <div class="request-card__footer">
+            <span class="text-sm text-muted">Customer: ${esc(j.customer_name || '—')}</span>
+            <a href="../request-detail-provider.html?id=${j.id}" class="btn btn--secondary btn--sm">View Details</a>
+          </div>
+        </div>`;
+    }).join('');
+
+  } catch (err) {
+    el.innerHTML = `<div class="empty-state"><p class="text-muted">${esc(err.message || 'Could not load jobs.')}</p></div>`;
+  }
+}
+
+async function init() {
+  const ok = await Auth.load();
+  if (!ok || !Auth.requireAuth(['provider'])) return;
+  Layout.renderShell('provider', 'completed', 'dashboard');
+  document.getElementById('refreshBtn').addEventListener('click', load);
+  load();
+}
+
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+else init();
 </script>
 </body>
 </html>

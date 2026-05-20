@@ -5,109 +5,158 @@
   <title>Account Settings — ServiceLink</title>
   <link rel="stylesheet" href="../assets/css/main.css">
   <link rel="stylesheet" href="../assets/css/components.css">
+  <script src="../core/guard.js"></script>
 </head>
 <body>
-<header class="app-navbar">
-  <div class="navbar">
-    <a href="../landing_page/index.html" class="navbar__logo"><div class="navbar__logo-icon">S</div>Service<span class="navbar__logo-accent">Link</span></a>
-    <div class="navbar__actions"><div class="navbar__user" id="navUser"></div><button class="btn btn--secondary btn--sm" onclick="Auth.logout()">Logout</button></div>
-  </div>
-</header>
-<div style="padding-top:var(--navbar-height)">
-  <div class="container" style="padding-top:var(--space-xl);max-width:700px">
-    <div class="page-header">
-      <div><div class="page-header__title">Account Settings</div><div class="page-header__subtitle">Update your profile and password</div></div>
-    </div>
 
-    <div class="card mb-lg">
-      <div class="card__header"><h3 style="font-size:16px">Profile Information</h3></div>
-      <div class="card__body">
-        <form id="profileForm" novalidate>
-          <div class="form-row">
-            <div class="form-group"><label class="form-label">Full Name</label><input class="form-input" id="fullName"></div>
-            <div class="form-group"><label class="form-label">Phone</label><input class="form-input" id="phone"></div>
-          </div>
-          <div class="form-group"><label class="form-label">Email Address</label><input class="form-input" type="email" id="email"></div>
-          <div class="form-group">
-            <label class="form-label">Location</label>
-            <select class="form-select" id="location">
-              <option value="">Sub-city...</option>
-              <option>Bole</option><option>Kirkos</option><option>Addis Ketema</option>
-              <option>Akaki Kaliti</option><option>Arada</option><option>Yeka</option>
-            </select>
-          </div>
-          <div style="text-align:right">
-            <button type="submit" class="btn btn--primary" id="profileBtn">Save Changes</button>
-          </div>
-        </form>
+<header id="app-header"></header>
+
+<div class="app-shell">
+  <aside id="app-sidebar"></aside>
+
+  <main class="app-content">
+    <div class="container" style="max-width:700px">
+      <div class="page-header">
+        <div><div class="page-header__title">Account Settings</div><div class="page-header__subtitle">Update your profile and password</div></div>
+      </div>
+
+      <div class="card mb-lg">
+        <div class="card__header"><h3 style="font-size:16px">Profile Information</h3></div>
+        <div class="card__body">
+          <form id="profileForm" novalidate>
+            <div class="form-row">
+              <div class="form-group"><label class="form-label">Full Name</label><input class="form-input" id="fullName"></div>
+              <div class="form-group"><label class="form-label">Phone</label><input class="form-input" id="phone"></div>
+            </div>
+            <div class="form-group"><label class="form-label">Email Address</label><input class="form-input" type="email" id="email" disabled></div>
+            <div class="form-group">
+              <label class="form-label">Location</label>
+              <select class="form-select" id="location">
+                <option value="">Sub-city...</option>
+                <option>Bole</option><option>Kirkos</option><option>Addis Ketema</option>
+                <option>Akaki Kaliti</option><option>Arada</option><option>Yeka</option>
+              </select>
+            </div>
+            <div style="text-align:right">
+              <button type="submit" class="btn btn--primary" id="profileBtn">Save Changes</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card__header"><h3 style="font-size:16px">Change Password</h3></div>
+        <div class="card__body">
+          <form id="pwForm" novalidate>
+            <div class="form-group">
+              <label class="form-label">Current Password</label>
+              <input class="form-input" type="password" id="currentPw" placeholder="••••••••">
+            </div>
+            <div class="form-group">
+              <label class="form-label">New Password</label>
+              <input class="form-input" type="password" id="newPw" placeholder="Min 8 characters">
+              <div class="pw-strength"><div class="pw-strength__bar" id="pwBar"></div></div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Confirm New Password</label>
+              <input class="form-input" type="password" id="confirmPw" placeholder="Repeat new password">
+            </div>
+            <div style="text-align:right">
+              <button type="submit" class="btn btn--primary" id="pwBtn">Update Password</button>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
-
-    <div class="card">
-      <div class="card__header"><h3 style="font-size:16px">Change Password</h3></div>
-      <div class="card__body">
-        <form id="pwForm" novalidate>
-          <div class="form-group">
-            <label class="form-label">Current Password</label>
-            <input class="form-input" type="password" id="currentPw" placeholder="••••••••">
-          </div>
-          <div class="form-group">
-            <label class="form-label">New Password</label>
-            <input class="form-input" type="password" id="newPw" placeholder="Min 8 characters">
-            <div class="pw-strength"><div class="pw-strength__bar" id="pwBar"></div></div>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Confirm New Password</label>
-            <input class="form-input" type="password" id="confirmPw" placeholder="Repeat new password">
-          </div>
-          <div style="text-align:right">
-            <button type="submit" class="btn btn--primary" id="pwBtn">Update Password</button>
-          </div>
-        </form>
-      </div>
-    </div>
-  </div>
+  </main>
 </div>
-<script src="../assets/js/modules/api.js"></script>
-<script src="../assets/js/modules/auth.js"></script>
-<script src="../assets/js/modules/toast.js"></script>
-<script src="../assets/js/modules/validate.js"></script>
-<script>
-async function init(){
-  await Auth.load();if(!Auth.requireAuth())return;
-  Auth.renderNavUser(document.getElementById('navUser'));
-  const u=Auth.user;
-  document.getElementById('fullName').value=u.full_name||'';
-  document.getElementById('email').value=u.email||'';
-  document.getElementById('phone').value=u.phone||'';
-  document.getElementById('location').value=u.location||'';
+
+<div class="toast-container" id="toastContainer"></div>
+
+<script type="module">
+import Api from '../core/api.js';
+import Auth from '../core/auth.js';
+import Toast from '../core/toast.js';
+import Layout from '../core/layout.js';
+
+// Define a simple password strength checker since validate.js is not imported in module form yet
+function passwordStrength(pw) {
+  let score = 0;
+  if(pw.length > 7) score++;
+  if(/[A-Z]/.test(pw)) score++;
+  if(/[0-9]/.test(pw)) score++;
+  if(/[^A-Za-z0-9]/.test(pw)) score++;
+  return score < 2 ? 'weak' : score < 4 ? 'medium' : 'strong';
 }
-document.getElementById('newPw').addEventListener('input',function(){
-  const bar=document.getElementById('pwBar');
-  bar.className='pw-strength__bar '+(this.value?Validate.passwordStrength(this.value):'');
-});
-document.getElementById('profileForm').addEventListener('submit',async e=>{
-  e.preventDefault();const btn=document.getElementById('profileBtn');
-  btn.disabled=true;btn.innerHTML='<span class="spinner"></span> Saving...';
-  try{
-    await api.put('/auth/profile',{full_name:document.getElementById('fullName').value,phone:document.getElementById('phone').value,location:document.getElementById('location').value});
-    Toast.success('Profile updated!');
-  }catch(err){Toast.error(err.message||'Failed.');}
-  finally{btn.disabled=false;btn.textContent='Save Changes';}
-});
-document.getElementById('pwForm').addEventListener('submit',async e=>{
-  e.preventDefault();
-  const np=document.getElementById('newPw').value;const cp=document.getElementById('confirmPw').value;
-  if(np!==cp){Toast.error('Passwords do not match.');return;}
-  if(np.length<8){Toast.error('Password must be at least 8 characters.');return;}
-  const btn=document.getElementById('pwBtn');btn.disabled=true;btn.innerHTML='<span class="spinner"></span> Updating...';
-  try{
-    await api.put('/auth/password',{current_password:document.getElementById('currentPw').value,new_password:np});
-    Toast.success('Password updated!');document.getElementById('pwForm').reset();
-  }catch(err){Toast.error(err.message||'Failed.');}
-  finally{btn.disabled=false;btn.textContent='Update Password';}
-});
-init();
+
+async function init() {
+  await Auth.load();
+  if(!Auth.requireAuth()) return;
+  
+  Layout.renderShell(Auth.user.role, 'settings', 'dashboard');
+  
+  const u = Auth.user;
+  document.getElementById('fullName').value = u.first_name ? (u.first_name + ' ' + (u.last_name || '')) : (u.name || u.full_name || '');
+  document.getElementById('email').value = u.email || '';
+  document.getElementById('phone').value = u.phone || '';
+  document.getElementById('location').value = u.location || '';
+  
+  document.getElementById('newPw').addEventListener('input', function() {
+    const bar = document.getElementById('pwBar');
+    bar.className = 'pw-strength__bar ' + (this.value ? passwordStrength(this.value) : '');
+  });
+  
+  document.getElementById('profileForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    const btn = document.getElementById('profileBtn');
+    btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Saving...';
+    try {
+      const res = await Api.put('/auth/profile', {
+        full_name: document.getElementById('fullName').value,
+        phone: document.getElementById('phone').value,
+        location: document.getElementById('location').value
+      });
+      if(res.success !== false) {
+        Toast.success('Profile updated!');
+        // Update local auth state if needed, assuming user data is returned or handled
+      } else {
+        Toast.error(res.message || 'Failed to update profile.');
+      }
+    } catch(err) { Toast.error(err.message || 'Failed.'); }
+    finally { btn.disabled = false; btn.textContent = 'Save Changes'; }
+  });
+  
+  document.getElementById('pwForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    const np = document.getElementById('newPw').value;
+    const cp = document.getElementById('confirmPw').value;
+    if(np !== cp) { Toast.error('Passwords do not match.'); return; }
+    if(np.length < 8) { Toast.error('Password must be at least 8 characters.'); return; }
+    
+    const btn = document.getElementById('pwBtn');
+    btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Updating...';
+    try {
+      const res = await Api.put('/auth/password', {
+        current_password: document.getElementById('currentPw').value,
+        new_password: np
+      });
+      if(res.success !== false) {
+        Toast.success('Password updated!');
+        document.getElementById('pwForm').reset();
+        document.getElementById('pwBar').className = 'pw-strength__bar';
+      } else {
+        Toast.error(res.message || 'Failed to update password.');
+      }
+    } catch(err) { Toast.error(err.message || 'Failed.'); }
+    finally { btn.disabled = false; btn.textContent = 'Update Password'; }
+  });
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', init);
+} else {
+  init();
+}
 </script>
 </body>
 </html>

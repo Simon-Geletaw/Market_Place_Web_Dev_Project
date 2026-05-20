@@ -1,41 +1,52 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>System Metrics — ServiceLink Admin</title>
   <link rel="stylesheet" href="../../assets/css/main.css">
   <link rel="stylesheet" href="../../assets/css/components.css">
+  <style>
+    @media (max-width: 768px) {
+      .grid-4, .grid-2 { grid-template-columns: 1fr; }
+    }
+  </style>
 </head>
 <body>
-<header class="app-navbar">
-  <div class="navbar">
-    <a href="../../landing_page/index.html" class="navbar__logo"><div class="navbar__logo-icon">S</div>Service<span class="navbar__logo-accent">Link</span> <span class="badge badge--verified" style="font-size:10px;margin-left:4px">Admin</span></a>
-    <div class="navbar__actions"><div class="navbar__user" id="navUser"></div><button class="btn btn--secondary btn--sm" onclick="Auth.logout()">Logout</button></div>
-  </div>
-</header>
+<div id="app-header"></div>
 <div class="app-shell">
-  <aside class="app-sidebar">
-    <div class="sidebar">
-      <div class="sidebar__label">Admin Panel</div>
-      <a href="../dashboard/admin.html" class="sidebar__item">📊 Overview</a>
-      <a href="verification.html" class="sidebar__item">🔒 Verification</a>
-      <a href="audit-logs.html" class="sidebar__item">📋 Audit Logs</a>
-      <a href="metrics.html" class="sidebar__item active">📈 Metrics</a>
-      <div class="sidebar__footer"><button class="btn btn--secondary btn--sm btn--full" onclick="Auth.logout()">Sign Out</button></div>
-    </div>
-  </aside>
+  <div id="app-sidebar"></div>
   <main class="app-content">
     <div class="page-header">
-      <div><div class="page-header__title">System Metrics</div><div class="page-header__subtitle">Platform health and activity statistics</div></div>
-      <button class="btn btn--secondary btn--sm" onclick="load()">Refresh</button>
+      <div>
+        <div class="page-header__title">System Metrics</div>
+        <div class="page-header__subtitle">Platform health and activity statistics</div>
+      </div>
+      <button class="btn btn--secondary btn--sm" id="refreshBtn">Refresh</button>
     </div>
 
     <!-- Stat Cards -->
     <div class="grid-4 mb-lg" id="statsGrid">
-      <div class="stat-card stat-card--requested"><div class="stat-card__icon" style="background:#e8f4ff">👥</div><div class="stat-card__value" id="m-users">—</div><div class="stat-card__label">Total Users</div></div>
-      <div class="stat-card stat-card--negotiating"><div class="stat-card__icon" style="background:#fff4e0">📋</div><div class="stat-card__value" id="m-requests">—</div><div class="stat-card__label">Total Requests</div></div>
-      <div class="stat-card stat-card--assigned"><div class="stat-card__icon" style="background:#e8f5eb">📤</div><div class="stat-card__value" id="m-offers">—</div><div class="stat-card__label">Total Offers</div></div>
-      <div class="stat-card stat-card--completed"><div class="stat-card__icon" style="background:#e0faf4">⭐</div><div class="stat-card__value" id="m-reviews">—</div><div class="stat-card__label">Total Reviews</div></div>
+      <div class="stat-card stat-card--requested">
+        <div class="stat-card__icon" style="background:#e8f4ff">👥</div>
+        <div class="stat-card__value" id="m-users">—</div>
+        <div class="stat-card__label">Total Users</div>
+      </div>
+      <div class="stat-card stat-card--negotiating">
+        <div class="stat-card__icon" style="background:#fff4e0">📋</div>
+        <div class="stat-card__value" id="m-requests">—</div>
+        <div class="stat-card__label">Total Requests</div>
+      </div>
+      <div class="stat-card stat-card--assigned">
+        <div class="stat-card__icon" style="background:#e8f5eb">📤</div>
+        <div class="stat-card__value" id="m-offers">—</div>
+        <div class="stat-card__label">Total Offers</div>
+      </div>
+      <div class="stat-card stat-card--completed">
+        <div class="stat-card__icon" style="background:#e0faf4">⭐</div>
+        <div class="stat-card__value" id="m-reviews">—</div>
+        <div class="stat-card__label">Total Reviews</div>
+      </div>
     </div>
 
     <div class="grid-2">
@@ -50,37 +61,58 @@
     </div>
   </main>
 </div>
-<script src="../../assets/js/modules/api.js"></script>
-<script src="../../assets/js/modules/auth.js"></script>
-<script>
-const STATUS_COLORS={Requested:'var(--status-requested)',Negotiating:'var(--status-negotiating)',Assigned:'var(--status-assigned)',Completed:'var(--status-completed)',Reviewed:'var(--status-reviewed)'};
-async function init(){await Auth.load();if(!Auth.requireRole('admin'))return;Auth.renderNavUser(document.getElementById('navUser'));load();}
-async function load(){
-  try{
-    const res=await api.get('/admin/metrics');const m=res.data||{};
-    document.getElementById('m-users').textContent=m.total_users||'0';
-    document.getElementById('m-requests').textContent=m.total_requests||'0';
-    document.getElementById('m-offers').textContent=m.total_offers||'0';
-    document.getElementById('m-reviews').textContent=m.total_reviews||'0';
+<script type="module">
+import Layout from '../../core/layout.js';
+import Auth from '../../core/auth.js';
+import Api from '../../core/api.js';
 
-    const byStatus=m.requests_by_status||[];
-    const total=byStatus.reduce((s,x)=>s+parseInt(x.count||0),0)||1;
-    document.getElementById('byStatus').innerHTML=byStatus.map(s=>`
+const STATUS_COLORS = {
+  Requested: 'var(--status-requested)',
+  Negotiating: 'var(--status-negotiating)',
+  Assigned: 'var(--status-assigned)',
+  Completed: 'var(--status-completed)',
+  Reviewed: 'var(--status-reviewed)'
+};
+
+async function load() {
+  try {
+    const res = await Api.get('/admin/metrics');
+    const m = res.data || {};
+    document.getElementById('m-users').textContent = m.total_users || '0';
+    document.getElementById('m-requests').textContent = m.total_requests || '0';
+    document.getElementById('m-offers').textContent = m.total_offers || '0';
+    document.getElementById('m-reviews').textContent = m.total_reviews || '0';
+
+    const byStatus = m.requests_by_status || [];
+    const total = byStatus.reduce((s, x) => s + parseInt(x.count || 0), 0) || 1;
+    document.getElementById('byStatus').innerHTML = byStatus.map(s => `
       <div style="margin-bottom:var(--space-md)">
         <div class="flex-between text-sm mb-sm"><span style="font-weight:600">${s.status}</span><span>${s.count}</span></div>
         <div style="height:8px;background:var(--color-border);border-radius:var(--radius-pill);overflow:hidden">
-          <div style="height:100%;width:${Math.round(s.count/total*100)}%;background:${STATUS_COLORS[s.status]||'var(--color-primary)'};border-radius:var(--radius-pill)"></div>
+          <div style="height:100%;width:${Math.round((s.count/total)*100)}%;background:${STATUS_COLORS[s.status] || 'var(--color-primary)'};border-radius:var(--radius-pill)"></div>
         </div>
-      </div>`).join('')||'<p class="text-muted">No data.</p>';
+      </div>`).join('') || '<p class="text-muted">No data.</p>';
 
-    const byCat=m.requests_by_category||[];
-    document.getElementById('byCategory').innerHTML=byCat.map(c=>`
+    const byCat = m.requests_by_category || [];
+    document.getElementById('byCategory').innerHTML = byCat.map(c => `
       <div class="flex-between" style="padding:8px 0;border-bottom:1px solid var(--color-border)">
-        <span style="font-weight:500">${c.category_name||c.category||'—'}</span>
+        <span style="font-weight:500">${c.category_name || c.category || '—'}</span>
         <span class="badge badge--pending">${c.count}</span>
-      </div>`).join('')||'<p class="text-muted">No data.</p>';
-  }catch{document.getElementById('byStatus').innerHTML='<p class="text-muted">Could not load metrics.</p>';}
+      </div>`).join('') || '<p class="text-muted">No data.</p>';
+  } catch (err) {
+    document.getElementById('byStatus').innerHTML = '<p class="text-muted">Could not load metrics.</p>';
+  }
 }
+
+async function init() {
+  await Auth.load();
+  if (!Auth.requireAuth(['admin'])) return;
+  Layout.renderShell('admin', 'metrics', 'dashboard');
+  
+  document.getElementById('refreshBtn').addEventListener('click', load);
+  load();
+}
+
 init();
 </script>
 </body>

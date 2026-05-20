@@ -1,107 +1,274 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-role="customer">
 <head>
-  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>My Requests — ServiceLink</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../../assets/css/main.css">
   <link rel="stylesheet" href="../../assets/css/components.css">
+  <script src="../../core/guard.js"></script>
 </head>
 <body>
-<header class="app-navbar">
-  <div class="navbar">
-    <a href="../../landing_page/index.html" class="navbar__logo"><div class="navbar__logo-icon">S</div>Service<span class="navbar__logo-accent">Link</span></a>
-    <nav class="navbar__nav"><a href="../marketplace.html" class="navbar__link">Browse</a><a href="../dashboard/customer.html" class="navbar__link">Dashboard</a></nav>
-    <div class="navbar__actions"><div class="navbar__user" id="navUser"></div><button class="btn btn--secondary btn--sm" onclick="Auth.logout()">Logout</button></div>
-  </div>
-</header>
+<header id="app-header"></header>
+
 <div class="app-shell">
-  <aside class="app-sidebar">
-    <div class="sidebar">
-      <div class="sidebar__label">Customer Menu</div>
-      <a href="../dashboard/customer.html" class="sidebar__item">📊 Dashboard</a>
-      <a href="my-requests.html" class="sidebar__item active">📋 My Requests</a>
-      <a href="../marketplace.html" class="sidebar__item">🔍 Browse Services</a>
-      <a href="reviews-given.html" class="sidebar__item">⭐ Reviews Given</a>
-      <a href="../settings.html" class="sidebar__item">⚙️ Settings</a>
-      <div class="sidebar__footer"><button class="btn btn--secondary btn--sm btn--full" onclick="Auth.logout()">Sign Out</button></div>
-    </div>
-  </aside>
+  <aside id="app-sidebar"></aside>
   <main class="app-content">
+
     <div class="page-header">
-      <div><div class="page-header__title">My Requests</div><div class="page-header__subtitle">All service requests you have posted</div></div>
-      <button class="btn btn--primary" onclick="openCreate()">+ New Request</button>
+      <div>
+        <div class="page-header__title">My Requests</div>
+        <div class="page-header__subtitle">All service requests you have posted</div>
+      </div>
+      <button class="btn btn--primary" id="openCreateBtn">+ New Request</button>
     </div>
+
     <div class="filter-bar">
-      <select class="form-select" id="statusFilter" onchange="load()">
+      <select class="form-select" id="statusFilter">
         <option value="">All Statuses</option>
-        <option value="Requested">Requested</option><option value="Negotiating">Negotiating</option>
-        <option value="Assigned">Assigned</option><option value="Completed">Completed</option><option value="Reviewed">Reviewed</option>
+        <option value="Requested">Requested</option>
+        <option value="Negotiating">Negotiating</option>
+        <option value="Assigned">Assigned</option>
+        <option value="Completed">Completed</option>
+        <option value="Reviewed">Reviewed</option>
       </select>
-      <select class="form-select" id="sortFilter" onchange="load()">
-        <option value="desc">Newest</option><option value="asc">Oldest</option>
+      <select class="form-select" id="sortFilter">
+        <option value="desc">Newest First</option>
+        <option value="asc">Oldest First</option>
       </select>
+      <button class="btn btn--secondary btn--sm" id="refreshBtn">↻ Refresh</button>
     </div>
+
     <div id="list"></div>
+
   </main>
 </div>
 
+<!-- Create Request Modal -->
 <div class="modal-overlay" id="createModal">
-  <div class="modal">
-    <div class="modal__header"><h2 class="modal__title">Post a New Request</h2><button class="modal__close" onclick="closeCreate()">✕</button></div>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitleCreate">
+    <div class="modal__header">
+      <h2 class="modal__title" id="modalTitleCreate">Post a New Request</h2>
+      <button class="modal__close" id="closeCreateTopBtn" aria-label="Close">✕</button>
+    </div>
     <div class="modal__body">
-      <div class="form-group"><label class="form-label">Category</label>
-        <select class="form-select" id="crCat"><option value="">Select...</option><option>Electrician</option><option>Plumber</option><option>Carpenter</option><option>Painter</option><option>Cleaner</option><option>General Handyman</option></select></div>
-      <div class="form-group"><label class="form-label">Title</label><input class="form-input" id="crTitle" placeholder="e.g., Fix door lock"></div>
-      <div class="form-group"><label class="form-label">Description</label><textarea class="form-textarea" id="crDesc" placeholder="Describe the job..."></textarea></div>
-      <div class="form-row">
-        <div class="form-group"><label class="form-label">Location</label>
-          <select class="form-select" id="crLoc"><option value="">Sub-city...</option><option>Bole</option><option>Kirkos</option><option>Addis Ketema</option><option>Arada</option><option>Yeka</option></select></div>
-        <div class="form-group"><label class="form-label">Preferred Date</label><input class="form-input" type="date" id="crDate"></div>
+      <div class="form-group">
+        <label class="form-label">Category *</label>
+        <select class="form-select" id="crCat">
+          <option value="">Loading categories…</option>
+        </select>
       </div>
-      <div class="form-group"><label class="form-label">Budget (ETB) — optional</label><input class="form-input" type="number" id="crBudget" placeholder="e.g., 500"></div>
+      <div class="form-group">
+        <label class="form-label">Title <span style="font-weight:400;color:#999">(optional)</span></label>
+        <input class="form-input" id="crTitle" type="text" placeholder="e.g. Fix leaking pipe" maxlength="160">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Description *</label>
+        <textarea class="form-textarea" id="crDesc" rows="4" placeholder="Describe the problem in detail (min 10 characters)…"></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Budget (ETB) <span style="font-weight:400;color:#999">(optional)</span></label>
+        <input class="form-input" type="number" id="crBudget" placeholder="e.g. 500" min="0" step="0.01">
+      </div>
+      <div id="createFormError" class="form-error" style="display:none"></div>
     </div>
     <div class="modal__footer">
-      <button class="btn btn--secondary" onclick="closeCreate()">Cancel</button>
-      <button class="btn btn--primary" id="createBtn" onclick="submitCreate()">Post Request</button>
+      <button class="btn btn--secondary" id="closeCreateBtn">Cancel</button>
+      <button class="btn btn--primary" id="createBtn">Post Request</button>
     </div>
   </div>
 </div>
 
-<script src="../../assets/js/modules/api.js"></script>
-<script src="../../assets/js/modules/auth.js"></script>
-<script src="../../assets/js/modules/toast.js"></script>
-<script>
-const BADGE={Requested:'badge--requested',Negotiating:'badge--negotiating',Assigned:'badge--assigned',Completed:'badge--completed',Reviewed:'badge--reviewed'};
-function esc(s){const d=document.createElement('div');d.textContent=s||'';return d.innerHTML}
-async function init(){await Auth.load();if(!Auth.requireAuth())return;Auth.renderNavUser(document.getElementById('navUser'));load();}
-async function load(){
-  const status=document.getElementById('statusFilter').value,sort=document.getElementById('sortFilter').value;
-  const el=document.getElementById('list');el.innerHTML='<div class="empty-state"><div class="spinner spinner--dark"></div></div>';
-  try{
-    const res=await api.get(`/requests?status=${status}&sort=${sort}`);const r=res.data||[];
-    if(!r.length){el.innerHTML='<div class="empty-state"><div class="empty-state__icon">📋</div><div class="empty-state__title">No requests yet</div><p class="empty-state__text">Post your first request to get started.</p><button class="btn btn--primary" onclick="openCreate()">Post a Request</button></div>';return;}
-    el.innerHTML=r.map(req=>`<div class="request-card mb-md">
-      <div class="request-card__header"><div><div class="request-card__title">${esc(req.title)}</div>
-      <div class="request-card__meta"><span>📍${esc(req.location)}</span><span>🗂${esc(req.category_name||req.category)}</span><span>${new Date(req.created_at).toLocaleDateString()}</span>${req.offer_count?`<span>💬${req.offer_count} offer(s)</span>`:''}</div></div>
-      <span class="badge ${BADGE[req.status]||''}">${req.status}</span></div>
-      <p class="request-card__desc">${esc(req.description)}</p>
-      <div class="request-card__footer"><div class="request-card__actions">
-        <a href="../request-detail.html?id=${req.id}" class="btn btn--primary btn--sm">View Details</a>
-        ${req.status==='Negotiating'?`<a href="../request-detail.html?id=${req.id}" class="btn btn--ghost btn--sm">Manage Offers</a>`:''}
-        ${req.status==='Completed'?`<a href="../request-detail.html?id=${req.id}" class="btn btn--secondary btn--sm">Leave Review</a>`:''}
-      </div></div></div>`).join('');
-  }catch{el.innerHTML='<div class="empty-state"><p class="text-muted">Could not load requests.</p></div>';}
+<div class="toast-container" id="toastContainer"></div>
+
+<script type="module">
+import Api    from '../../core/api.js';
+import Auth   from '../../core/auth.js';
+import Toast  from '../../core/toast.js';
+import Layout from '../../core/layout.js';
+
+const BADGE = {
+  Requested:   'badge--requested',
+  Negotiating: 'badge--negotiating',
+  Assigned:    'badge--assigned',
+  Completed:   'badge--completed',
+  Reviewed:    'badge--reviewed',
+};
+
+function esc(s) { const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
+
+// API returns `description` — there is no `title` field in the response
+function cardHeading(req) {
+  const raw = req.description || '';
+  return raw.length > 70 ? raw.substring(0, 70) + '…' : raw || 'Service Request';
 }
-function openCreate(){document.getElementById('createModal').classList.add('open');}
-function closeCreate(){document.getElementById('createModal').classList.remove('open');}
-async function submitCreate(){
-  const body={category:document.getElementById('crCat').value,title:document.getElementById('crTitle').value,description:document.getElementById('crDesc').value,location:document.getElementById('crLoc').value,preferred_date:document.getElementById('crDate').value,budget:document.getElementById('crBudget').value||null};
-  if(!body.category||!body.title||!body.description||!body.location){Toast.error('Fill all required fields.');return;}
-  const btn=document.getElementById('createBtn');btn.disabled=true;btn.innerHTML='<span class="spinner"></span> Posting...';
-  try{await api.post('/requests',body);Toast.success('Request posted!');closeCreate();load();}catch(e){Toast.error(e.message||'Failed.');}
-  finally{btn.disabled=false;btn.textContent='Post Request';}
+
+// ── Load categories from API ──────────────────────────────────────────
+async function loadCategories() {
+  try {
+    const res  = await Api.get('/categories');
+    const cats = res.data || [];
+    const sel  = document.getElementById('crCat');
+    sel.innerHTML = '<option value="">Select category…</option>' +
+      cats.map(c => `<option value="${esc(c.id)}">${esc(c.name)}</option>`).join('');
+  } catch {
+    // Fallback to name-based list (backend resolves by name too)
+    document.getElementById('crCat').innerHTML = `
+      <option value="">Select category…</option>
+      <option value="Electrician">Electrician</option>
+      <option value="Plumber">Plumber</option>
+      <option value="Carpenter">Carpenter</option>
+      <option value="Painter">Painter</option>
+      <option value="Cleaner">Cleaner</option>
+      <option value="General Handyman">General Handyman</option>`;
+  }
 }
-init();
+
+// ── Load and render requests ──────────────────────────────────────────
+async function load() {
+  const status = document.getElementById('statusFilter').value;
+  const sort   = document.getElementById('sortFilter').value;
+  const el     = document.getElementById('list');
+  el.innerHTML = '<div class="empty-state"><div class="spinner spinner--dark"></div></div>';
+
+  try {
+    const res  = await Api.get(`/requests?status=${encodeURIComponent(status)}&sort=${sort}`);
+    const reqs = res.data || [];
+
+    if (!reqs.length) {
+      el.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-state__icon">📋</div>
+          <div class="empty-state__title">No requests found</div>
+          <p class="empty-state__text">Post your first service request to get started.</p>
+          <button class="btn btn--primary" id="emptyCreateBtn">Post a Request</button>
+        </div>`;
+      document.getElementById('emptyCreateBtn')?.addEventListener('click', openCreate);
+      return;
+    }
+
+    el.innerHTML = reqs.map(req => {
+      const title = cardHeading(req);
+      const actionMap = {
+        Negotiating: `<a href="../request-detail.html?id=${req.id}" class="btn btn--ghost btn--sm">Manage Offers</a>`,
+        Assigned:    `<a href="../request-detail.html?id=${req.id}" class="btn btn--ghost btn--sm">Track Progress</a>`,
+        Completed:   `<a href="../request-detail.html?id=${req.id}" class="btn btn--secondary btn--sm">Leave Review</a>`,
+      };
+
+      return `
+        <div class="request-card mb-md">
+          <div class="request-card__header">
+            <div>
+              <div class="request-card__title">${esc(title)}</div>
+              <div class="request-card__meta">
+                <span>📍 ${esc(req.location || '—')}</span>
+                <span>🗂 ${esc(req.category_name || '—')}</span>
+                <span>${new Date(req.created_at).toLocaleDateString()}</span>
+                ${req.offer_count > 0 ? `<span>💬 ${req.offer_count} offer${req.offer_count > 1 ? 's' : ''}</span>` : ''}
+              </div>
+            </div>
+            <span class="badge ${BADGE[req.status] || ''}">${esc(req.status)}</span>
+          </div>
+          <p class="request-card__desc">${esc(req.description || '')}</p>
+          <div class="request-card__footer">
+            <div class="request-card__actions">
+              <a href="../request-detail.html?id=${req.id}" class="btn btn--primary btn--sm">View Details</a>
+              ${actionMap[req.status] || ''}
+            </div>
+          </div>
+        </div>`;
+    }).join('');
+
+  } catch (err) {
+    el.innerHTML = `<div class="empty-state"><p class="text-muted">${esc(err.message || 'Could not load requests.')}</p></div>`;
+  }
+}
+
+// ── Create modal ──────────────────────────────────────────────────────
+function openCreate()  { document.getElementById('createModal').classList.add('open'); }
+function closeCreate() { document.getElementById('createModal').classList.remove('open'); }
+
+async function submitCreate() {
+  const errEl = document.getElementById('createFormError');
+  const btn   = document.getElementById('createBtn');
+
+  const categoryValue = document.getElementById('crCat').value;
+  const title         = document.getElementById('crTitle').value.trim();
+  const description   = document.getElementById('crDesc').value.trim();
+  const budget        = document.getElementById('crBudget').value;
+
+  // Validation
+  const errs = [];
+  if (!categoryValue)          errs.push('Please select a category.');
+  if (description.length < 10) errs.push('Description must be at least 10 characters.');
+  if (errs.length) {
+    errEl.textContent = errs[0];
+    errEl.style.display = 'block';
+    return;
+  }
+  errEl.style.display = 'none';
+
+  // Determine if value is a UUID (category_id) or a name
+  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(categoryValue);
+  const body = { description };
+  if (title)  body.title = title;
+  if (budget) body.budget = parseFloat(budget);
+  if (isUuid) body.category_id = categoryValue;
+  else        body.category    = categoryValue;
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Posting…';
+
+  try {
+    const result = await Api.post('/requests', body);
+    if (result.success) {
+      Toast.success('Request posted!');
+      closeCreate();
+      document.getElementById('crCat').value   = '';
+      document.getElementById('crTitle').value  = '';
+      document.getElementById('crDesc').value   = '';
+      document.getElementById('crBudget').value = '';
+      load();
+    } else {
+      errEl.textContent = result.message || 'Failed to post request.';
+      errEl.style.display = 'block';
+    }
+  } catch (err) {
+    errEl.textContent = err.message || 'Failed to post request.';
+    errEl.style.display = 'block';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Post Request';
+  }
+}
+
+// ── Init ──────────────────────────────────────────────────────────────
+async function init() {
+  const ok = await Auth.load();
+  if (!ok || !Auth.requireAuth(['customer'])) return;
+  Layout.renderShell('customer', 'requests', 'dashboard');
+
+  document.getElementById('statusFilter').addEventListener('change', load);
+  document.getElementById('sortFilter').addEventListener('change', load);
+  document.getElementById('refreshBtn').addEventListener('click', load);
+  document.getElementById('openCreateBtn').addEventListener('click', openCreate);
+  document.getElementById('closeCreateTopBtn').addEventListener('click', closeCreate);
+  document.getElementById('closeCreateBtn').addEventListener('click', closeCreate);
+  document.getElementById('createBtn').addEventListener('click', submitCreate);
+
+  // Close on backdrop click
+  document.getElementById('createModal').addEventListener('click', e => {
+    if (e.target === e.currentTarget) closeCreate();
+  });
+
+  await loadCategories();
+  load();
+}
+
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+else init();
 </script>
 </body>
 </html>

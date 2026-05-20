@@ -1,65 +1,219 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-role="provider">
 <head>
-  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Assigned Jobs — ServiceLink</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../../assets/css/main.css">
   <link rel="stylesheet" href="../../assets/css/components.css">
+  <script src="../../core/guard.js"></script>
 </head>
 <body>
-<header class="app-navbar">
-  <div class="navbar">
-    <a href="../../landing_page/index.html" class="navbar__logo"><div class="navbar__logo-icon">S</div>Service<span class="navbar__logo-accent">Link</span></a>
-    <nav class="navbar__nav"><a href="../marketplace.html" class="navbar__link">Browse</a><a href="../dashboard/provider.html" class="navbar__link">Dashboard</a></nav>
-    <div class="navbar__actions"><div class="navbar__user" id="navUser"></div><button class="btn btn--secondary btn--sm" onclick="Auth.logout()">Logout</button></div>
-  </div>
-</header>
+<header id="app-header"></header>
+
 <div class="app-shell">
-  <aside class="app-sidebar">
-    <div class="sidebar">
-      <div class="sidebar__label">Provider Menu</div>
-      <a href="../dashboard/provider.html" class="sidebar__item">📊 Dashboard</a>
-      <a href="../marketplace.html" class="sidebar__item">🔍 Browse Requests</a>
-      <a href="my-offers.html" class="sidebar__item">📤 My Offers</a>
-      <a href="assigned-jobs.html" class="sidebar__item active">✅ Assigned Jobs</a>
-      <a href="completed-jobs.html" class="sidebar__item">🎉 Completed Jobs</a>
-      <a href="reviews-received.html" class="sidebar__item">⭐ Reviews Received</a>
-      <a href="../settings.html" class="sidebar__item">⚙️ Settings</a>
-      <div class="sidebar__footer"><button class="btn btn--secondary btn--sm btn--full" onclick="Auth.logout()">Sign Out</button></div>
-    </div>
-  </aside>
+  <aside id="app-sidebar"></aside>
   <main class="app-content">
+
     <div class="page-header">
-      <div><div class="page-header__title">Assigned Jobs</div><div class="page-header__subtitle">Jobs you are currently assigned to complete</div></div>
+      <div>
+        <div class="page-header__title">Assigned Jobs</div>
+        <div class="page-header__subtitle">Jobs you are currently assigned to complete</div>
+      </div>
+      <button class="btn btn--secondary btn--sm" id="refreshBtn">↻ Refresh</button>
     </div>
+
     <div id="list"></div>
+
   </main>
 </div>
-<script src="../../assets/js/modules/api.js"></script>
-<script src="../../assets/js/modules/auth.js"></script>
-<script>
-function esc(s){const d=document.createElement('div');d.textContent=s||'';return d.innerHTML}
-async function init(){await Auth.load();if(!Auth.requireAuth())return;Auth.renderNavUser(document.getElementById('navUser'));
-  const el=document.getElementById('list');el.innerHTML='<div class="empty-state"><div class="spinner spinner--dark"></div></div>';
-  try{
-    const res=await api.get('/requests/assigned');const jobs=res.data||[];
-    if(!jobs.length){el.innerHTML='<div class="empty-state"><div class="empty-state__icon">✅</div><div class="empty-state__title">No assigned jobs</div><p class="empty-state__text">Your accepted jobs will appear here.</p></div>';return;}
-    el.innerHTML=jobs.map(j=>`<div class="request-card mb-md">
-      <div class="request-card__header"><div>
-        <div class="request-card__title">${esc(j.title)}</div>
-        <div class="request-card__meta"><span>📍${esc(j.location)}</span><span>🗂${esc(j.category_name||j.category)}</span><span>${new Date(j.created_at).toLocaleDateString()}</span></div>
-      </div><span class="badge badge--assigned">Assigned</span></div>
-      <p class="request-card__desc">${esc(j.description)}</p>
-      <div class="request-card__footer">
-        <span class="text-sm text-muted">Customer: ${esc(j.customer_name||'—')}</span>
-        <div class="request-card__actions">
-          <a href="../request-detail-provider.html?id=${j.id}" class="btn btn--primary btn--sm">View & Complete</a>
-        </div>
+
+<div class="modal-overlay" id="completeModal">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="completeModalTitle">
+    <div class="modal__header">
+      <h2 class="modal__title" id="completeModalTitle">Mark Job Complete</h2>
+      <button class="modal__close" id="closeCompleteTopBtn" aria-label="Close">x</button>
+    </div>
+    <div class="modal__body">
+      <p class="text-muted mb-md">Upload an optional proof photo before moving this job to Completed.</p>
+      <input type="hidden" id="completeRequestId">
+      <div class="form-group">
+        <label class="form-label" for="completePhoto">Completion photo</label>
+        <input class="form-input" type="file" id="completePhoto" accept="image/png,image/jpeg,image/webp">
+        <p class="text-sm text-muted mt-xs">JPG, PNG, or WebP up to 5 MB.</p>
       </div>
-    </div>`).join('');
-  }catch{el.innerHTML='<div class="empty-state"><p class="text-muted">Could not load jobs.</p></div>';}
+    </div>
+    <div class="modal__footer">
+      <button class="btn btn--secondary" id="closeCompleteBtn">Cancel</button>
+      <button class="btn btn--primary" id="submitCompleteBtn">Mark Complete</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<script type="module">
+import Layout from '../../core/layout.js';
+import Auth   from '../../core/auth.js';
+import Api    from '../../core/api.js';
+import Toast  from '../../core/toast.js';
+
+function esc(s) { const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
+
+function heading(job) {
+  // API returns `description` — there is no `title` field
+  const raw = job.description || '';
+  return raw.length > 80 ? raw.substring(0, 80) + '…' : raw || 'Service Request';
 }
-init();
+
+async function load() {
+  const el = document.getElementById('list');
+  el.innerHTML = '<div class="empty-state"><div class="spinner spinner--dark"></div><p class="empty-state__text">Loading assigned jobs…</p></div>';
+
+  try {
+    const res  = await Api.get('/provider/jobs/assigned');
+    const jobs = res.data || [];
+
+    if (!jobs.length) {
+      el.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-state__icon">✅</div>
+          <div class="empty-state__title">No assigned jobs</div>
+          <p class="empty-state__text">Your accepted jobs will appear here once a customer accepts your offer.</p>
+          <a href="../marketplace.html" class="btn btn--primary">Browse Marketplace</a>
+        </div>`;
+      return;
+    }
+
+    el.innerHTML = jobs.map(j => {
+      const title    = heading(j);
+      const price    = j.accepted_price ? `ETB ${parseFloat(j.accepted_price).toLocaleString()}` : '—';
+      const date     = j.preferred_date || 'Pending';
+      const location = j.location || '—';
+
+      return `
+        <div class="request-card mb-md">
+          <div class="request-card__header">
+            <div>
+              <div class="request-card__title">${esc(title)}</div>
+              <div class="request-card__meta">
+                <span>🗂 ${esc(j.category_name || '—')}</span>
+                <span>📅 Scheduled: <strong>${esc(date)}</strong></span>
+              </div>
+            </div>
+            <span class="badge badge--assigned">Assigned</span>
+          </div>
+
+          <div style="background:#f8f9fa;border-radius:6px;padding:12px;margin:12px 0;display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
+            <div>
+              <div class="text-sm text-muted">Location</div>
+              <div style="font-weight:600">📍 ${esc(location)}</div>
+            </div>
+            <div>
+              <div class="text-sm text-muted">Agreed Price</div>
+              <div style="font-weight:600;color:var(--color-primary)">${esc(price)}</div>
+            </div>
+            <div>
+              <div class="text-sm text-muted">Customer</div>
+              <div style="font-weight:600">${esc(j.customer_name || '—')}</div>
+            </div>
+          </div>
+
+          <div class="request-card__footer">
+            <span class="text-sm text-muted">
+              ${j.customer_phone ? `📞 ${esc(j.customer_phone)}` : ''}
+            </span>
+            <div class="request-card__actions">
+              <a href="../request-detail-provider.html?id=${j.id}" class="btn btn--secondary btn--sm">View Details</a>
+              <button class="btn btn--success btn--sm btn-complete" data-id="${j.id}">✓ Mark Complete</button>
+            </div>
+          </div>
+        </div>`;
+    }).join('');
+
+    // Attach mark-complete listeners
+    el.querySelectorAll('.btn-complete').forEach(btn => {
+      btn.addEventListener('click', () => openCompleteModal(btn.dataset.id, btn));
+    });
+
+  } catch (err) {
+    el.innerHTML = `<div class="empty-state"><p class="text-muted">${esc(err.message || 'Could not load jobs.')}</p></div>`;
+  }
+}
+
+async function markComplete(requestId, btn) {
+  if (!confirm('Mark this job as completed? The customer will be notified and can leave a review.')) return;
+  btn.disabled = true;
+  btn.textContent = 'Saving…';
+  try {
+    await Api.post(`/requests/${requestId}/complete`, {});
+    Toast.success('Job marked as complete!');
+    load(); // refresh the list
+  } catch (err) {
+    Toast.error(err.message || 'Failed to mark complete.');
+    btn.disabled = false;
+    btn.textContent = '✓ Mark Complete';
+  }
+}
+
+function openCompleteModal(requestId, btn) {
+  document.getElementById('completeRequestId').value = requestId;
+  document.getElementById('completePhoto').value = '';
+  document.getElementById('completeModal').classList.add('open');
+  btn?.blur();
+}
+
+function closeCompleteModal() {
+  document.getElementById('completeModal').classList.remove('open');
+}
+
+async function submitComplete() {
+  const requestId = document.getElementById('completeRequestId').value;
+  if (!requestId) return;
+  if (!confirm('Mark this job as completed? The customer will be able to leave a review.')) return;
+
+  const btn = document.getElementById('submitCompleteBtn');
+  const photo = document.getElementById('completePhoto').files[0] || null;
+  btn.disabled = true;
+  btn.textContent = 'Saving...';
+
+  try {
+    if (photo) {
+      const formData = new FormData();
+      formData.append('completion_photo', photo);
+      await Api.upload(`/requests/${requestId}/complete`, formData);
+    } else {
+      await Api.post(`/requests/${requestId}/complete`, {});
+    }
+    Toast.success('Job marked as complete!');
+    closeCompleteModal();
+    load();
+  } catch (err) {
+    Toast.error(err.message || 'Failed to mark complete.');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Mark Complete';
+  }
+}
+
+async function init() {
+  const ok = await Auth.load();
+  if (!ok || !Auth.requireAuth(['provider'])) return;
+  Layout.renderShell('provider', 'assigned', 'dashboard');
+  document.getElementById('refreshBtn').addEventListener('click', load);
+  document.getElementById('closeCompleteTopBtn').addEventListener('click', closeCompleteModal);
+  document.getElementById('closeCompleteBtn').addEventListener('click', closeCompleteModal);
+  document.getElementById('submitCompleteBtn').addEventListener('click', submitComplete);
+  document.getElementById('completeModal').addEventListener('click', e => {
+    if (e.target === e.currentTarget) closeCompleteModal();
+  });
+  load();
+}
+
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+else init();
 </script>
 </body>
 </html>

@@ -1,72 +1,99 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-role="provider">
 <head>
   <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
   <title>My Offers — ServiceLink</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../../assets/css/main.css">
   <link rel="stylesheet" href="../../assets/css/components.css">
+  <script src="../../core/guard.js"></script>
 </head>
 <body>
-<header class="app-navbar">
-  <div class="navbar">
-    <a href="../../landing_page/index.html" class="navbar__logo"><div class="navbar__logo-icon">S</div>Service<span class="navbar__logo-accent">Link</span></a>
-    <nav class="navbar__nav"><a href="../marketplace.html" class="navbar__link">Browse</a><a href="../dashboard/provider.html" class="navbar__link">Dashboard</a></nav>
-    <div class="navbar__actions"><div class="navbar__user" id="navUser"></div><button class="btn btn--secondary btn--sm" onclick="Auth.logout()">Logout</button></div>
-  </div>
-</header>
+<header id="app-header"></header>
 <div class="app-shell">
-  <aside class="app-sidebar">
-    <div class="sidebar">
-      <div class="sidebar__label">Provider Menu</div>
-      <a href="../dashboard/provider.html" class="sidebar__item">📊 Dashboard</a>
-      <a href="../marketplace.html" class="sidebar__item">🔍 Browse Requests</a>
-      <a href="my-offers.html" class="sidebar__item active">📤 My Offers</a>
-      <a href="assigned-jobs.html" class="sidebar__item">✅ Assigned Jobs</a>
-      <a href="completed-jobs.html" class="sidebar__item">🎉 Completed Jobs</a>
-      <a href="reviews-received.html" class="sidebar__item">⭐ Reviews Received</a>
-      <a href="../settings.html" class="sidebar__item">⚙️ Settings</a>
-      <div class="sidebar__footer"><button class="btn btn--secondary btn--sm btn--full" onclick="Auth.logout()">Sign Out</button></div>
-    </div>
-  </aside>
+  <aside id="app-sidebar"></aside>
   <main class="app-content">
     <div class="page-header">
-      <div><div class="page-header__title">My Offers</div><div class="page-header__subtitle">All offers you have submitted</div></div>
-      <a href="../marketplace.html" class="btn btn--primary">Browse More Requests</a>
+      <div>
+        <div class="page-header__title">My Offers</div>
+        <div class="page-header__subtitle">All offers you have submitted to service requests</div>
+      </div>
+      <a href="../marketplace.html" class="btn btn--primary">🔍 Browse More Requests</a>
     </div>
     <div class="filter-bar">
-      <select class="form-select" id="statusFilter" onchange="load()">
+      <select class="form-select" id="statusFilter">
         <option value="">All Statuses</option>
-        <option value="pending">Pending</option><option value="accepted">Accepted</option>
-        <option value="rejected">Rejected</option><option value="countered">Countered</option>
+        <option value="Pending">Pending</option>
+        <option value="Accepted">Accepted</option>
+        <option value="Rejected">Rejected</option>
+        <option value="Countered">Countered</option>
       </select>
+      <button class="btn btn--secondary btn--sm" id="refreshBtn">↻ Refresh</button>
     </div>
     <div id="list"></div>
   </main>
 </div>
-<script src="../../assets/js/modules/api.js"></script>
-<script src="../../assets/js/modules/auth.js"></script>
-<script>
-const BADGE={pending:'badge--pending',accepted:'badge--accepted',rejected:'badge--rejected',countered:'badge--countered'};
-function esc(s){const d=document.createElement('div');d.textContent=s||'';return d.innerHTML}
-async function init(){await Auth.load();if(!Auth.requireAuth())return;Auth.renderNavUser(document.getElementById('navUser'));load();}
-async function load(){
-  const status=document.getElementById('statusFilter').value;
-  const el=document.getElementById('list');el.innerHTML='<div class="empty-state"><div class="spinner spinner--dark"></div></div>';
-  try{
-    const res=await api.get(`/offers?status=${status}`);const offers=res.data||[];
-    if(!offers.length){el.innerHTML='<div class="empty-state"><div class="empty-state__icon">📤</div><div class="empty-state__title">No offers yet</div><p class="empty-state__text">Browse requests and submit your first offer.</p><a href="../marketplace.html" class="btn btn--primary">Browse Requests</a></div>';return;}
-    el.innerHTML=`<div class="table-wrap"><table class="table"><thead><tr><th>Request</th><th>Your Price</th><th>Status</th><th>Submitted</th><th></th></tr></thead><tbody>
-      ${offers.map(o=>`<tr>
-        <td><a href="../request-detail-provider.html?id=${o.request_id}">${esc(o.request_title||'Request')}</a><div class="text-sm text-muted">📍${esc(o.request_location||'')}</div></td>
-        <td><strong>${parseFloat(o.price_offered).toLocaleString()} ETB</strong></td>
-        <td><span class="badge ${BADGE[o.status]||''}">${o.status}</span></td>
-        <td class="text-muted text-sm">${new Date(o.created_at).toLocaleDateString()}</td>
-        <td><a href="../request-detail-provider.html?id=${o.request_id}" class="btn btn--secondary btn--sm">View</a></td>
+<div class="toast-container" id="toastContainer"></div>
+<script type="module">
+import Api    from '../../core/api.js';
+import Auth   from '../../core/auth.js';
+import Layout from '../../core/layout.js';
+
+const BADGE = { Pending:'badge--negotiating', Accepted:'badge--assigned', Rejected:'badge--danger', Countered:'badge--requested' };
+function esc(s) { const d = document.createElement('div'); d.textContent = s||''; return d.innerHTML; }
+
+async function load() {
+  const status = document.getElementById('statusFilter').value;
+  const el = document.getElementById('list');
+  el.innerHTML = '<div class="empty-state"><div class="spinner spinner--dark"></div><p>Loading offers...</p></div>';
+  try {
+    const res    = await Api.get(`/offers?status=${encodeURIComponent(status)}`);
+    const offers = Array.isArray(res.data) ? res.data : [];
+    if (!offers.length) {
+      el.innerHTML = `<div class="empty-state">
+        <div class="empty-state__icon">📤</div>
+        <div class="empty-state__title">No offers yet</div>
+        <p class="empty-state__text">Browse requests and submit your first offer.</p>
+        <a href="../marketplace.html" class="btn btn--primary">Browse Requests</a>
+      </div>`;
+      return;
+    }
+    el.innerHTML = `<div class="table-wrapper"><table class="data-table">
+      <thead><tr><th>Request</th><th>Your Price (ETB)</th><th>Status</th><th>Counter Offer</th><th>Submitted</th><th></th></tr></thead>
+      <tbody>
+      ${offers.map(o => `<tr ${o.status === 'Rejected' ? 'style="opacity: 0.6; background: #fafafa;"' : ''}>
+        <td>
+          <a href="../request-detail-provider.html?id=${o.request_id}" style="font-weight:600">${esc(o.request_description ? o.request_description.substring(0,50)+'...' : 'View Request')}</a>
+          <div class="text-sm text-muted" style="margin-top:4px">📍 ${esc(o.request_location || '—')}</div>
+        </td>
+        <td><strong>${parseFloat(o.price||0).toLocaleString()}</strong></td>
+        <td><span class="badge ${BADGE[o.status]||''}">${esc(o.status)}</span></td>
+        <td>${o.counter_price ? `
+          <div style="background:#fff4e0; border-left:3px solid #f59e0b; padding:6px 10px; border-radius:4px;">
+            <strong style="color:#b45309">ETB ${parseFloat(o.counter_price).toLocaleString()}</strong><br>
+            <small style="color:#78350f; font-style:italic">"${esc(o.counter_message||'No message')}"</small>
+          </div>
+        ` : '<span class="text-muted">—</span>'}</td>
+        <td class="text-sm text-muted">${o.created_at ? new Date(o.created_at).toLocaleDateString() : '—'}</td>
+        <td><a href="../request-detail-provider.html?id=${o.request_id}" class="btn btn--ghost btn--sm">View</a></td>
       </tr>`).join('')}
-    </tbody></table></div>`;
-  }catch{el.innerHTML='<div class="empty-state"><p class="text-muted">Could not load offers.</p></div>';}
+      </tbody></table></div>`;
+  } catch (err) {
+    el.innerHTML = `<div class="empty-state"><p class="text-muted">${esc(err.message || 'Could not load offers.')}</p></div>`;
+  }
 }
-init();
+
+async function init() {
+  const ok = await Auth.load();
+  if (!ok || !Auth.requireAuth(['provider'])) return;
+  Layout.renderShell('provider', 'my-offers', 'provider');
+  document.getElementById('statusFilter').addEventListener('change', load);
+  document.getElementById('refreshBtn').addEventListener('click', load);
+  load();
+}
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+else init();
 </script>
 </body>
 </html>
