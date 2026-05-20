@@ -6,6 +6,7 @@ require_once __DIR__ . '/../repositories/OfferRepository.php';
 require_once __DIR__ . '/../repositories/RequestRepository.php';
 require_once __DIR__ . '/../repositories/StatusHistoryRepository.php';
 require_once __DIR__ . '/../repositories/AuditLogRepository.php';
+require_once __DIR__ . '/../repositories/NotificationRepository.php';
 
 /**
  * OfferService
@@ -79,6 +80,10 @@ final class OfferService
 
             return ['success' => true, 'offer_id' => $offerId];
         } catch (\Throwable $e) {
+            if ($this->isDuplicateConstraint($e)) {
+                return ['success' => false, 'message' => 'You have already submitted an offer for this request.', 'http_code' => 409];
+            }
+
             error_log('[OfferService] submitOffer failed: ' . $e->getMessage());
             return ['success' => false, 'message' => 'Failed to submit offer. Please try again.', 'http_code' => 500];
         }
@@ -114,9 +119,11 @@ final class OfferService
         }
 
         $location = trim((string) ($data['location'] ?? ''));
-        $date = trim((string) ($data['date'] ?? ''));
-        $time = trim((string) ($data['time'] ?? ''));
-        $preferredDate = trim("$date $time");
+        $preferredDate = trim((string) ($data['preferred_date'] ?? $data['date'] ?? ''));
+
+        if ($location === '' || !$this->isValidDate($preferredDate)) {
+            return ['success' => false, 'message' => 'Location and valid date are required.', 'http_code' => 422];
+        }
 
         try {
             $this->offers->transaction(function () use ($offer, $offerId, $customerId, $location, $preferredDate): void {
@@ -131,19 +138,15 @@ final class OfferService
 
                 $this->statusHistory->record($offer['REQUEST_ID'], 'Negotiating', 'Assigned', $customerId, "Offer $offerId accepted");
                 $this->audit->log($customerId, 'offer_accepted', 'offer', $offerId, "Request: {$offer['REQUEST_ID']}");
-                
-                // Notify the provider
-                if ($this->notifications) {
-                    $message = "Your offer was accepted! Scheduled for $preferredDate at $location.";
-                    $this->notifications->create(
-                        $offer['PROVIDER_ID'], 
-                        $message, 
-                        'offer_accepted', 
-                        "../request-detail-provider.html?id={$offer['REQUEST_ID']}",
-                        'request',
-                        $offer['REQUEST_ID']
-                    );
-                }
+
+                $this->notify(
+                    $offer['PROVIDER_ID'],
+                    "Your offer was accepted. Scheduled for $preferredDate at $location.",
+                    'offer_accepted',
+                    "../request-detail-provider.html?id={$offer['REQUEST_ID']}",
+                    'request',
+                    $offer['REQUEST_ID']
+                );
             });
 
             return ['success' => true, 'message' => 'Offer accepted. Request is now Assigned.'];
@@ -176,16 +179,14 @@ final class OfferService
         $this->offers->updateStatus($offerId, 'Rejected');
         $this->audit->log($customerId, 'offer_rejected', 'offer', $offerId);
 
-        if ($this->notifications) {
-            $this->notifications->create(
-                $offer['PROVIDER_ID'], 
-                "Your offer for request was declined.", 
-                'offer_rejected', 
-                "../request-detail-provider.html?id={$offer['REQUEST_ID']}",
-                'request',
-                $offer['REQUEST_ID']
-            );
-        }
+        $this->notify(
+            $offer['PROVIDER_ID'],
+            'Your offer was declined.',
+            'offer_rejected',
+            "../request-detail-provider.html?id={$offer['REQUEST_ID']}",
+            'request',
+            $offer['REQUEST_ID']
+        );
 
         return ['success' => true, 'message' => 'Offer rejected.'];
     }
@@ -218,16 +219,14 @@ final class OfferService
         $this->offers->storeCounter($offerId, $counterPrice, $data['counter_message'] ?? '');
         $this->audit->log($customerId, 'offer_countered', 'offer', $offerId, "Counter: $counterPrice");
 
-        if ($this->notifications) {
-            $this->notifications->create(
-                $offer['PROVIDER_ID'], 
-                "You received a counter-offer of ETB " . number_format($counterPrice) . ".", 
-                'offer_countered', 
-                "../request-detail-provider.html?id={$offer['REQUEST_ID']}",
-                'request',
-                $offer['REQUEST_ID']
-            );
-        }
+        $this->notify(
+            $offer['PROVIDER_ID'],
+            'You received a counter-offer of ETB ' . number_format($counterPrice, 2) . '.',
+            'offer_countered',
+            "../request-detail-provider.html?id={$offer['REQUEST_ID']}",
+            'request',
+            $offer['REQUEST_ID']
+        );
 
         return ['success' => true, 'message' => 'Counter-offer sent.'];
     }
@@ -239,11 +238,16 @@ final class OfferService
     public function getOffersForRequest(string $requestId, string $customerId): array
     {
         $request = $this->requests->findById($requestId);
-        if (!$request || $request['CUSTOMER_ID'] !== $customerId) {
-            return [];
+        if (!$request) {
+            return ['success' => false, 'message' => 'Request not found.', 'http_code' => 404];
         }
+
+        if ($request['CUSTOMER_ID'] !== $customerId) {
+            return ['success' => false, 'message' => 'Access denied.', 'http_code' => 403];
+        }
+
         $rows = $this->offers->findByRequest($requestId);
-        return array_map([$this, 'normalizeOffer'], $rows);
+        return ['success' => true, 'data' => array_map([$this, 'normalizeOffer'], $rows)];
     }
 
     public function getMyOffers(string $providerId, string $status = ''): array
@@ -278,5 +282,40 @@ final class OfferService
             'customer_name'       => $row['CUSTOMER_NAME']       ?? null,
             'created_at'       => $row['CREATED_AT'],
         ];
+    }
+
+    private function notify(
+        string $userId,
+        string $message,
+        string $type,
+        ?string $link,
+        ?string $entityType,
+        ?string $entityId
+    ): void {
+        if ($this->notifications === null || $userId === '') {
+            return;
+        }
+
+        try {
+            $this->notifications->create($userId, $message, $type, $link, $entityType, $entityId);
+        } catch (\Throwable $exception) {
+            error_log('[OfferService] Notification failed: ' . $exception->getMessage());
+        }
+    }
+
+    private function isValidDate(string $value): bool
+    {
+        $date = \DateTimeImmutable::createFromFormat('Y-m-d', $value);
+        return $date !== false && $date->format('Y-m-d') === $value;
+    }
+
+    private function isDuplicateConstraint(\Throwable $exception): bool
+    {
+        if (!$exception instanceof \PDOException) {
+            return false;
+        }
+
+        $sqlState = (string) ($exception->errorInfo[0] ?? $exception->getCode());
+        return $sqlState === '23000';
     }
 }

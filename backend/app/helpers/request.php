@@ -54,6 +54,12 @@ function request_json_body(): array
         return $GLOBALS['json_body'];
     }
 
+    $contentType = strtolower((string) ($_SERVER['CONTENT_TYPE'] ?? $_SERVER['HTTP_CONTENT_TYPE'] ?? ''));
+    if ($contentType !== '' && !str_contains($contentType, 'application/json')) {
+        $GLOBALS['json_body'] = [];
+        return $GLOBALS['json_body'];
+    }
+
     $rawBody = file_get_contents('php://input');
 
     if ($rawBody === false || trim($rawBody) === '') {

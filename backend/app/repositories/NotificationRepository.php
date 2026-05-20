@@ -84,7 +84,10 @@ final class NotificationRepository
         }
 
         $rows = $this->db->query('SHOW COLUMNS FROM NOTIFICATIONS')->fetchAll();
-        $this->columns = array_map(static fn(array $row): string => strtoupper((string) $row['Field']), $rows);
+        $this->columns = array_map(
+            static fn(array $row): string => strtoupper((string) ($row['FIELD'] ?? $row['Field'] ?? '')),
+            $rows
+        );
 
         return $this->columns;
     }

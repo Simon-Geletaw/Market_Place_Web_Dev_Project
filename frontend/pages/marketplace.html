@@ -258,7 +258,7 @@ async function loadRequests() {
     if (category) params.set('category_id', category);
     if (location) params.set('location', location);
 
-    const res = await Api.get(`/marketplace?${params.toString()}`);
+    const res = await Api.get(`/marketplace/requests?${params.toString()}`);
     let requests = res.data || [];
 
     // Client-side text search (backend doesn't support full-text yet)
@@ -350,21 +350,14 @@ async function loadCategories() {
 }
 
 async function init() {
-  await Auth.load();
+  const ok = await Auth.load();
+  if (!ok || !Auth.requireAuth(['provider'])) return;
 
-  // Set back link based on user role
-  const user = Auth.getUser();
+  // Marketplace is a provider workspace per lifecycle requirements.
   const backBtn = document.getElementById('backBtn');
-  if (user) {
-    const role = user.role.toLowerCase();
-    const base = window.location.pathname.split('/frontend/')[0];
-    backBtn.href = `${base}/frontend/pages/dashboard/${role}.html`;
-    Layout.renderNavbar('app-header', 'browse');
-  } else {
-    const base = window.location.pathname.split('/frontend/')[0];
-    backBtn.href = `${base}/frontend/landing_page/index.html`;
-    Layout.renderNavbar('app-header', 'browse');
-  }
+  const base = window.location.pathname.split('/frontend/')[0];
+  backBtn.href = `${base}/frontend/pages/dashboard/provider.html`;
+  Layout.renderNavbar('app-header', 'browse');
 
   // Event listeners
   document.getElementById('searchInput').addEventListener('input', debounceLoad);

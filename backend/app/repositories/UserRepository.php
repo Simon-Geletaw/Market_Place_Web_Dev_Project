@@ -68,7 +68,7 @@ final class UserRepository
      */
     public function findByEmail(string $email): ?array
     {
-        $sql  = 'SELECT * FROM users WHERE EMAIL = :email LIMIT 1';
+        $sql  = 'SELECT * FROM USERS WHERE EMAIL = :email LIMIT 1';
         $stmt = $this->db->prepare($sql);
         $stmt->execute([':email' => strtolower(trim($email))]);
         $row = $stmt->fetch();

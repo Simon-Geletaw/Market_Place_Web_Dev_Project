@@ -52,12 +52,14 @@ function validate_offer_accept(array $data): array
         $errors['location'] = 'Location is required.';
     }
 
-    if (empty($data['date'])) {
+    $date = $data['preferred_date'] ?? $data['date'] ?? '';
+    if (empty($date)) {
         $errors['date'] = 'Date is required.';
-    }
-
-    if (empty($data['time'])) {
-        $errors['time'] = 'Time is required.';
+    } else {
+        $parsed = \DateTime::createFromFormat('Y-m-d', (string) $date);
+        if (!$parsed || $parsed->format('Y-m-d') !== (string) $date) {
+            $errors['date'] = 'Date must be in YYYY-MM-DD format.';
+        }
     }
 
     return $errors;

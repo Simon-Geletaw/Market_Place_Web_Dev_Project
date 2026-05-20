@@ -62,14 +62,14 @@ final class ReviewService
             return ['success' => false, 'message' => 'Access denied.', 'http_code' => 403];
         }
 
-        // Only Completed requests can be reviewed.
-        if ($request['STATUS'] !== 'Completed') {
-            return ['success' => false, 'message' => 'You can only review a completed job.', 'http_code' => 422];
-        }
-
         // Prevent duplicate reviews (unique constraint on REQUEST_ID in REVIEWS).
         if ($this->reviews->existsForRequest($requestId)) {
             return ['success' => false, 'message' => 'You have already reviewed this job.', 'http_code' => 409];
+        }
+
+        // Only Completed requests can be reviewed.
+        if ($request['STATUS'] !== 'Completed') {
+            return ['success' => false, 'message' => 'You can only review a completed job.', 'http_code' => 422];
         }
 
         // Validate rating range.
@@ -107,6 +107,10 @@ final class ReviewService
 
             return ['success' => true, 'review_id' => $reviewId];
         } catch (\Throwable $e) {
+            if ($this->isDuplicateConstraint($e)) {
+                return ['success' => false, 'message' => 'You have already reviewed this job.', 'http_code' => 409];
+            }
+
             error_log('[ReviewService] submitReview failed: ' . $e->getMessage());
             return ['success' => false, 'message' => 'Failed to submit review.', 'http_code' => 500];
         }
@@ -150,5 +154,15 @@ final class ReviewService
             'category_name'       => $row['CATEGORY_NAME']        ?? null,
             'created_at'          => $row['CREATED_AT'],
         ];
+    }
+
+    private function isDuplicateConstraint(\Throwable $exception): bool
+    {
+        if (!$exception instanceof \PDOException) {
+            return false;
+        }
+
+        $sqlState = (string) ($exception->errorInfo[0] ?? $exception->getCode());
+        return $sqlState === '23000';
     }
 }

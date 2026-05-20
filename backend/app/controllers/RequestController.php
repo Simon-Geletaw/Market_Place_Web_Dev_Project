@@ -103,6 +103,14 @@ final class RequestController
         $input      = request_json_body();
         $photoPath  = $input['completion_photo'] ?? null;
 
+        if (!empty($_FILES['completion_photo']) && is_array($_FILES['completion_photo'])) {
+            $upload = $this->storeCompletionPhoto($_FILES['completion_photo'], $requestId);
+            if (!$upload['success']) {
+                return error_response($upload['message'], [], 422);
+            }
+            $photoPath = $upload['path'];
+        }
+
         $result = $this->requestService->markCompleted($requestId, $providerId, $photoPath);
         $code   = $result['http_code'] ?? ($result['success'] ? 200 : 400);
 
@@ -121,7 +129,7 @@ final class RequestController
         return success_response('Status history not yet implemented.', []);
     }
 
-    // GET /api/marketplace  (public browse)
+    // GET /api/marketplace  (provider browse)
     public function browse(): array
     {
         $filters = [];
@@ -148,5 +156,50 @@ final class RequestController
     public function providerCompletedJobs(): array
     {
         return success_response('Completed jobs retrieved.', $this->requestService->getProviderJobs($this->currentUserId(), 'Completed'));
+    }
+
+    private function storeCompletionPhoto(array $file, string $requestId): array
+    {
+        if (($file['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_NO_FILE) {
+            return ['success' => true, 'path' => null];
+        }
+
+        if (($file['error'] ?? UPLOAD_ERR_OK) !== UPLOAD_ERR_OK) {
+            return ['success' => false, 'message' => 'Completion photo upload failed.'];
+        }
+
+        if (($file['size'] ?? 0) > 5 * 1024 * 1024) {
+            return ['success' => false, 'message' => 'Completion photo must be 5 MB or smaller.'];
+        }
+
+        $tmpName = (string) ($file['tmp_name'] ?? '');
+        if ($tmpName === '' || !is_uploaded_file($tmpName)) {
+            return ['success' => false, 'message' => 'Invalid completion photo upload.'];
+        }
+
+        $mime = mime_content_type($tmpName) ?: '';
+        $extensions = [
+            'image/jpeg' => 'jpg',
+            'image/png' => 'png',
+            'image/webp' => 'webp',
+        ];
+
+        if (!isset($extensions[$mime])) {
+            return ['success' => false, 'message' => 'Completion photo must be a JPG, PNG, or WebP image.'];
+        }
+
+        $uploadDir = dirname(__DIR__, 2) . '/public/uploads/completions';
+        if (!is_dir($uploadDir) && !mkdir($uploadDir, 0775, true) && !is_dir($uploadDir)) {
+            return ['success' => false, 'message' => 'Could not prepare upload directory.'];
+        }
+
+        $filename = preg_replace('/[^a-zA-Z0-9-]/', '', $requestId) . '-' . bin2hex(random_bytes(8)) . '.' . $extensions[$mime];
+        $target = $uploadDir . '/' . $filename;
+
+        if (!move_uploaded_file($tmpName, $target)) {
+            return ['success' => false, 'message' => 'Could not save completion photo.'];
+        }
+
+        return ['success' => true, 'path' => '/uploads/completions/' . $filename];
     }
 }

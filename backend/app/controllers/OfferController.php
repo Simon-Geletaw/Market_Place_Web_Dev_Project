@@ -72,8 +72,14 @@ final class OfferController
         $requestId  = route_param('id', '');
         $customerId = $this->currentUserId();
 
-        $offers = $this->offerService->getOffersForRequest($requestId, $customerId);
-        return success_response('Offers retrieved.', $offers);
+        $result = $this->offerService->getOffersForRequest($requestId, $customerId);
+        $code   = $result['http_code'] ?? ($result['success'] ? 200 : 400);
+
+        if (!$result['success']) {
+            return error_response($result['message'], [], $code);
+        }
+
+        return success_response('Offers retrieved.', $result['data']);
     }
 
     // GET /api/offers  (provider views their own offers)

@@ -80,10 +80,6 @@
           <label class="form-label">Date *</label>
           <input class="form-input" type="date" id="acceptDate">
         </div>
-        <div class="form-group">
-          <label class="form-label">Time *</label>
-          <input class="form-input" type="time" id="acceptTime">
-        </div>
       </div>
     </div>
     <div class="modal__footer">
@@ -133,6 +129,7 @@ import Toast  from '../core/toast.js';
 import Layout from '../core/layout.js';
 
 const BADGE    = { Requested:'badge--requested', Negotiating:'badge--negotiating', Assigned:'badge--assigned', Completed:'badge--completed', Reviewed:'badge--reviewed' };
+const OFFER_BADGE = { Pending:'badge--pending', Countered:'badge--countered', Accepted:'badge--accepted', Rejected:'badge--rejected' };
 const TIMELINE = ['Requested','Negotiating','Assigned','Completed','Reviewed'];
 let request    = null;
 let offers     = [];
@@ -156,8 +153,9 @@ async function loadAll() {
     document.getElementById('breadTitle').textContent = heading;
     document.title = heading + ' — ServiceLink';
 
-    // Fetch offers for customer if request is in negotiation
-    if (['Requested','Negotiating'].includes(request.status)) {
+    // Fetch offers for all statuses where the customer needs to see them:
+    // Negotiating (manage offers), Assigned/Completed/Reviewed (see who was hired)
+    if (['Requested','Negotiating','Assigned','Completed','Reviewed'].includes(request.status)) {
       try {
         const offersRes = await Api.get(`/requests/${requestId}/offers`);
         offers = Array.isArray(offersRes.data) ? offersRes.data : [];
@@ -226,16 +224,33 @@ function renderActionPanel(isOwner) {
 
   // ── Reviewed / Assigned: info only
   if (r.status === 'Reviewed') {
+    const accepted = offers.find(o => o.status === 'Accepted');
     panel.innerHTML = `<div class="card"><div class="card__body">
-      <div class="empty-state"><div class="empty-state__icon">✅</div><div class="empty-state__title" style="font-size:1rem">Completed &amp; Reviewed</div></div>
+      <div class="empty-state" style="padding:var(--space-lg)">
+        <div class="empty-state__icon">✅</div>
+        <div class="empty-state__title" style="font-size:1rem">Completed &amp; Reviewed</div>
+        ${accepted ? `<p class="text-muted text-sm" style="margin-top:8px">Provider: <strong>${esc(accepted.provider_name || '—')}</strong></p>` : ''}
+        ${r.accepted_price ? `<p class="text-muted text-sm">Final Price: <strong>ETB ${parseFloat(r.accepted_price).toLocaleString()}</strong></p>` : ''}
+      </div>
     </div></div>`;
     return;
   }
 
   // ── Completed: leave review
   if (r.status === 'Completed' && isOwner) {
+    const accepted = offers.find(o => o.status === 'Accepted');
     panel.innerHTML = `<div class="card"><div class="card__header"><h3 style="font-size:14px">Job Complete 🎉</h3></div>
       <div class="card__body">
+        ${accepted ? `
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+            <div style="width:40px;height:40px;border-radius:50%;background:var(--color-primary);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px">
+              ${esc((accepted.provider_name || 'P')[0].toUpperCase())}
+            </div>
+            <div>
+              <div style="font-weight:600">${esc(accepted.provider_name || 'Provider')}</div>
+              <div style="font-size:.8rem;color:#999">⭐ ${accepted.provider_rating ? parseFloat(accepted.provider_rating).toFixed(1) : 'New'}</div>
+            </div>
+          </div>` : ''}
         <p class="text-muted mb-md" style="font-size:.9rem">The provider has marked this job complete. Leave a review to finish.</p>
         <button class="btn btn--primary btn--full" id="leaveReviewBtn">⭐ Leave a Review</button>
       </div>
@@ -246,10 +261,22 @@ function renderActionPanel(isOwner) {
 
   // ── Assigned: show who is working
   if (r.status === 'Assigned') {
+    const accepted = offers.find(o => o.status === 'Accepted');
     panel.innerHTML = `<div class="card"><div class="card__header"><h3 style="font-size:14px">✅ Job Assigned</h3></div>
       <div class="card__body">
-        <p class="text-muted" style="font-size:.9rem">A provider has been assigned. They will begin work soon.</p>
+        ${accepted ? `
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+            <div style="width:40px;height:40px;border-radius:50%;background:var(--color-primary);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px">
+              ${esc((accepted.provider_name || 'P')[0].toUpperCase())}
+            </div>
+            <div>
+              <div style="font-weight:600">${esc(accepted.provider_name || 'Provider')}</div>
+              <div style="font-size:.8rem;color:#999">⭐ ${accepted.provider_rating ? parseFloat(accepted.provider_rating).toFixed(1) : 'New'}</div>
+            </div>
+          </div>` : ''}
+        <p class="text-muted" style="font-size:.9rem">A provider has been assigned and will begin work soon.</p>
         ${r.accepted_price ? `<p style="margin-top:8px"><strong>Agreed Price:</strong> ETB ${parseFloat(r.accepted_price).toLocaleString()}</p>` : ''}
+        ${r.preferred_date ? `<p style="margin-top:4px"><strong>Scheduled:</strong> ${esc(r.preferred_date)}</p>` : ''}
       </div>
     </div>`;
     return;
@@ -281,7 +308,10 @@ function renderActionPanel(isOwner) {
                       <div style="font-size:.8rem;color:#999">⭐ ${o.provider_rating ? parseFloat(o.provider_rating).toFixed(1) : 'New'}</div>
                     </div>
                   </div>
-                  <div class="offer-card__price">ETB ${parseFloat(o.price || 0).toLocaleString()}</div>
+                  <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+                    <span class="badge ${OFFER_BADGE[o.status] || ''}">${esc(o.status || 'Pending')}</span>
+                    <div class="offer-card__price">ETB ${parseFloat(o.price || 0).toLocaleString()}</div>
+                  </div>
                 </div>
                 ${o.message ? `<p style="font-size:.85rem;color:#555;margin:6px 0">${esc(o.message)}</p>` : ''}
                 ${o.counter_price ? `<div style="background:#fff4e0;border-radius:6px;padding:8px;font-size:.85rem;margin:6px 0">
@@ -341,12 +371,34 @@ function renderActionPanel(isOwner) {
           ` : ''}
         </div>
       </div>`;
+    limitOfferActions(panel, activeOffers, r.status);
     return;
   }
 
   panel.innerHTML = `<div class="card"><div class="card__body">
     <p class="text-muted" style="font-size:.9rem">Status: <strong>${esc(r.status)}</strong></p>
   </div></div>`;
+}
+
+function limitOfferActions(panel, renderedOffers, requestStatus) {
+  panel.querySelectorAll('.offer-card').forEach((card, index) => {
+    const offer = renderedOffers[index];
+    if (!offer) return;
+
+    const canDecide = requestStatus === 'Negotiating' && ['Pending', 'Countered'].includes(offer.status);
+    const canCounter = requestStatus === 'Negotiating' && offer.status === 'Pending';
+    const [acceptBtn, rejectBtn, counterBtn] = card.querySelectorAll('.offer-card__actions button');
+
+    if (acceptBtn) acceptBtn.hidden = !canDecide;
+    if (rejectBtn) rejectBtn.hidden = !canDecide;
+    if (counterBtn) counterBtn.hidden = !canCounter;
+
+    const counterForm = card.querySelector('.counter-form');
+    if (counterForm && !canCounter) counterForm.hidden = true;
+
+    const actions = card.querySelector('.offer-card__actions');
+    if (actions && !canDecide && !canCounter) actions.hidden = true;
+  });
 }
 
 // -----------------------------------------------------------------------
@@ -357,6 +409,8 @@ window.acceptOffer = function(offerId) {
   if (!o) return;
   document.getElementById('acceptOfferId').value = offerId;
   document.getElementById('acceptFor').textContent = `Accept offer from ${o.provider_name || 'Provider'} for ETB ${parseFloat(o.price || 0).toLocaleString()}`;
+  document.getElementById('acceptLocation').value = request?.location || '';
+  document.getElementById('acceptDate').value = (request?.preferred_date || '').slice(0, 10);
   document.getElementById('acceptModal').classList.add('open');
 };
 
@@ -364,17 +418,15 @@ window.confirmAccept = async function() {
   const offerId = document.getElementById('acceptOfferId').value;
   const location = document.getElementById('acceptLocation').value;
   const date = document.getElementById('acceptDate').value;
-  const time = document.getElementById('acceptTime').value;
 
   if (!location) { Toast.error('Please select a location.'); return; }
   if (!date) { Toast.error('Please select a date.'); return; }
-  if (!time) { Toast.error('Please select a time.'); return; }
 
   const btn = document.getElementById('confirmAcceptBtn');
   btn.disabled = true; btn.textContent = 'Accepting...';
 
   try {
-    await Api.patch(`/offers/${offerId}/accept`, { location, date, time });
+    await Api.patch(`/offers/${offerId}/accept`, { location, date });
     Toast.success('Offer accepted! Job assigned.');
     closeModal('acceptModal');
     loadAll();

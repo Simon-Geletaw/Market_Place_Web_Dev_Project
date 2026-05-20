@@ -164,6 +164,7 @@ final class RequestService
             'completion_photo' => $row['COMPLETION_PHOTO'] ?? null,
             'offer_count' => (int) ($row['OFFER_COUNT'] ?? 0),
             'customer_name' => $row['CUSTOMER_NAME'] ?? null,
+            'customer_phone' => $row['CUSTOMER_PHONE'] ?? null,
             'accepted_price' => isset($row['ACCEPTED_PRICE']) ? (float) $row['ACCEPTED_PRICE'] : null,
             'created_at' => $row['CREATED_AT'],
             'updated_at' => $row['UPDATED_AT'] ?? null,

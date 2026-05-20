@@ -73,8 +73,10 @@ const Layout = {
           <span class="navbar__logo-text">Service<span class="navbar__logo-accent">Link</span></span>
         </a>
         <nav class="navbar__nav">
+          ${role === 'provider' ? `
           <a href="${url('/frontend/pages/marketplace.html')}"
              class="navbar__link ${activeMenu === 'browse' ? 'active' : ''}">Browse</a>
+          ` : ''}
           ${isAuth ? `
           <a href="${url('/frontend/pages/dashboard/' + role + '.html')}"
              class="navbar__link ${activeMenu === 'dashboard' ? 'active' : ''}">Dashboard</a>
@@ -112,7 +114,6 @@ const Layout = {
       customer: [
         { id: 'dashboard', icon: 'dashboard', label: 'Dashboard',       href: url('/frontend/pages/dashboard/customer.html') },
         { id: 'requests',  icon: 'requests',  label: 'My Requests',     href: url('/frontend/pages/customer/my-requests.html') },
-        { id: 'browse',    icon: 'browse',     label: 'Browse Services', href: url('/frontend/pages/marketplace.html') },
         { id: 'reviews',   icon: 'reviews',    label: 'Reviews Given',   href: url('/frontend/pages/customer/reviews-given.html') },
         { id: 'settings',  icon: 'settings',   label: 'Settings',        href: url('/frontend/pages/settings.html') },
       ],

@@ -100,14 +100,21 @@ return [
     ],
 
     // ----------------------------------------------------------------
-    // Marketplace (public browse for providers and guests)
+    // Marketplace (provider browse)
     // ----------------------------------------------------------------
     [
         'method'     => 'GET',
         'path'       => '/api/marketplace',
         'controller' => RequestController::class,
         'action'     => 'browse',
-        'middleware' => [],
+        'middleware' => ['auth', 'role:provider'],
+    ],
+    [
+        'method'     => 'GET',
+        'path'       => '/api/marketplace/requests',
+        'controller' => RequestController::class,
+        'action'     => 'browse',
+        'middleware' => ['auth', 'role:provider'],
     ],
 
     // ----------------------------------------------------------------

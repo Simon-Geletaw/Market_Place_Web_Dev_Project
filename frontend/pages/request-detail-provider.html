@@ -46,6 +46,27 @@
   </main>
 </div>
 
+<div class="modal-overlay" id="completeModal">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="completeModalTitle">
+    <div class="modal__header">
+      <h2 class="modal__title" id="completeModalTitle">Mark Job Complete</h2>
+      <button class="modal__close" id="closeCompleteTopBtn" aria-label="Close">x</button>
+    </div>
+    <div class="modal__body">
+      <p class="text-muted mb-md">Upload an optional proof photo before moving this job to Completed.</p>
+      <div class="form-group">
+        <label class="form-label" for="completePhoto">Completion photo</label>
+        <input class="form-input" type="file" id="completePhoto" accept="image/png,image/jpeg,image/webp">
+        <p class="text-sm text-muted mt-xs">JPG, PNG, or WebP up to 5 MB.</p>
+      </div>
+    </div>
+    <div class="modal__footer">
+      <button class="btn btn--secondary" id="closeCompleteBtn">Cancel</button>
+      <button class="btn btn--primary" id="submitCompleteBtn">Mark Complete</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast-container" id="toastContainer"></div>
 
 <script type="module">
@@ -212,7 +233,7 @@ function renderOfferPanel(isOpen) {
           <p class="text-muted" style="font-size:.8rem;margin-top:10px;text-align:center">
             ${myOffer.status === 'Pending' ? 'Waiting for the customer to respond.' : ''}
             ${myOffer.status === 'Rejected' ? 'Your offer was not accepted this time.' : ''}
-            ${myOffer.status === 'Countered' ? 'The customer sent a counter offer. Check your messages or submit a new offer.' : ''}
+            ${myOffer.status === 'Countered' ? 'The customer sent a counter offer. They can still accept or reject this negotiated offer.' : ''}
           </p>
         </div>
       </div>`;
@@ -241,6 +262,9 @@ function renderOfferPanel(isOpen) {
 }
 
 window.markJobComplete = async function() {
+  document.getElementById('completePhoto').value = '';
+  document.getElementById('completeModal').classList.add('open');
+  return;
   if (!confirm('Are you sure you want to mark this job as complete?')) return;
   const btn = document.getElementById('markCompleteBtn');
   if (btn) { btn.disabled = true; btn.textContent = 'Completing...'; }
@@ -253,6 +277,37 @@ window.markJobComplete = async function() {
     if (btn) { btn.disabled = false; btn.textContent = '✓ Mark Job as Complete'; }
   }
 };
+
+function closeCompleteModal() {
+  document.getElementById('completeModal').classList.remove('open');
+}
+
+async function submitCompletion() {
+  if (!confirm('Mark this job as completed? The customer will be able to leave a review.')) return;
+
+  const btn = document.getElementById('submitCompleteBtn');
+  const photo = document.getElementById('completePhoto').files[0] || null;
+  btn.disabled = true;
+  btn.textContent = 'Completing...';
+
+  try {
+    if (photo) {
+      const formData = new FormData();
+      formData.append('completion_photo', photo);
+      await Api.upload(`/requests/${requestId}/complete`, formData);
+    } else {
+      await Api.post(`/requests/${requestId}/complete`, {});
+    }
+    Toast.success('Job marked as complete!');
+    closeCompleteModal();
+    loadAll();
+  } catch (err) {
+    Toast.error(err.message || 'Failed to complete job.');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Mark Complete';
+  }
+}
 
 async function submitOffer() {
   const priceEl   = document.getElementById('offerPrice');
@@ -290,6 +345,12 @@ async function init() {
   const ok = await Auth.load();
   if (!ok || !Auth.requireAuth(['provider'])) return;
   Layout.renderShell('provider', 'browse', 'browse');
+  document.getElementById('closeCompleteTopBtn').addEventListener('click', closeCompleteModal);
+  document.getElementById('closeCompleteBtn').addEventListener('click', closeCompleteModal);
+  document.getElementById('submitCompleteBtn').addEventListener('click', submitCompletion);
+  document.getElementById('completeModal').addEventListener('click', e => {
+    if (e.target === e.currentTarget) closeCompleteModal();
+  });
   loadAll();
 }
 

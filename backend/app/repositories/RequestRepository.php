@@ -251,11 +251,24 @@ final class RequestRepository
                 JOIN SERVICE_CATEGORIES sc ON sr.CATEGORY_ID      = sc.CATEGORY_ID
                 JOIN USERS             u  ON sr.CUSTOMER_ID        = u.USER_ID
                 JOIN OFFERS            o  ON sr.ACCEPTED_OFFER_ID  = o.OFFER_ID
-                WHERE o.PROVIDER_ID = :provider_id AND sr.STATUS = :status
+                WHERE o.PROVIDER_ID = :provider_id';
+
+        $params = [':provider_id' => $providerId];
+
+        if ($status === 'Completed') {
+            $sql .= ' AND sr.STATUS IN (:completed, :reviewed)';
+            $params[':completed'] = 'Completed';
+            $params[':reviewed'] = 'Reviewed';
+        } else {
+            $sql .= ' AND sr.STATUS = :status';
+            $params[':status'] = $status;
+        }
+
+        $sql .= '
                 ORDER BY sr.UPDATED_AT DESC';
 
         $stmt = $this->db->prepare($sql);
-        $stmt->execute([':provider_id' => $providerId, ':status' => $status]);
+        $stmt->execute($params);
         return $stmt->fetchAll();
     }
 
