@@ -43,6 +43,21 @@ final class MetricsRepository
         return $this->db->query($sql)->fetchAll();
     }
 
+    public function weeklyRequestsCreated(): array
+    {
+        $sql = "SELECT 
+                    YEAR(CREATED_AT) AS year,
+                    WEEK(CREATED_AT, 1) AS week,
+                    DATE_FORMAT(MIN(CREATED_AT), '%b %d') AS week_start,
+                    COUNT(*) AS count
+                FROM SERVICE_REQUESTS
+                GROUP BY YEAR(CREATED_AT), WEEK(CREATED_AT, 1)
+                ORDER BY YEAR(CREATED_AT) ASC, WEEK(CREATED_AT, 1) ASC
+                LIMIT 6";
+
+        return $this->db->query($sql)->fetchAll();
+    }
+
     private function count(string $table): int
     {
         return (int) $this->db->query("SELECT COUNT(*) FROM {$table}")->fetchColumn();

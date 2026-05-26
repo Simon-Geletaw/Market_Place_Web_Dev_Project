@@ -110,9 +110,6 @@ final class UserRepository
         return $stmt->rowCount() > 0;
     }
 
-    /**
-     * List all providers (for admin verification screen).
-     */
     public function findAllProviders(): array
     {
         $sql  = 'SELECT USER_ID, NAME, EMAIL, PHONE, LOCATION, RATING_AVERAGE, TOTAL_REVIEWS, IS_VERIFIED, CREATED_AT
@@ -120,6 +117,16 @@ final class UserRepository
         $stmt = $this->db->prepare($sql);
         $stmt->execute([':role' => UserRole::Provider->value]);
         return $stmt->fetchAll();
+    }
+
+    /**
+     * List all users on the platform.
+     */
+    public function findAll(): array
+    {
+        $sql  = 'SELECT USER_ID, NAME, EMAIL, ROLE, PHONE, LOCATION, RATING_AVERAGE, TOTAL_REVIEWS, IS_VERIFIED, CREATED_AT
+                 FROM USERS ORDER BY CREATED_AT DESC';
+        return $this->db->query($sql)->fetchAll();
     }
 
     /**

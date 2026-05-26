@@ -2,6 +2,7 @@
 <html lang="en" data-role="admin">
 <head>
   <meta charset="UTF-8">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230066CC'/%3E%3Cpath d='M10 16L14.5 20.5L22 11' stroke='%23ffffff' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round' fill='none'/%3E%3C/svg%3E">
   <meta name="viewport" content="width=device-width,initial-scale=1.0">
   <title>Admin Dashboard — ServiceLink</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -9,6 +10,65 @@
   <link rel="stylesheet" href="../../assets/css/main.css">
   <link rel="stylesheet" href="../../assets/css/components.css">
   <script src="../../core/guard.js"></script>
+  <style>
+    /* Weekly Usage Chart Styling */
+    .bar-chart {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      height: 200px;
+      padding: var(--space-lg) 0 var(--space-sm) 0;
+      border-bottom: 2px solid var(--color-border);
+      gap: var(--space-md);
+    }
+    .chart-bar-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      flex: 1;
+      height: 100%;
+      justify-content: flex-end;
+    }
+    .chart-bar {
+      width: 100%;
+      max-width: 42px;
+      background: linear-gradient(180deg, var(--color-primary) 0%, #3399ff 100%);
+      border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+      transition: height 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+      position: relative;
+      cursor: pointer;
+    }
+    .chart-bar:hover {
+      background: linear-gradient(180deg, #0052a3 0%, var(--color-primary) 100%);
+    }
+    .chart-bar-tooltip {
+      position: absolute;
+      top: -32px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--color-text);
+      color: white;
+      padding: 4px 8px;
+      font-size: 11px;
+      border-radius: var(--radius-sm);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease, top 0.2s ease;
+      white-space: nowrap;
+      font-weight: 600;
+      box-shadow: var(--shadow-sm);
+    }
+    .chart-bar:hover .chart-bar-tooltip {
+      opacity: 1;
+      top: -38px;
+    }
+    .chart-bar-label {
+      margin-top: var(--space-xs);
+      font-size: 11px;
+      color: var(--color-text-muted);
+      font-weight: 500;
+    }
+  </style>
 </head>
 <body>
 
@@ -21,38 +81,85 @@
     <div class="page-header">
       <div>
         <div class="page-header__title">Admin Dashboard</div>
-        <div class="page-header__subtitle">Platform overview and management</div>
+        <div class="page-header__subtitle">Platform overview and management console</div>
       </div>
+      <button class="btn btn--secondary btn--sm" id="refreshBtn">Refresh Data</button>
     </div>
 
     <!-- Stats -->
     <div class="grid-4 mb-lg">
-      <div class="stat-card">
+      <div class="stat-card" style="border-top:4px solid var(--color-primary)">
         <div class="stat-card__icon" style="background:#e8f4ff">👥</div>
-        <div class="stat-card__value" id="totalProviders">—</div>
-        <div class="stat-card__label">Total Providers</div>
+        <div class="stat-card__value" id="totalUsers">—</div>
+        <div class="stat-card__label">Total Registered Users</div>
       </div>
-      <div class="stat-card">
+      <div class="stat-card" style="border-top:4px solid #f59e0b">
         <div class="stat-card__icon" style="background:#fff3cd">⏳</div>
         <div class="stat-card__value" id="unverifiedProviders">—</div>
-        <div class="stat-card__label">Pending Verification</div>
+        <div class="stat-card__label">Pending Verifications</div>
       </div>
-      <div class="stat-card">
+      <div class="stat-card" style="border-top:4px solid var(--status-assigned)">
         <div class="stat-card__icon" style="background:#e8f5eb">✅</div>
-        <div class="stat-card__value" id="totalCategories">—</div>
-        <div class="stat-card__label">Active Categories</div>
+        <div class="stat-card__value" id="totalRequests">—</div>
+        <div class="stat-card__label">Total Service Requests</div>
       </div>
-      <div class="stat-card">
-        <div class="stat-card__icon" style="background:#f8d7da">📋</div>
-        <div class="stat-card__value" id="totalAuditLogs">—</div>
-        <div class="stat-card__label">Audit Events</div>
+      <div class="stat-card" style="border-top:4px solid var(--status-completed)">
+        <div class="stat-card__icon" style="background:#e0faf4">⭐</div>
+        <div class="stat-card__value" id="totalReviews">—</div>
+        <div class="stat-card__label">Completed Reviews</div>
+      </div>
+    </div>
+
+    <div class="grid-2 mb-lg">
+      <!-- Weekly Platform Activity -->
+      <div class="card">
+        <div class="card__header" style="border-bottom:1px solid var(--color-border);padding-bottom:12px">
+          <h3 style="font-size:15px;margin:0">📈 Weekly Platform Usage</h3>
+          <p style="font-size:12px;color:var(--color-text-muted);margin:4px 0 0 0">Number of requests submitted per week</p>
+        </div>
+        <div class="card__body">
+          <div class="bar-chart" id="weeklyUsageChart">
+            <div style="display:flex;align-items:center;justify-content:center;width:100%;height:100%">
+              <div class="spinner spinner--dark"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Shortcuts & Info -->
+      <div class="card">
+        <div class="card__header" style="border-bottom:1px solid var(--color-border);padding-bottom:12px">
+          <h3 style="font-size:15px;margin:0">⚡ Quick Management Shortcuts</h3>
+        </div>
+        <div class="card__body" style="padding-top:var(--space-md);display:grid;grid-template-columns:1fr 1fr;gap:var(--space-md)">
+          <a href="../admin/users.html" class="stat-card" style="text-decoration:none;transition:transform 0.2s">
+            <div style="font-size:24px;margin-bottom:8px">👥</div>
+            <strong>User Directory</strong>
+            <span class="text-sm text-muted">View all platform users</span>
+          </a>
+          <a href="../admin/verification.html" class="stat-card" style="text-decoration:none;transition:transform 0.2s">
+            <div style="font-size:24px;margin-bottom:8px">🛡️</div>
+            <strong>Verification</strong>
+            <span class="text-sm text-muted">Review providers applications</span>
+          </a>
+          <a href="../admin/audit-logs.html" class="stat-card" style="text-decoration:none;transition:transform 0.2s">
+            <div style="font-size:24px;margin-bottom:8px">📋</div>
+            <strong>Audit Log Viewer</strong>
+            <span class="text-sm text-muted">See recent server operations</span>
+          </a>
+          <a href="../admin/metrics.html" class="stat-card" style="text-decoration:none;transition:transform 0.2s">
+            <div style="font-size:24px;margin-bottom:8px">📊</div>
+            <strong>Detailed Metrics</strong>
+            <span class="text-sm text-muted">Status & category breakdowns</span>
+          </a>
+        </div>
       </div>
     </div>
 
     <!-- Providers Pending Verification -->
     <div class="mb-lg">
       <div class="page-header" style="margin-bottom:12px">
-        <h3 class="section-title" style="margin:0">Providers Pending Verification</h3>
+        <h3 class="section-title" style="margin:0">⏳ Providers Pending Verification</h3>
         <a href="../admin/verification.html" class="btn btn--ghost btn--sm">View All →</a>
       </div>
       <div id="pendingProviders">
@@ -63,7 +170,7 @@
     <!-- Recent Audit Logs -->
     <div>
       <div class="page-header" style="margin-bottom:12px">
-        <h3 class="section-title" style="margin:0">Recent Audit Events</h3>
+        <h3 class="section-title" style="margin:0">📋 Recent Audit Events</h3>
         <a href="../admin/audit-logs.html" class="btn btn--ghost btn--sm">View All →</a>
       </div>
       <div id="auditLogsList">
@@ -85,17 +192,43 @@ function esc(s) { const d = document.createElement('div'); d.textContent = s || 
 
 async function loadDashboard() {
   try {
-    const [dashRes, logsRes, catsRes] = await Promise.all([
+    const [dashRes, logsRes, metricsRes] = await Promise.all([
       Api.get('/admin/dashboard'),
       Api.get('/admin/audit-logs?per_page=5'),
-      Api.get('/admin/categories'),
+      Api.get('/admin/metrics'),
     ]);
 
     const dash = dashRes.data || {};
-    document.getElementById('totalProviders').textContent     = dash.total_providers      ?? '0';
-    document.getElementById('unverifiedProviders').textContent = dash.unverified_providers ?? '0';
-    document.getElementById('totalCategories').textContent    = (catsRes.data || []).filter(c => c.IS_ACTIVE !== false).length;
-    document.getElementById('totalAuditLogs').textContent     = logsRes.data?.total ?? '—';
+    const metrics = metricsRes.data || {};
+    const logs = logsRes.data?.logs || [];
+
+    // Core KPI values
+    document.getElementById('totalUsers').textContent           = metrics.total_users           ?? '0';
+    document.getElementById('unverifiedProviders').textContent  = dash.unverified_providers      ?? '0';
+    document.getElementById('totalRequests').textContent        = metrics.total_requests        ?? '0';
+    document.getElementById('totalReviews').textContent         = metrics.total_reviews         ?? '0';
+
+    // Render Weekly Usage chart
+    const weeklyRequests = metrics.weekly_requests || [];
+    const chartEl = document.getElementById('weeklyUsageChart');
+    if (!weeklyRequests.length) {
+      chartEl.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;width:100%;height:100%"><p class="text-muted">No weekly activity data found.</p></div>`;
+    } else {
+      const counts = weeklyRequests.map(w => parseInt(w.count));
+      const maxCount = Math.max(...counts) || 1;
+      
+      chartEl.innerHTML = weeklyRequests.map(w => {
+        const pct = Math.round((parseInt(w.count) / maxCount) * 100);
+        return `
+          <div class="chart-bar-container">
+            <div class="chart-bar" style="height:${pct}%">
+              <div class="chart-bar-tooltip">${w.count} requests</div>
+            </div>
+            <div class="chart-bar-label">Wk of ${w.week_start}</div>
+          </div>
+        `;
+      }).join('');
+    }
 
     // Pending providers
     const provRes     = await Api.get('/admin/providers');
@@ -103,36 +236,36 @@ async function loadDashboard() {
     const pendingEl   = document.getElementById('pendingProviders');
 
     if (!unverified.length) {
-      pendingEl.innerHTML = `<div class="empty-state"><p class="empty-state__text">✅ All providers are verified.</p></div>`;
+      pendingEl.innerHTML = `<div class="empty-state"><p class="empty-state__text">✅ All service providers verified.</p></div>`;
     } else {
       pendingEl.innerHTML = unverified.slice(0, 5).map(p => `
-        <div class="request-card mb-sm">
+        <div class="request-card mb-sm" style="border-left: 4px solid #f59e0b">
           <div class="request-card__header">
             <div>
               <div class="request-card__title">${esc(p.name)}</div>
               <div class="request-card__meta">
                 <span>📧 ${esc(p.email)}</span>
                 <span>📍 ${esc(p.location || '—')}</span>
+                <span>📞 ${esc(p.phone || '—')}</span>
               </div>
             </div>
-            <button class="btn btn--success btn--sm" onclick="verifyProvider('${p.id}', this)">✓ Verify</button>
+            <button class="btn btn--success btn--sm" onclick="verifyProvider('${p.id}', this)">✓ Verify & Approve</button>
           </div>
         </div>`).join('');
     }
 
-    // Audit logs
-    const logs   = logsRes.data?.logs || [];
+    // Audit logs table
     const logsEl = document.getElementById('auditLogsList');
     if (!logs.length) {
       logsEl.innerHTML = `<div class="empty-state"><p class="empty-state__text">No audit events yet.</p></div>`;
     } else {
       logsEl.innerHTML = `<div class="table-wrapper"><table class="data-table">
-        <thead><tr><th>Action</th><th>User</th><th>Entity</th><th>Time</th></tr></thead>
+        <thead><tr><th>Action</th><th>Actor</th><th>Resource</th><th>Date / Time</th></tr></thead>
         <tbody>
         ${logs.map(l => `<tr>
-          <td><code>${esc(l.action)}</code></td>
-          <td>${esc(l.user_name || '—')}</td>
-          <td>${esc(l.entity_type || '—')} ${l.entity_id ? `<small>#${l.entity_id.substring(0,8)}</small>` : ''}</td>
+          <td><code style="background:#e8f4ff;color:var(--color-primary);padding:3px 6px;border-radius:3px">${esc(l.action)}</code></td>
+          <td><strong>${esc(l.user_name || 'System')}</strong> <span class="badge badge--pending" style="font-size:10px">${esc(l.user_role || '—')}</span></td>
+          <td>${esc(l.entity_type || '—')} ${l.entity_id ? `<small class="text-muted">#${l.entity_id.substring(0,8)}</small>` : ''}</td>
           <td>${l.created_at ? new Date(l.created_at).toLocaleString() : '—'}</td>
         </tr>`).join('')}
         </tbody>
@@ -144,17 +277,17 @@ async function loadDashboard() {
 }
 
 window.verifyProvider = async function(providerId, btn) {
-  if (!confirm('Verify this provider?')) return;
+  if (!confirm('Verify and approve this service provider?')) return;
   btn.disabled = true;
   btn.textContent = 'Verifying...';
   try {
     await Api.patch(`/admin/providers/${providerId}/verify`);
-    Toast.success('Provider verified!');
+    Toast.success('Provider verified successfully!');
     loadDashboard();
   } catch (err) {
-    Toast.error(err.message || 'Failed to verify.');
+    Toast.error(err.message || 'Failed to verify provider.');
     btn.disabled = false;
-    btn.textContent = '✓ Verify';
+    btn.textContent = '✓ Verify & Approve';
   }
 };
 
@@ -162,6 +295,12 @@ async function init() {
   const ok = await Auth.load();
   if (!ok || !Auth.requireAuth(['admin'])) return;
   Layout.renderShell('admin', 'dashboard', 'dashboard');
+  
+  document.getElementById('refreshBtn').addEventListener('click', () => {
+    Toast.success('Refreshing dashboard content...');
+    loadDashboard();
+  });
+  
   await loadDashboard();
 }
 

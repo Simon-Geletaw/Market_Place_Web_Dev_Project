@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en" data-role="admin">
+<head>
+  <meta charset="UTF-8">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230066CC'/%3E%3Cpath d='M10 16L14.5 20.5L22 11' stroke='%23ffffff' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round' fill='none'/%3E%3C/svg%3E">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>User Directory — ServiceLink Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../assets/css/main.css">
+  <link rel="stylesheet" href="../../assets/css/components.css">
+  <script src="../../core/guard.js"></script>
+</head>
+<body>
+<header id="app-header"></header>
+<div class="app-shell">
+  <aside id="app-sidebar"></aside>
+  <main class="app-content">
+    <div class="page-header">
+      <div>
+        <div class="page-header__title">User Directory</div>
+        <div class="page-header__subtitle">Manage and view all registered platform users</div>
+      </div>
+    </div>
+
+    <!-- Search and filter card -->
+    <div class="card mb-lg" style="padding:var(--space-md)">
+      <div style="display:flex;gap:var(--space-md);flex-wrap:wrap;align-items:center">
+        <div style="flex:1;min-width:260px">
+          <input type="text" class="form-input" id="searchQuery" placeholder="🔍 Search by name, email, phone or location...">
+        </div>
+        <div style="width:200px">
+          <select class="form-select" id="filterRole">
+            <option value="all">All Roles</option>
+            <option value="Customer">Customers</option>
+            <option value="Provider">Providers</option>
+            <option value="Admin">Admins</option>
+          </select>
+        </div>
+        <div style="width:200px">
+          <select class="form-select" id="filterVerification">
+            <option value="all">All Statuses</option>
+            <option value="verified">Verified (Providers)</option>
+            <option value="pending">Unverified (Providers)</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div id="usersList">
+      <div class="empty-state"><div class="spinner spinner--dark"></div><p>Loading users directory...</p></div>
+    </div>
+  </main>
+</div>
+
+<!-- Details Modal -->
+<div class="modal-overlay" id="userModal">
+  <div class="modal" style="max-width:540px" role="dialog" aria-modal="true" aria-labelledby="modalTitleUser">
+    <div class="modal__header">
+      <h2 class="modal__title" id="modalTitleUser">User Profile Details</h2>
+      <button class="modal__close" id="closeModalBtn" aria-label="Close modal">✕</button>
+    </div>
+    <div class="modal__body" id="modalBody"></div>
+    <div class="modal__footer">
+      <button class="btn btn--secondary" id="closeModalBtnFooter">Close</button>
+      <div id="modalVerifyAction"></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<script type="module">
+import Api    from '../../core/api.js';
+import Auth   from '../../core/auth.js';
+import Toast  from '../../core/toast.js';
+import Layout from '../../core/layout.js';
+
+function esc(s) { const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
+
+let users = [];
+
+async function loadUsers() {
+  const el = document.getElementById('usersList');
+  try {
+    const res = await Api.get('/admin/users');
+    users = res.data || [];
+    render();
+  } catch (err) {
+    el.innerHTML = `<div class="empty-state"><p class="text-muted">${esc(err.message || 'Could not load user directory.')}</p></div>`;
+  }
+}
+
+function render() {
+  const query = document.getElementById('searchQuery').value.toLowerCase().trim();
+  const roleFilter = document.getElementById('filterRole').value;
+  const verFilter = document.getElementById('filterVerification').value;
+  const el = document.getElementById('usersList');
+
+  const filtered = users.filter(u => {
+    // Search match
+    const searchStr = `${u.name} ${u.email} ${u.phone || ''} ${u.location || ''}`.toLowerCase();
+    if (query && !searchStr.includes(query)) return false;
+
+    // Role filter
+    if (roleFilter !== 'all' && u.role !== roleFilter) return false;
+
+    // Verification filter (only concerns providers)
+    if (verFilter === 'verified' && (u.role !== 'Provider' || !u.is_verified)) return false;
+    if (verFilter === 'pending' && u.role === 'Provider' && u.is_verified) return false;
+    if (verFilter === 'pending' && u.role !== 'Provider') return false; // Non-providers can't have verified pending status
+
+    return true;
+  });
+
+  if (!filtered.length) {
+    el.innerHTML = `<div class="empty-state"><div class="empty-state__icon">🔍</div><p class="empty-state__text">No users match your criteria.</p></div>`;
+    return;
+  }
+
+  el.innerHTML = `<div class="table-wrapper"><table class="data-table">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Email</th>
+        <th>Role</th>
+        <th>Location</th>
+        <th>Verification</th>
+        <th>Joined</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      ${filtered.map(u => {
+        let badgeClass = 'badge--requested';
+        if (u.role === 'Provider') badgeClass = 'badge--negotiating';
+        if (u.role === 'Admin') badgeClass = 'badge--completed';
+
+        return `<tr>
+          <td><strong>${esc(u.name)}</strong></td>
+          <td>${esc(u.email)}</td>
+          <td><span class="badge ${badgeClass}">${esc(u.role)}</span></td>
+          <td>${esc(u.location || '—')}</td>
+          <td>
+            ${u.role === 'Provider' 
+              ? `<span class="badge ${u.is_verified ? 'badge--assigned' : 'badge--requested'}">${u.is_verified ? 'Verified' : 'Pending'}</span>`
+              : '<span class="text-muted">—</span>'
+            }
+          </td>
+          <td class="text-sm text-muted">${u.created_at ? new Date(u.created_at).toLocaleDateString() : '—'}</td>
+          <td>
+            <button class="btn btn--secondary btn--sm" onclick="viewUser('${u.id}')">Details</button>
+          </td>
+        </tr>`;
+      }).join('')}
+    </tbody>
+  </table></div>`;
+}
+
+window.viewUser = function(id) {
+  const u = users.find(x => x.id === id);
+  if (!u) return;
+
+  let detailsHtml = `
+    <div class="info-grid">
+      <div class="info-row"><span class="info-row__label">Full Name</span><span class="info-row__val">${esc(u.name)}</span></div>
+      <div class="info-row"><span class="info-row__label">Email</span><span class="info-row__val">${esc(u.email)}</span></div>
+      <div class="info-row"><span class="info-row__label">Phone</span><span class="info-row__val">${esc(u.phone || '—')}</span></div>
+      <div class="info-row"><span class="info-row__label">Location</span><span class="info-row__val">${esc(u.location || '—')}</span></div>
+      <div class="info-row"><span class="info-row__label">Role</span><span class="info-row__val"><span class="badge">${esc(u.role)}</span></span></div>
+      <div class="info-row"><span class="info-row__label">Member Since</span><span class="info-row__val">${u.created_at ? new Date(u.created_at).toLocaleString() : '—'}</span></div>
+  `;
+
+  if (u.role === 'Provider') {
+    detailsHtml += `
+      <div class="info-row"><span class="info-row__label">Status</span><span class="info-row__val">${u.is_verified ? 'Verified Provider ✅' : 'Verification Pending ⏳'}</span></div>
+      <div class="info-row"><span class="info-row__label">Rating</span><span class="info-row__val">${u.rating_average > 0 ? parseFloat(u.rating_average).toFixed(1) + ' ⭐ (' + u.total_reviews + ' reviews)' : 'No reviews yet'}</span></div>
+    `;
+  }
+
+  detailsHtml += `</div>`;
+  document.getElementById('modalBody').innerHTML = detailsHtml;
+
+  const actionEl = document.getElementById('modalVerifyAction');
+  if (u.role === 'Provider' && !u.is_verified) {
+    actionEl.innerHTML = `<button class="btn btn--success" onclick="verifyUserInModal('${u.id}', this)">✓ Approve Provider</button>`;
+  } else {
+    actionEl.innerHTML = '';
+  }
+
+  document.getElementById('userModal').classList.add('open');
+};
+
+window.verifyUserInModal = async function(id, btn) {
+  if (!confirm('Approve and verify this service provider?')) return;
+  const orig = btn.textContent;
+  btn.disabled = true; btn.textContent = 'Approving...';
+  try {
+    await Api.patch(`/admin/providers/${id}/verify`);
+    Toast.success('Provider approved successfully!');
+    document.getElementById('userModal').classList.remove('open');
+    loadUsers();
+  } catch (err) {
+    Toast.error(err.message || 'Failed to approve provider.');
+    btn.disabled = false; btn.textContent = orig;
+  }
+};
+
+async function init() {
+  const ok = await Auth.load();
+  if (!ok || !Auth.requireAuth(['admin'])) return;
+  Layout.renderShell('admin', 'users', 'admin');
+
+  document.getElementById('searchQuery').addEventListener('input', render);
+  document.getElementById('filterRole').addEventListener('change', render);
+  document.getElementById('filterVerification').addEventListener('change', render);
+
+  const close = () => document.getElementById('userModal').classList.remove('open');
+  document.getElementById('closeModalBtn').addEventListener('click', close);
+  document.getElementById('closeModalBtnFooter').addEventListener('click', close);
+
+  loadUsers();
+}
+
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+else init();
+</script>
+</body>
+</html>

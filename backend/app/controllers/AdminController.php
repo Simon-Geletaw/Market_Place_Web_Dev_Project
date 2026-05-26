@@ -139,4 +139,11 @@ final class AdminController
         $data = $this->adminService->listProviders();
         return success_response('Providers retrieved.', $data);
     }
+
+    // GET /api/admin/users
+    public function users(): array
+    {
+        $data = $this->adminService->listUsers();
+        return success_response('Users retrieved.', $data);
+    }
 }

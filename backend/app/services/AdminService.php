@@ -73,6 +73,25 @@ final class AdminService
         }, $rows);
     }
 
+    public function listUsers(): array
+    {
+        $rows = $this->users->findAll();
+        return array_map(function (array $row): array {
+            return [
+                'id'             => $row['USER_ID'],
+                'name'           => $row['NAME'],
+                'email'          => $row['EMAIL'],
+                'role'           => $row['ROLE'],
+                'phone'          => $row['PHONE']          ?? null,
+                'location'       => $row['LOCATION']       ?? null,
+                'rating_average' => (float) ($row['RATING_AVERAGE'] ?? 0.0),
+                'total_reviews'  => (int)   ($row['TOTAL_REVIEWS']  ?? 0),
+                'is_verified'    => (bool)   $row['IS_VERIFIED'],
+                'created_at'     => $row['CREATED_AT'],
+            ];
+        }, $rows);
+    }
+
     // ------------------------------------------------------------------
     // Audit logs
     // ------------------------------------------------------------------
@@ -163,6 +182,7 @@ final class AdminService
             'users_by_role' => $this->metrics->usersByRole(),
             'requests_by_status' => $this->metrics->requestsByStatus(),
             'requests_by_category' => $this->metrics->requestsByCategory(),
+            'weekly_requests' => $this->metrics->weeklyRequestsCreated(),
         ]);
     }
 }

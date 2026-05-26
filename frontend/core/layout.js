@@ -35,6 +35,7 @@ const ICONS = {
   shield:     '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>',
   audit:      '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>',
   metrics:    '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>',
+  bell:       '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>',
 };
 
 function icon(name) {
@@ -112,26 +113,29 @@ const Layout = {
 
     const menus = {
       customer: [
-        { id: 'dashboard', icon: 'dashboard', label: 'Dashboard',       href: url('/frontend/pages/dashboard/customer.html') },
-        { id: 'requests',  icon: 'requests',  label: 'My Requests',     href: url('/frontend/pages/customer/my-requests.html') },
-        { id: 'reviews',   icon: 'reviews',    label: 'Reviews Given',   href: url('/frontend/pages/customer/reviews-given.html') },
-        { id: 'settings',  icon: 'settings',   label: 'Settings',        href: url('/frontend/pages/settings.html') },
+        { id: 'dashboard',     icon: 'dashboard', label: 'Dashboard',       href: url('/frontend/pages/dashboard/customer.html') },
+        { id: 'requests',      icon: 'requests',  label: 'My Requests',     href: url('/frontend/pages/customer/my-requests.html') },
+        { id: 'notifications', icon: 'bell',      label: 'Notifications',   href: url('/frontend/pages/notifications.html') },
+        { id: 'reviews',       icon: 'reviews',   label: 'Reviews Given',   href: url('/frontend/pages/customer/reviews-given.html') },
+        { id: 'settings',      icon: 'settings',  label: 'Settings',        href: url('/frontend/pages/settings.html') },
       ],
       provider: [
-        { id: 'dashboard', icon: 'dashboard', label: 'Dashboard',        href: url('/frontend/pages/dashboard/provider.html') },
-        { id: 'browse',    icon: 'browse',     label: 'Browse Requests', href: url('/frontend/pages/marketplace.html') },
-        { id: 'my-offers', icon: 'offers',     label: 'My Offers',       href: url('/frontend/pages/provider/my-offers.html') },
-        { id: 'assigned',  icon: 'assigned',   label: 'Assigned Jobs',   href: url('/frontend/pages/provider/assigned-jobs.html') },
-        { id: 'completed', icon: 'completed',  label: 'Completed Jobs',  href: url('/frontend/pages/provider/completed-jobs.html') },
-        { id: 'reviews',   icon: 'reviews',    label: 'Reviews',         href: url('/frontend/pages/provider/reviews-received.html') },
-        { id: 'settings',  icon: 'settings',   label: 'Settings',        href: url('/frontend/pages/settings.html') },
+        { id: 'dashboard',     icon: 'dashboard', label: 'Dashboard',        href: url('/frontend/pages/dashboard/provider.html') },
+        { id: 'browse',        icon: 'browse',    label: 'Browse Requests',  href: url('/frontend/pages/marketplace.html') },
+        { id: 'my-offers',     icon: 'offers',    label: 'My Offers',        href: url('/frontend/pages/provider/my-offers.html') },
+        { id: 'assigned',      icon: 'assigned',  label: 'Assigned Jobs',    href: url('/frontend/pages/provider/assigned-jobs.html') },
+        { id: 'completed',     icon: 'completed', label: 'Completed Jobs',   href: url('/frontend/pages/provider/completed-jobs.html') },
+        { id: 'notifications', icon: 'bell',      label: 'Notifications',    href: url('/frontend/pages/notifications.html') },
+        { id: 'reviews',       icon: 'reviews',   label: 'Reviews',          href: url('/frontend/pages/provider/reviews-received.html') },
+        { id: 'settings',      icon: 'settings',  label: 'Settings',         href: url('/frontend/pages/settings.html') },
       ],
       admin: [
-        { id: 'dashboard',    icon: 'overview',  label: 'Overview',              href: url('/frontend/pages/dashboard/admin.html') },
-        { id: 'verification', icon: 'shield',    label: 'Provider Verification', href: url('/frontend/pages/admin/verification.html') },
-        { id: 'audit-logs',   icon: 'audit',     label: 'Audit Logs',            href: url('/frontend/pages/admin/audit-logs.html') },
-        { id: 'metrics',      icon: 'metrics',   label: 'Metrics',               href: url('/frontend/pages/admin/metrics.html') },
-        { id: 'settings',     icon: 'settings',  label: 'Settings',              href: url('/frontend/pages/settings.html') },
+        { id: 'dashboard',     icon: 'overview',  label: 'Overview',              href: url('/frontend/pages/dashboard/admin.html') },
+        { id: 'users',         icon: 'browse',    label: 'User Directory',        href: url('/frontend/pages/admin/users.html') },
+        { id: 'verification',  icon: 'shield',    label: 'Provider Verification', href: url('/frontend/pages/admin/verification.html') },
+        { id: 'audit-logs',    icon: 'audit',     label: 'Audit Logs',            href: url('/frontend/pages/admin/audit-logs.html') },
+        { id: 'metrics',       icon: 'metrics',   label: 'Metrics',               href: url('/frontend/pages/admin/metrics.html') },
+        { id: 'settings',      icon: 'settings',  label: 'Settings',              href: url('/frontend/pages/settings.html') },
       ],
     };
 
@@ -142,9 +146,10 @@ const Layout = {
       <div class="sidebar">
         <div class="sidebar__label">${escHtml(roleLabel)} Menu</div>
         ${items.map(item => `
-          <a href="${item.href}" class="sidebar__item ${activeItem === item.id ? 'active' : ''}">
+          <a href="${item.href}" class="sidebar__item ${activeItem === item.id ? 'active' : ''}" id="sidebarItem-${item.id}">
             ${icon(item.icon)}
-            ${escHtml(item.label)}
+            <span class="sidebar__item-label">${escHtml(item.label)}</span>
+            ${item.id === 'notifications' ? '<span class="notif-badge" id="sidebarNotifBadge" style="display:none">0</span>' : ''}
           </a>
         `).join('')}
         <div class="sidebar__footer">
@@ -159,6 +164,39 @@ const Layout = {
   renderShell(role = 'customer', activeSidebar = '', activeNavbar = 'dashboard') {
     this.renderNavbar('app-header', activeNavbar);
     this.renderSidebar('app-sidebar', role, activeSidebar);
+    this.loadNotifBadge();
+  },
+
+  async loadNotifBadge() {
+    const badge = document.getElementById('sidebarNotifBadge');
+    if (!badge) return;
+
+    const refresh = async () => {
+      try {
+        const origin = window.location.origin;
+        const parts  = window.location.pathname.split('/frontend/');
+        const prefix = parts.length > 1 ? parts[0] : '';
+        const res    = await fetch(`${origin}${prefix}/backend/public/api/notifications`, {
+          credentials: 'include'
+        });
+        if (!res.ok) return;
+        const json   = await res.json();
+        const items  = Array.isArray(json.data) ? json.data : [];
+        const unread = items.filter(n => n.is_read === false || n.is_read === 0).length;
+        if (unread > 0) {
+          badge.textContent  = unread > 99 ? '99+' : String(unread);
+          badge.style.display = 'inline-flex';
+        } else {
+          badge.style.display = 'none';
+        }
+      } catch {
+        // Silent fail — badge just won't appear
+      }
+    };
+
+    await refresh();
+    const timer = setInterval(refresh, 60_000);
+    window.addEventListener('pagehide', () => clearInterval(timer), { once: true });
   },
 };
 

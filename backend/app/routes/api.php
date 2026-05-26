@@ -29,6 +29,17 @@ return [
     ],
 
     // ----------------------------------------------------------------
+    // Public stats for landing page (no auth)
+    // ----------------------------------------------------------------
+    [
+        'method'     => 'GET',
+        'path'       => '/api/stats',
+        'controller' => PublicStatsController::class,
+        'action'     => 'stats',
+        'middleware' => [],
+    ],
+
+    // ----------------------------------------------------------------
     // Authentication  (no auth required — guest endpoints)
     // ----------------------------------------------------------------
     [
@@ -135,6 +146,13 @@ return [
         'middleware' => ['auth', 'role:customer', 'validate:request_create'],
     ],
     [
+        'method'     => 'DELETE',
+        'path'       => '/api/requests/{id}',
+        'controller' => RequestController::class,
+        'action'     => 'cancel',
+        'middleware' => ['auth', 'role:customer'],
+    ],
+    [
         'method'     => 'GET',
         'path'       => '/api/requests/{id}',
         'controller' => RequestController::class,
@@ -212,6 +230,22 @@ return [
         'controller' => OfferController::class,
         'action'     => 'counter',
         'middleware' => ['auth', 'role:customer', 'validate:offer_counter'],
+    ],
+
+    // Provider responds to customer's counter-offer
+    [
+        'method'     => 'PATCH',
+        'path'       => '/api/offers/{id}/accept-counter',
+        'controller' => OfferController::class,
+        'action'     => 'acceptCounter',
+        'middleware' => ['auth', 'role:provider'],
+    ],
+    [
+        'method'     => 'PATCH',
+        'path'       => '/api/offers/{id}/revise',
+        'controller' => OfferController::class,
+        'action'     => 'revise',
+        'middleware' => ['auth', 'role:provider'],
     ],
 
     // ----------------------------------------------------------------
@@ -336,6 +370,13 @@ return [
         'path'       => '/api/admin/providers',
         'controller' => AdminController::class,
         'action'     => 'providers',
+        'middleware' => ['auth', 'role:admin'],
+    ],
+    [
+        'method'     => 'GET',
+        'path'       => '/api/admin/users',
+        'controller' => AdminController::class,
+        'action'     => 'users',
         'middleware' => ['auth', 'role:admin'],
     ],
     [
