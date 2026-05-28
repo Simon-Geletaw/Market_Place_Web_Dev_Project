@@ -2,6 +2,7 @@
 <html lang="en" data-role="customer">
 <head>
   <meta charset="UTF-8">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230066CC'/%3E%3Cpath d='M10 16L14.5 20.5L22 11' stroke='%23ffffff' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round' fill='none'/%3E%3C/svg%3E">
   <meta name="viewport" content="width=device-width,initial-scale=1.0">
   <meta name="description" content="Manage your service requests, track offers, and connect with providers.">
   <title>Customer Dashboard — ServiceLink</title>
@@ -210,6 +211,14 @@
           <label class="form-label">Budget (ETB)</label>
           <input class="form-input" type="number" id="crBudget" placeholder="Optional estimated budget" min="0" step="0.01">
         </div>
+        <div class="form-group">
+          <label class="form-label">Location *</label>
+          <input class="form-input" type="text" id="crLocation" placeholder="e.g. Bole, Addis Ababa" maxlength="255">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Preferred Date <span style="font-weight:400;color:var(--color-text-muted)">(optional)</span></label>
+          <input class="form-input" type="date" id="crDate">
+        </div>
         <div id="createFormError" class="form-error" style="display:none"></div>
       </form>
     </div>
@@ -276,7 +285,6 @@ async function loadRequests() {
   try {
     const res      = await Api.get(`/requests?status=${encodeURIComponent(status)}&sort=${sort}`);
     const requests = Array.isArray(res.data) ? res.data : [];
-    updateStats(requests);
     if (!requests.length) {
       list.innerHTML = `<div class="empty-card">
         <div class="empty-card__icon">${IC.empty}</div>
@@ -293,12 +301,17 @@ async function loadRequests() {
   }
 }
 
-function updateStats(requests) {
-  const count = s => requests.filter(r => r.status === s).length;
-  document.getElementById('cntRequested').textContent  = count('Requested');
-  document.getElementById('cntNegotiating').textContent = count('Negotiating');
-  document.getElementById('cntAssigned').textContent   = count('Assigned');
-  document.getElementById('cntCompleted').textContent  = count('Completed');
+// Fetch ALL requests (unfiltered) to populate stat cards independently of the list filter
+async function loadStats() {
+  try {
+    const res = await Api.get('/requests');
+    const all = Array.isArray(res.data) ? res.data : [];
+    const count = s => all.filter(r => r.status === s).length;
+    document.getElementById('cntRequested').textContent  = count('Requested');
+    document.getElementById('cntNegotiating').textContent = count('Negotiating');
+    document.getElementById('cntAssigned').textContent   = count('Assigned');
+    document.getElementById('cntCompleted').textContent  = count('Completed') + count('Reviewed');
+  } catch { /* stat cards keep their current value */ }
 }
 
 function renderCard(r) {
@@ -307,6 +320,7 @@ function renderCard(r) {
     : (r.description || 'Untitled'));
 
   const actionMap = {
+    Requested:   `<button class="btn btn--danger btn--sm" onclick="window._cancelRequest('${r.id}')">Cancel</button>`,
     Negotiating: `<a href="../request-detail.html?id=${r.id}" class="btn btn--ghost btn--sm">Manage Offers</a>`,
     Assigned:    `<a href="../request-detail.html?id=${r.id}" class="btn btn--ghost btn--sm">Track Progress</a>`,
     Completed:   `<a href="../request-detail.html?id=${r.id}" class="btn btn--secondary btn--sm">Leave Review</a>`,
@@ -319,9 +333,10 @@ function renderCard(r) {
       <span class="badge ${BADGE[r.status] || ''}">${esc(r.status)}</span>
     </div>
     <div class="job-card__meta">
-      <span class="job-card__meta-item">${IC.pin} ${esc(r.location || 'N/A')}</span>
+      <span class="job-card__meta-item">${IC.pin} ${esc(r.location || '—')}</span>
       <span class="job-card__meta-item">${IC.tag} ${esc(r.category_name || r.category || 'N/A')}</span>
       <span class="job-card__meta-item">${IC.cal} ${r.created_at ? new Date(r.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'N/A'}</span>
+      ${r.preferred_date ? `<span class="job-card__meta-item">${IC.cal} Preferred: ${new Date(r.preferred_date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>` : ''}
       ${r.offer_count > 0 ? `<span class="job-card__meta-item">${IC.offers} ${r.offer_count} offer${r.offer_count > 1 ? 's' : ''}</span>` : ''}
     </div>
     <p class="job-card__desc">${esc(r.description || '')}</p>
@@ -337,6 +352,20 @@ function esc(s) {
   d.textContent = s || '';
   return d.innerHTML;
 }
+
+// ── Cancel request (Feature 2) ────────────────────────────────────────
+async function cancelRequest(id) {
+  if (!confirm('Cancel this request? This cannot be undone.')) return;
+  try {
+    await Api.delete('/requests/' + id);
+    Toast.success('Request cancelled.');
+    loadStats();
+    loadRequests();
+  } catch (err) {
+    Toast.error(err.message || 'Could not cancel request.');
+  }
+}
+window._cancelRequest = cancelRequest;
 
 // -----------------------------------------------------------------------
 // Modal controls
@@ -361,6 +390,14 @@ async function submitRequest() {
     description: document.getElementById('crDesc').value.trim()
   };
 
+  // Location (required)
+  const location = document.getElementById('crLocation').value.trim();
+  body.location = location;
+
+  // Preferred date (optional)
+  const prefDate = document.getElementById('crDate').value;
+  if (prefDate) body.preferred_date = prefDate;
+
   // Add title if provided
   const title = document.getElementById('crTitle').value.trim();
   if (title) body.title = title;
@@ -380,6 +417,7 @@ async function submitRequest() {
   const errs = [];
   if (!categoryValue) errs.push('Please select a category.');
   if (body.description.length < 10) errs.push('Description must be at least 10 characters.');
+  if (!location) errs.push('Please enter a location for the job.');
   if (errs.length) {
     errEl.textContent = errs[0];
     errEl.style.display = 'block';
@@ -395,6 +433,7 @@ async function submitRequest() {
       Toast.success('Request posted successfully!');
       closeCreateModal();
       document.getElementById('createForm').reset();
+      loadStats();
       loadRequests();
     } else {
       errEl.textContent = result.message || 'Failed to post request.';
@@ -430,6 +469,9 @@ async function init() {
   document.getElementById('closeCreateBtn').addEventListener('click', closeCreateModal);
   document.getElementById('createBtn').addEventListener('click', submitRequest);
 
+  // Set minimum date to today
+  document.getElementById('crDate').min = new Date().toISOString().slice(0, 10);
+
   document.querySelectorAll('.stat-card').forEach(card => {
     card.addEventListener('click', () => filterRequests(card.dataset.filter));
   });
@@ -440,6 +482,7 @@ async function init() {
   });
 
   await loadCategories();
+  loadStats();
   await loadRequests();
 }
 

@@ -41,7 +41,7 @@
 
 /* ── Status Badges ── */
 .badge{display:inline-flex;align-items:center;padding:4px 12px;border-radius:var(--radius-pill);font-size:12px;font-weight:600;text-transform:capitalize}
-.badge--requested{background:#e8f4ff;color:#0066aa}
+.badge--requested{background:#e8f4ff;color:#e6f0f8}
 .badge--negotiating{background:#fff4e0;color:#b36a00}
 .badge--assigned{background:#e8f5eb;color:#1a7a32}
 .badge--completed{background:#e0faf4;color:#0f7a5a}

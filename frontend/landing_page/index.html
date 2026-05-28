@@ -1,293 +1,417 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<meta name="description" content="ServiceLink connects customers with trusted local service providers for repairs, cleaning, and home projects.">
-	<title>ServiceLink — Local Service Marketplace</title>
+  <meta charset="UTF-8">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230066CC'/%3E%3Cpath d='M10 16L14.5 20.5L22 11' stroke='%23ffffff' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round' fill='none'/%3E%3C/svg%3E">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="ServiceLink connects customers with trusted local service providers for repairs, cleaning, and home projects.">
+  <title>ServiceLink — Local Service Marketplace</title>
 
-	<link rel="preconnect" href="https://fonts.googleapis.com">
-	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-
-	<link rel="stylesheet" href="styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
-	<!-- Navbar -->
-	<header class="navbar" id="navbar">
-		<div class="container navbar__inner">
-			<a class="navbar__logo" href="index.html" aria-label="ServiceLink home">
-				Service<span class="navbar__logo-accent">Link</span>
-			</a>
+  <!--  NAVBAR  -->
+  <header class="navbar" id="navbar">
+    <div class="container navbar__inner">
 
-			<nav class="navbar__nav" id="navbarMenu">
-				<ul class="navbar__list">
-					<li><a href="#hero" class="navbar__link">Home</a></li>
-					<li><a href="#categories" class="navbar__link">Services</a></li>
-					<li><a href="#how-it-works" class="navbar__link">How It Works</a></li>
-					<li><a href="#stats" class="navbar__link">Impact</a></li>
-					<li><a href="#testimonials" class="navbar__link">Testimonials</a></li>
-				</ul>
-				<div class="navbar__actions">
-					<a href="../login/index.html" class="btn btn--ghost">Log In</a>
-					<a href="../register/index.html" class="btn btn--primary">Sign Up Free</a>
-				</div>
-			</nav>
+      <a class="navbar__logo" href="index.html" aria-label="ServiceLink home">
+        <svg class="navbar__logo-icon" width="34" height="34" viewBox="0 0 32 32" fill="none">
+          <rect width="32" height="32" rx="8" fill="#0066CC"/>
+          <path d="M10 16L14.5 20.5L22 11" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Service<span class="navbar__logo-accent">Link</span>
+      </a>
 
-			<button class="navbar__toggle" id="navToggle" aria-expanded="false" aria-label="Toggle navigation">
-				<span class="navbar__toggle-bar"></span>
-				<span class="navbar__toggle-bar"></span>
-				<span class="navbar__toggle-bar"></span>
-			</button>
-		</div>
-	</header>
+      <!-- Desktop Nav Links — each carries data-tab -->
+      <nav class="navbar__nav" aria-label="Main navigation">
+        <ul class="navbar__list">
+          <li><a href="#home"     data-tab="home"     class="navbar__link active">Home</a></li>
+          <li><a href="#services" data-tab="services" class="navbar__link">Services</a></li>
+          <li><a href="#how"      data-tab="how"      class="navbar__link">How It Works</a></li>
+          <li><a href="#reviews"  data-tab="reviews"  class="navbar__link">Reviews</a></li>
+        </ul>
+      </nav>
 
-	<!-- Hero -->
-	<section class="hero" id="hero">
-		<div class="hero__shape hero__shape--circle"></div>
-		<div class="hero__shape hero__shape--dots"></div>
-		<div class="container hero__inner">
-			<div>
-				<span class="hero__badge">Trusted Local Marketplace</span>
-				<h1 class="hero__title">Find the right local pro in <span class="hero__title-accent">minutes</span></h1>
-				<p class="hero__subtitle">Post a request, compare offers, and hire verified providers with confidence. From quick repairs to full projects, ServiceLink makes it simple.</p>
-				<div class="hero__cta-group">
-					<a href="../register/index.html" class="btn btn--primary btn--lg">Post a Request</a>
-					<a href="../login/index.html" class="btn btn--ghost btn--lg">I am a Provider</a>
-				</div>
-				<div class="hero__trust">
-					<div class="hero__trust-avatars">
-						<div class="hero__avatar hero__avatar--blue">AF</div>
-						<div class="hero__avatar hero__avatar--green">MM</div>
-						<div class="hero__avatar hero__avatar--amber">KD</div>
-					</div>
-					<div class="hero__trust-text">2,000+ homeowners trust ServiceLink for local services.</div>
-				</div>
-			</div>
-			<div class="hero__visual">
-				<div class="hero__card hero__card--1">
-					<div class="hero__card-icon">⚡</div>
-					<div>
-						<span class="hero__card-title">Fast Matching</span>
-						<span class="hero__card-meta">Offers in minutes</span>
-					</div>
-				</div>
-				<div class="hero__card hero__card--2">
-					<div class="hero__card-icon">✅</div>
-					<div>
-						<span class="hero__card-title">Verified Providers</span>
-						<span class="hero__card-meta">Background checked</span>
-					</div>
-				</div>
-				<div class="hero__card hero__card--3">
-					<div class="hero__card-icon">⭐</div>
-					<div>
-						<span class="hero__card-title">4.8 Avg Rating</span>
-						<span class="hero__card-meta">500+ reviews</span>
-					</div>
-				</div>
-			</div>
-		</div>
-		<div class="hero__wave" aria-hidden="true">
-			<svg viewBox="0 0 1440 120" xmlns="http://www.w3.org/2000/svg"><path fill="#ffffff" d="M0,64L60,69.3C120,75,240,85,360,85.3C480,85,600,75,720,69.3C840,64,960,64,1080,58.7C1200,53,1320,43,1380,37.3L1440,32L1440,120L0,120Z"></path></svg>
-		</div>
-	</section>
+      <div class="navbar__actions">
+        <a href="../login/index.html"    class="btn-nav btn-nav--ghost">Log In</a>
+        <a href="../register/index.html" class="btn-nav btn-nav--primary">Sign Up Free</a>
+      </div>
 
-	<!-- Categories -->
-	<section class="categories" id="categories">
-		<div class="container">
-			<div class="section-header">
-				<span class="section-header__tag">Popular Services</span>
-				<h2 class="section-header__title">Choose a category and get offers fast</h2>
-				<p class="section-header__subtitle">Post a request in minutes and connect with trusted professionals near you.</p>
-			</div>
-			<div class="categories__grid">
-				<div class="category-card">
-					<div class="category-card__icon-wrap"><span class="category-card__icon">🔧</span></div>
-					<div class="category-card__title">Plumbing</div>
-					<div class="category-card__desc">Leaks, installations, and repairs for kitchens and bathrooms.</div>
-					<div class="category-card__count">120+ pros</div>
-				</div>
-				<div class="category-card">
-					<div class="category-card__icon-wrap"><span class="category-card__icon">⚡</span></div>
-					<div class="category-card__title">Electrical</div>
-					<div class="category-card__desc">Wiring, lighting upgrades, and electrical troubleshooting.</div>
-					<div class="category-card__count">95+ pros</div>
-				</div>
-				<div class="category-card">
-					<div class="category-card__icon-wrap"><span class="category-card__icon">🪚</span></div>
-					<div class="category-card__title">Carpentry</div>
-					<div class="category-card__desc">Custom builds, repairs, and finish work by experts.</div>
-					<div class="category-card__count">80+ pros</div>
-				</div>
-				<div class="category-card">
-					<div class="category-card__icon-wrap"><span class="category-card__icon">🧹</span></div>
-					<div class="category-card__title">Cleaning</div>
-					<div class="category-card__desc">Home, office, and deep cleaning packages on demand.</div>
-					<div class="category-card__count">110+ pros</div>
-				</div>
-				<div class="category-card">
-					<div class="category-card__icon-wrap"><span class="category-card__icon">🎨</span></div>
-					<div class="category-card__title">Painting</div>
-					<div class="category-card__desc">Interior, exterior, and finishing services by pros.</div>
-					<div class="category-card__count">70+ pros</div>
-				</div>
-				<div class="category-card">
-					<div class="category-card__icon-wrap"><span class="category-card__icon">🛠️</span></div>
-					<div class="category-card__title">Handyman</div>
-					<div class="category-card__desc">Quick fixes and maintenance for busy homes.</div>
-					<div class="category-card__count">140+ pros</div>
-				</div>
-			</div>
-		</div>
-	</section>
+    </div>
+  </header>
 
-	<!-- How It Works -->
-	<section class="how-it-works" id="how-it-works">
-		<div class="container">
-			<div class="section-header">
-				<span class="section-header__tag">How It Works</span>
-				<h2 class="section-header__title">Post, compare, hire — in three steps</h2>
-				<p class="section-header__subtitle">Move from request to completion with full transparency at each step.</p>
-			</div>
-			<div class="hiw__steps">
-				<div class="hiw__step">
-					<div class="hiw__step-number">1</div>
-					<div class="hiw__step-icon">📝</div>
-					<div class="hiw__step-title">Post a Request</div>
-					<div class="hiw__step-desc">Describe the job, choose a category, and set your location.</div>
-				</div>
-				<div class="hiw__connector">→</div>
-				<div class="hiw__step">
-					<div class="hiw__step-number">2</div>
-					<div class="hiw__step-icon">💬</div>
-					<div class="hiw__step-title">Compare Offers</div>
-					<div class="hiw__step-desc">Review pricing and profiles from local verified providers.</div>
-				</div>
-				<div class="hiw__connector">→</div>
-				<div class="hiw__step">
-					<div class="hiw__step-number">3</div>
-					<div class="hiw__step-icon">✅</div>
-					<div class="hiw__step-title">Hire Confidently</div>
-					<div class="hiw__step-desc">Accept an offer, track progress, and leave a review.</div>
-				</div>
-			</div>
-		</div>
-	</section>
+  <!--  TAB CONTAINER  -->
+  <main class="tab-container">
 
-	<!-- Stats -->
-	<section class="stats" id="stats">
-		<div class="container stats__inner">
-			<div class="stats__item">
-				<span class="stats__number" data-target="2000">0</span><span class="stats__suffix">+</span>
-				<span class="stats__label">Active Customers</span>
-			</div>
-			<div class="stats__divider"></div>
-			<div class="stats__item">
-				<span class="stats__number" data-target="650">0</span><span class="stats__suffix">+</span>
-				<span class="stats__label">Verified Providers</span>
-			</div>
-			<div class="stats__divider"></div>
-			<div class="stats__item">
-				<span class="stats__number" data-target="4.8">0</span>
-				<span class="stats__label">Average Rating</span>
-			</div>
-		</div>
-	</section>
+    <!-- ═
+         TAB 1 — HERO
+         ═ -->
+    <section class="tab-section hero" data-tab="home" id="home">
+      <div class="container">
+        <div class="hero__inner">
 
-	<!-- Testimonials -->
-	<section class="testimonials" id="testimonials">
-		<div class="container">
-			<div class="section-header">
-				<span class="section-header__tag">Testimonials</span>
-				<h2 class="section-header__title">Neighbors trust ServiceLink</h2>
-				<p class="section-header__subtitle">See how homeowners and providers grow with our local marketplace.</p>
-			</div>
-			<div class="testimonials__grid">
-				<div class="testimonial-card">
-					<p class="testimonial-card__quote">“The offers came in minutes. I hired a plumber the same day.”</p>
-					<div class="testimonial-card__meta">
-						<div class="testimonial-card__name">Selam W.</div>
-						<div class="testimonial-card__role">Customer • Bole</div>
-					</div>
-				</div>
-				<div class="testimonial-card">
-					<p class="testimonial-card__quote">“ServiceLink keeps my schedule full. The dashboard is easy to use.”</p>
-					<div class="testimonial-card__meta">
-						<div class="testimonial-card__name">Hailu G.</div>
-						<div class="testimonial-card__role">Provider • Electrical</div>
-					</div>
-				</div>
-				<div class="testimonial-card">
-					<p class="testimonial-card__quote">“Clear pricing, verified pros, and a simple review process.”</p>
-					<div class="testimonial-card__meta">
-						<div class="testimonial-card__name">Mulu A.</div>
-						<div class="testimonial-card__role">Customer • Kirkos</div>
-					</div>
-				</div>
-			</div>
-		</div>
-	</section>
+          <!-- Left: Value pitch -->
+          <div class="hero__content">
+            <div class="hero__badge">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+              </svg>
+              Trusted Local Marketplace
+            </div>
 
-	<!-- CTA -->
-	<section class="cta" id="cta">
-		<div class="container">
-			<h2 class="cta__title">Ready to get started?</h2>
-			<p class="cta__subtitle">Create a request or join as a provider. Build trust and complete work fast.</p>
-			<div class="cta__buttons">
-				<a href="../register/index.html" class="btn btn--white btn--lg">Post a Request</a>
-				<a href="../login/index.html" class="btn btn--outline-white btn--lg">Sign In</a>
-			</div>
-		</div>
-	</section>
+            <h1 class="hero__title">
+              Find the right local pro<br>
+              in <span class="text-gradient">minutes</span>
+            </h1>
 
-	<!-- Footer -->
-	<footer class="footer">
-		<div class="container footer__inner">
-			<div>
-				<div class="footer__logo">
-					<span class="footer__logo-text">Service<span class="footer__logo-accent">Link</span></span>
-				</div>
-				<p class="footer__tagline">A trusted local marketplace for home services, built for speed and transparency.</p>
-			</div>
-			<div>
-				<div class="footer__col-title">Explore</div>
-				<div class="footer__links">
-					<a href="#categories" class="footer__link">Services</a>
-					<a href="#how-it-works" class="footer__link">How it Works</a>
-					<a href="#testimonials" class="footer__link">Testimonials</a>
-				</div>
-			</div>
-			<div>
-				<div class="footer__col-title">For Customers</div>
-				<div class="footer__links">
-					<a href="../register/index.html" class="footer__link">Post a Request</a>
-					<a href="../login/index.html" class="footer__link">Manage Offers</a>
-				</div>
-			</div>
-			<div>
-				<div class="footer__col-title">For Providers</div>
-				<div class="footer__links">
-					<a href="../register/index.html" class="footer__link">Join as Provider</a>
-					<a href="../login/index.html" class="footer__link">Provider Dashboard</a>
-				</div>
-			</div>
-		</div>
-		<div class="footer__bottom">
-			<div class="container footer__bottom-inner">
-				<div class="footer__copyright">© 2026 ServiceLink. All rights reserved.</div>
-				<div class="footer__social">
-					<a href="#" class="footer__social-link">LinkedIn</a>
-					<a href="#" class="footer__social-link">Twitter</a>
-					<a href="#" class="footer__social-link">Instagram</a>
-				</div>
-			</div>
-		</div>
-	</footer>
+            <p class="hero__subtitle">
+              Post a request, compare offers, and hire verified providers with confidence.
+              From quick repairs to full projects, ServiceLink makes it simple.
+            </p>
 
-	<button class="back-to-top" id="backToTop" aria-label="Back to top">↑</button>
+            <div class="hero__cta-group">
+              <a href="../register/index.html" class="btn btn--primary">Post a Request</a>
+              <a href="../login/index.html"    class="btn btn--ghost">I am a Provider</a>
+            </div>
 
-	<script src="script.js"></script>
+            <div class="hero__trust">
+              <div class="hero__trust-stars">
+                <svg class="star-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                <svg class="star-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                <svg class="star-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                <svg class="star-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                <svg class="star-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+              </div>
+              <span class="hero__trust-text">2,000+ homeowners trust ServiceLink</span>
+            </div>
+          </div>
+
+          <!-- Right: Floating cards (desktop only) -->
+          <div class="hero__visual" aria-hidden="true">
+            <div class="hero__card hero__card--1">
+              <div class="hero__card-icon-wrap hero__card-icon-wrap--blue">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                </svg>
+              </div>
+              <div>
+                <span class="hero__card-title">Fast Matching</span>
+                <span class="hero__card-meta">Offers in minutes</span>
+              </div>
+            </div>
+
+            <div class="hero__card hero__card--2">
+              <div class="hero__card-icon-wrap hero__card-icon-wrap--green">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                  <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                </svg>
+              </div>
+              <div>
+                <span class="hero__card-title">Verified Providers</span>
+                <span class="hero__card-meta">Background checked</span>
+              </div>
+            </div>
+
+            <div class="hero__card hero__card--3">
+              <div class="hero__card-icon-wrap hero__card-icon-wrap--amber">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                </svg>
+              </div>
+              <div>
+                <span class="hero__card-title">4.9 Avg Rating</span>
+                <span class="hero__card-meta">500+ reviews</span>
+              </div>
+            </div>
+          </div>
+
+        </div><!-- /.hero__inner -->
+      </div><!-- /.container -->
+    </section><!-- /#home -->
+
+
+    <!-- ═
+         TAB 2 — POPULAR SERVICES
+         ═ -->
+    <section class="tab-section categories" data-tab="services" id="services" hidden>
+      <div class="container">
+        <div class="section-content">
+          <div class="section-header">
+            <span class="section-header__tag">Popular Services</span>
+            <h2 class="section-header__title">Choose a category and get offers fast</h2>
+            <p class="section-header__subtitle">Post a request in minutes and connect with trusted professionals near you.</p>
+          </div>
+
+          <div class="categories__grid">
+            <div class="category-card">
+              <div class="category-card__icon-wrap">
+                <svg width="22" height="22" class="icon-blue" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path>
+                </svg>
+              </div>
+              <h3 class="category-card__title">Plumbing</h3>
+              <p class="category-card__desc">Leaks, pipe installations, and kitchen/bathroom repairs.</p>
+              <span class="category-card__count">120+ active pros</span>
+            </div>
+
+            <div class="category-card">
+              <div class="category-card__icon-wrap">
+                <svg width="22" height="22" class="icon-amber" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                </svg>
+              </div>
+              <h3 class="category-card__title">Electrical</h3>
+              <p class="category-card__desc">Wiring, lighting upgrades, and safety troubleshooting.</p>
+              <span class="category-card__count">95+ active pros</span>
+            </div>
+
+            <div class="category-card">
+              <div class="category-card__icon-wrap">
+                <svg width="22" height="22" class="icon-violet" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                  <line x1="8" y1="21" x2="16" y2="21"></line>
+                  <line x1="12" y1="17" x2="12" y2="21"></line>
+                </svg>
+              </div>
+              <h3 class="category-card__title">Carpentry</h3>
+              <p class="category-card__desc">Custom wooden builds, furniture repair, and cabinets.</p>
+              <span class="category-card__count">80+ active pros</span>
+            </div>
+
+            <div class="category-card">
+              <div class="category-card__icon-wrap">
+                <svg width="22" height="22" class="icon-green" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                  <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                </svg>
+              </div>
+              <h3 class="category-card__title">Cleaning</h3>
+              <p class="category-card__desc">Deep cleaning, sanitation packages, and routine maids.</p>
+              <span class="category-card__count">110+ active pros</span>
+            </div>
+
+            <div class="category-card">
+              <div class="category-card__icon-wrap">
+                <svg width="22" height="22" class="icon-pink" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <circle cx="12" cy="12" r="6"></circle>
+                  <circle cx="12" cy="12" r="2"></circle>
+                </svg>
+              </div>
+              <h3 class="category-card__title">Painting</h3>
+              <p class="category-card__desc">Interior wall paint, smooth finishes, and drywall fixes.</p>
+              <span class="category-card__count">70+ active pros</span>
+            </div>
+
+            <div class="category-card">
+              <div class="category-card__icon-wrap">
+                <svg width="22" height="22" class="icon-teal" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="3"></circle>
+                  <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                </svg>
+              </div>
+              <h3 class="category-card__title">Handyman</h3>
+              <p class="category-card__desc">TV mounting, appliance setup, and quick home fixes.</p>
+              <span class="category-card__count">140+ active pros</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section><!-- /#services -->
+
+
+    <!-- ═
+         TAB 3 — HOW IT WORKS
+         ═ -->
+    <section class="tab-section how-it-works" data-tab="how" id="how" hidden>
+      <div class="container">
+        <div class="section-content">
+          <div class="section-header">
+            <span class="section-header__tag">How It Works</span>
+            <h2 class="section-header__title">Post, compare, hire — in three steps</h2>
+            <p class="section-header__subtitle">Move from request to completion with full transparency at every stage.</p>
+          </div>
+
+          <div class="hiw__steps">
+            <div class="hiw__step">
+              <span class="hiw__step-num">1</span>
+              <div class="hiw__step-icon-wrap">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                  <path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                </svg>
+              </div>
+              <h3 class="hiw__step-title">Post a Request</h3>
+              <p class="hiw__step-desc">Describe the job, select a service type, and set your location.</p>
+            </div>
+
+            <div class="hiw__arrow" aria-hidden="true">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+                <polyline points="12 5 19 12 12 19"></polyline>
+              </svg>
+            </div>
+
+            <div class="hiw__step">
+              <span class="hiw__step-num">2</span>
+              <div class="hiw__step-icon-wrap">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                </svg>
+              </div>
+              <h3 class="hiw__step-title">Compare Offers</h3>
+              <p class="hiw__step-desc">Review pricing and profiles from verified local professionals.</p>
+            </div>
+
+            <div class="hiw__arrow" aria-hidden="true">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+                <polyline points="12 5 19 12 12 19"></polyline>
+              </svg>
+            </div>
+
+            <div class="hiw__step">
+              <span class="hiw__step-num">3</span>
+              <div class="hiw__step-icon-wrap">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                  <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                </svg>
+              </div>
+              <h3 class="hiw__step-title">Hire Confidently</h3>
+              <p class="hiw__step-desc">Accept an offer, track progress, and leave a verified review.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section><!-- /#how -->
+
+
+    <!-- ═
+         TAB 4 — REVIEWS + LIVE STATS
+         ═ -->
+    <section class="tab-section testimonials-stats" data-tab="reviews" id="reviews" hidden>
+      <div class="container">
+        <div class="section-content">
+
+          <!-- Live Stats Bar — counts pulled from DB -->
+          <div class="stats-bar">
+            <div class="stats-bar__item">
+              <span class="stats-bar__num" data-stat="customers">—</span><span class="stats-bar__suffix">+</span>
+              <span class="stats-bar__label">Active Customers</span>
+            </div>
+            <div class="stats-bar__div"></div>
+            <div class="stats-bar__item">
+              <span class="stats-bar__num" data-stat="providers">—</span><span class="stats-bar__suffix">+</span>
+              <span class="stats-bar__label">Verified Providers</span>
+            </div>
+            <div class="stats-bar__div"></div>
+            <div class="stats-bar__item">
+              <span class="stats-bar__num" data-stat="avg_rating">—</span>
+              <span class="stats-bar__label">Average Rating</span>
+            </div>
+          </div>
+
+          <!-- Testimonials -->
+          <div class="section-header" style="margin-top:28px; margin-bottom:20px;">
+            <span class="section-header__tag">Testimonials</span>
+            <h2 class="section-header__title">Neighbors trust ServiceLink</h2>
+          </div>
+
+          <div class="testimonials-grid">
+            <div class="testimonial-card">
+              <p class="testimonial-card__quote">"The offers came in minutes. I hired a plumber the same day and the issue was resolved fast."</p>
+              <div>
+                <div class="testimonial-card__name">Selam W.</div>
+                <div class="testimonial-card__role">Customer — Bole</div>
+              </div>
+            </div>
+            <div class="testimonial-card">
+              <p class="testimonial-card__quote">"ServiceLink keeps my schedule fully booked. The dashboard is clean and offers come in daily."</p>
+              <div>
+                <div class="testimonial-card__name">Hailu G.</div>
+                <div class="testimonial-card__role">Provider — Electrical</div>
+              </div>
+            </div>
+            <div class="testimonial-card">
+              <p class="testimonial-card__quote">"Clear pricing, background-checked pros, and a simple review process. Highly recommend."</p>
+              <div>
+                <div class="testimonial-card__name">Mulu A.</div>
+                <div class="testimonial-card__role">Customer — Kirkos</div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section><!-- /#reviews -->
+
+
+    <!-- ═
+         FOOTER — always visible
+         ═ -->
+    <footer class="site-footer" role="contentinfo">
+      <div class="container">
+
+        <!-- CTA strip -->
+        <div class="cta-block">
+          <h2 class="cta-block__title">Ready to get started?</h2>
+          <p class="cta-block__subtitle">Create an account in under two minutes to post requests or join as a service provider.</p>
+          <div class="cta-block__buttons">
+            <a href="../register/index.html" class="btn btn--primary">Post a Request</a>
+            <a href="../login/index.html"    class="btn btn--ghost">Sign In</a>
+          </div>
+        </div>
+
+        <div class="footer__grid">
+          <!-- Brand -->
+          <div>
+            <div class="footer__brand-logo">
+              <svg width="24" height="24" viewBox="0 0 32 32" fill="none">
+                <rect width="32" height="32" rx="8" fill="#0066CC"/>
+                <path d="M10 16L14.5 20.5L22 11" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              Service<span class="footer__logo-accent">Link</span>
+            </div>
+            <p class="footer__tagline">A trusted local marketplace for home services, built for speed and transparency.</p>
+          </div>
+          <!-- For Customers -->
+          <div>
+            <div class="footer__col-title">For Customers</div>
+            <div class="footer__links">
+              <a href="../register/index.html" class="footer__link">Post a Request</a>
+              <a href="../login/index.html"    class="footer__link">Manage Offers</a>
+            </div>
+          </div>
+          <!-- For Providers -->
+          <div>
+            <div class="footer__col-title">For Providers</div>
+            <div class="footer__links">
+              <a href="../register/index.html" class="footer__link">Join as Provider</a>
+              <a href="../login/index.html"    class="footer__link">Provider Dashboard</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="footer__bottom">
+          <span class="footer__copyright">© 2026 ServiceLink. All rights reserved.</span>
+          <div class="footer__socials">
+            <a href="#" class="footer__social-link">LinkedIn</a>
+            <a href="#" class="footer__social-link">Twitter</a>
+            <a href="#" class="footer__social-link">Instagram</a>
+          </div>
+        </div>
+
+      </div>
+    </footer>
+
+  </main><!-- /.tab-container -->
+
+  <script src="script.js"></script>
 </body>
 </html>

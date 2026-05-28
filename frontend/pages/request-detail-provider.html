@@ -2,6 +2,7 @@
 <html lang="en" data-role="provider">
 <head>
   <meta charset="UTF-8">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230066CC'/%3E%3Cpath d='M10 16L14.5 20.5L22 11' stroke='%23ffffff' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round' fill='none'/%3E%3C/svg%3E">
   <meta name="viewport" content="width=device-width,initial-scale=1.0">
   <title>Request Detail — ServiceLink</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -215,6 +216,7 @@ function renderOfferPanel(isOpen) {
   // If it's open and provider already submitted an offer
   if (myOffer) {
     const OBADGE = { Pending:'badge--negotiating', Accepted:'badge--assigned', Rejected:'badge--danger', Countered:'badge--requested' };
+    const isCountered = myOffer.status === 'Countered';
     panel.innerHTML = `
       <div class="card">
         <div class="card__header"><h3 style="font-size:14px">Your Offer</h3></div>
@@ -224,19 +226,100 @@ function renderOfferPanel(isOpen) {
             <span class="badge ${OBADGE[myOffer.status]||''}">${esc(myOffer.status)}</span>
             ${myOffer.message ? `<p style="font-size:.85rem;color:#555;margin-top:8px">${esc(myOffer.message)}</p>` : ''}
             ${myOffer.counter_price ? `
-              <div style="background:#fff4e0;border-radius:6px;padding:8px;margin-top:10px;text-align:left;font-size:.85rem">
+              <div style="background:#fff4e0;border-radius:6px;padding:10px;margin-top:10px;text-align:left;font-size:.85rem">
                 <strong>Counter offer from customer:</strong><br>
                 ETB ${parseFloat(myOffer.counter_price).toLocaleString()}
                 ${myOffer.counter_message ? `<br><em>${esc(myOffer.counter_message)}</em>` : ''}
               </div>` : ''}
           </div>
+
+          ${isCountered ? `
+          <div style="margin-top:14px">
+            <p style="font-size:.85rem;color:#555;margin-bottom:10px;text-align:center">
+              The customer countered your <strong>ETB ${parseFloat(myOffer.price||0).toLocaleString()}</strong> with <strong>ETB ${parseFloat(myOffer.counter_price||0).toLocaleString()}</strong>. Choose how to respond:
+            </p>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <button class="btn btn--primary btn--sm btn--full" id="acceptCounterBtn">
+                ✓ Accept Counter (ETB ${parseFloat(myOffer.counter_price||0).toLocaleString()})
+              </button>
+              <button class="btn btn--danger btn--sm btn--full" id="declineCounterBtn">
+                ✗ Decline Counter
+              </button>
+              <button class="btn btn--ghost btn--sm btn--full" id="toggleReviseBtn">
+                ↔ Propose New Price
+              </button>
+            </div>
+            <div id="reviseForm" style="display:none;margin-top:10px;background:#f8f9fa;border-radius:8px;padding:12px">
+              <input class="form-input" type="number" id="revisePrice" placeholder="Your new price (ETB)" min="1" style="margin-bottom:8px">
+              <div style="display:flex;gap:6px">
+                <button class="btn btn--primary btn--sm" id="submitReviseBtn">Send New Price</button>
+                <button class="btn btn--ghost btn--sm" id="cancelReviseBtn">Cancel</button>
+              </div>
+            </div>
+          </div>
+          ` : `
           <p class="text-muted" style="font-size:.8rem;margin-top:10px;text-align:center">
             ${myOffer.status === 'Pending' ? 'Waiting for the customer to respond.' : ''}
             ${myOffer.status === 'Rejected' ? 'Your offer was not accepted this time.' : ''}
-            ${myOffer.status === 'Countered' ? 'The customer sent a counter offer. They can still accept or reject this negotiated offer.' : ''}
           </p>
+          `}
         </div>
       </div>`;
+
+    // Bind counter-response event handlers
+    if (isCountered) {
+      document.getElementById('acceptCounterBtn')?.addEventListener('click', async () => {
+        if (!confirm(`Accept the customer's counter of ETB ${parseFloat(myOffer.counter_price||0).toLocaleString()}?`)) return;
+        const btn = document.getElementById('acceptCounterBtn');
+        btn.disabled = true; btn.textContent = 'Accepting...';
+        try {
+          await Api.patch(`/offers/${myOffer.id}/accept-counter`, {});
+          Toast.success('Counter accepted! Waiting for customer to finalize.');
+          loadAll();
+        } catch (err) {
+          Toast.error(err.message || 'Failed to accept counter.');
+          btn.disabled = false; btn.textContent = '✓ Accept Counter';
+        }
+      });
+
+      document.getElementById('declineCounterBtn')?.addEventListener('click', async () => {
+        if (!confirm('Decline the counter? Your original price will stand.')) return;
+        const btn = document.getElementById('declineCounterBtn');
+        btn.disabled = true; btn.textContent = 'Declining...';
+        try {
+          // Revise back to the original price to effectively decline the counter
+          await Api.patch(`/offers/${myOffer.id}/revise`, { price: myOffer.price });
+          Toast.success('Counter declined. Your original price is restored.');
+          loadAll();
+        } catch (err) {
+          Toast.error(err.message || 'Failed to decline counter.');
+          btn.disabled = false; btn.textContent = '✗ Decline Counter';
+        }
+      });
+
+      document.getElementById('toggleReviseBtn')?.addEventListener('click', () => {
+        const form = document.getElementById('reviseForm');
+        form.style.display = form.style.display === 'none' ? 'block' : 'none';
+      });
+      document.getElementById('cancelReviseBtn')?.addEventListener('click', () => {
+        document.getElementById('reviseForm').style.display = 'none';
+      });
+
+      document.getElementById('submitReviseBtn')?.addEventListener('click', async () => {
+        const price = parseFloat(document.getElementById('revisePrice').value);
+        if (!price || price < 1) { Toast.error('Enter a valid price.'); return; }
+        const btn = document.getElementById('submitReviseBtn');
+        btn.disabled = true; btn.textContent = 'Sending...';
+        try {
+          await Api.patch(`/offers/${myOffer.id}/revise`, { price });
+          Toast.success('New price sent to customer!');
+          loadAll();
+        } catch (err) {
+          Toast.error(err.message || 'Failed to revise price.');
+          btn.disabled = false; btn.textContent = 'Send New Price';
+        }
+      });
+    }
     return;
   }
 

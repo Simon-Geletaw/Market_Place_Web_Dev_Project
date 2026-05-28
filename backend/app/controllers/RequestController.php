@@ -158,6 +158,22 @@ final class RequestController
         return success_response('Completed jobs retrieved.', $this->requestService->getProviderJobs($this->currentUserId(), 'Completed'));
     }
 
+    // DELETE /api/requests/{id}  (customer: cancel a pending request)
+    public function cancel(): array
+    {
+        $requestId  = route_param('id', '');
+        $customerId = $this->currentUserId();
+
+        $result = $this->requestService->cancelRequest($requestId, $customerId);
+        $code   = $result['http_code'] ?? ($result['success'] ? 200 : 400);
+
+        if (!$result['success']) {
+            return error_response($result['message'], [], $code);
+        }
+
+        return success_response($result['message']);
+    }
+
     private function storeCompletionPhoto(array $file, string $requestId): array
     {
         if (($file['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_NO_FILE) {

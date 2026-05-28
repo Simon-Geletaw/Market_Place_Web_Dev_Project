@@ -1,7 +1,8 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en" data-role="customer">
 <head>
   <meta charset="UTF-8">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230066CC'/%3E%3Cpath d='M10 16L14.5 20.5L22 11' stroke='%23ffffff' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round' fill='none'/%3E%3C/svg%3E">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>My Requests — ServiceLink</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -71,6 +72,14 @@
       <div class="form-group">
         <label class="form-label">Budget (ETB) <span style="font-weight:400;color:#999">(optional)</span></label>
         <input class="form-input" type="number" id="crBudget" placeholder="e.g. 500" min="0" step="0.01">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Location *</label>
+        <input class="form-input" type="text" id="crLocation" placeholder="e.g. Bole, Addis Ababa" maxlength="255">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Preferred Date <span style="font-weight:400;color:#999">(optional)</span></label>
+        <input class="form-input" type="date" id="crDate">
       </div>
       <div id="createFormError" class="form-error" style="display:none"></div>
     </div>
@@ -166,6 +175,7 @@ async function load() {
                 <span>📍 ${esc(req.location || '—')}</span>
                 <span>🗂 ${esc(req.category_name || '—')}</span>
                 <span>${new Date(req.created_at).toLocaleDateString()}</span>
+                ${req.preferred_date ? `<span>📅 Preferred: ${new Date(req.preferred_date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>` : ''}
                 ${req.offer_count > 0 ? `<span>💬 ${req.offer_count} offer${req.offer_count > 1 ? 's' : ''}</span>` : ''}
               </div>
             </div>
@@ -175,7 +185,7 @@ async function load() {
           <div class="request-card__footer">
             <div class="request-card__actions">
               <a href="../request-detail.html?id=${req.id}" class="btn btn--primary btn--sm">View Details</a>
-              ${actionMap[req.status] || ''}
+              ${req.status === 'Requested' ? `<button class="btn btn--danger btn--sm" onclick="window._cancelReq('${req.id}')">Cancel</button>` : (actionMap[req.status] || '')}
             </div>
           </div>
         </div>`;
@@ -190,6 +200,19 @@ async function load() {
 function openCreate()  { document.getElementById('createModal').classList.add('open'); }
 function closeCreate() { document.getElementById('createModal').classList.remove('open'); }
 
+// ── Cancel request ────────────────────────────────────────────────────
+async function cancelReq(id) {
+  if (!confirm('Cancel this request? This cannot be undone.')) return;
+  try {
+    await Api.delete('/requests/' + id);
+    Toast.success('Request cancelled.');
+    load();
+  } catch (err) {
+    Toast.error(err.message || 'Could not cancel request.');
+  }
+}
+window._cancelReq = cancelReq;
+
 async function submitCreate() {
   const errEl = document.getElementById('createFormError');
   const btn   = document.getElementById('createBtn');
@@ -198,11 +221,14 @@ async function submitCreate() {
   const title         = document.getElementById('crTitle').value.trim();
   const description   = document.getElementById('crDesc').value.trim();
   const budget        = document.getElementById('crBudget').value;
+  const location      = document.getElementById('crLocation').value.trim();
+  const prefDate      = document.getElementById('crDate').value;
 
   // Validation
   const errs = [];
   if (!categoryValue)          errs.push('Please select a category.');
   if (description.length < 10) errs.push('Description must be at least 10 characters.');
+  if (!location)               errs.push('Please enter a location for the job.');
   if (errs.length) {
     errEl.textContent = errs[0];
     errEl.style.display = 'block';
@@ -212,11 +238,12 @@ async function submitCreate() {
 
   // Determine if value is a UUID (category_id) or a name
   const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(categoryValue);
-  const body = { description };
-  if (title)  body.title = title;
-  if (budget) body.budget = parseFloat(budget);
-  if (isUuid) body.category_id = categoryValue;
-  else        body.category    = categoryValue;
+  const body = { description, location };
+  if (title)    body.title  = title;
+  if (budget)   body.budget = parseFloat(budget);
+  if (prefDate) body.preferred_date = prefDate;
+  if (isUuid)   body.category_id = categoryValue;
+  else          body.category    = categoryValue;
 
   btn.disabled = true;
   btn.innerHTML = '<span class="spinner"></span> Posting…';
@@ -226,10 +253,12 @@ async function submitCreate() {
     if (result.success) {
       Toast.success('Request posted!');
       closeCreate();
-      document.getElementById('crCat').value   = '';
-      document.getElementById('crTitle').value  = '';
-      document.getElementById('crDesc').value   = '';
-      document.getElementById('crBudget').value = '';
+      document.getElementById('crCat').value      = '';
+      document.getElementById('crTitle').value    = '';
+      document.getElementById('crDesc').value     = '';
+      document.getElementById('crBudget').value   = '';
+      document.getElementById('crLocation').value = '';
+      document.getElementById('crDate').value     = '';
       load();
     } else {
       errEl.textContent = result.message || 'Failed to post request.';
@@ -262,6 +291,9 @@ async function init() {
   document.getElementById('createModal').addEventListener('click', e => {
     if (e.target === e.currentTarget) closeCreate();
   });
+
+  // Set minimum selectable date to today
+  document.getElementById('crDate').min = new Date().toISOString().slice(0, 10);
 
   await loadCategories();
   load();

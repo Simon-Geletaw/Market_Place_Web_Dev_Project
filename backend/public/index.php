@@ -101,6 +101,7 @@ require_once __DIR__ . '/../app/controllers/ReviewController.php';
 require_once __DIR__ . '/../app/controllers/AdminController.php';
 require_once __DIR__ . '/../app/controllers/DashboardController.php';
 require_once __DIR__ . '/../app/controllers/NotificationController.php';
+require_once __DIR__ . '/../app/controllers/PublicStatsController.php';
 
 // ------------------------------------------------------------------
 // Route registry

@@ -146,4 +146,37 @@ final class OfferController
 
         return success_response($result['message']);
     }
+
+    // PATCH /api/offers/{id}/accept-counter  (provider)
+    public function acceptCounter(): array
+    {
+        $offerId    = route_param('id', '');
+        $providerId = $this->currentUserId();
+
+        $result = $this->offerService->providerAcceptCounter($offerId, $providerId);
+        $code   = $result['http_code'] ?? ($result['success'] ? 200 : 400);
+
+        if (!$result['success']) {
+            return error_response($result['message'], [], $code);
+        }
+
+        return success_response($result['message']);
+    }
+
+    // PATCH /api/offers/{id}/revise  (provider)
+    public function revise(): array
+    {
+        $offerId    = route_param('id', '');
+        $providerId = $this->currentUserId();
+        $input      = request_json_body();
+
+        $result = $this->offerService->providerReviseOffer($offerId, $providerId, $input);
+        $code   = $result['http_code'] ?? ($result['success'] ? 200 : 400);
+
+        if (!$result['success']) {
+            return error_response($result['message'], [], $code);
+        }
+
+        return success_response($result['message']);
+    }
 }

@@ -2,6 +2,7 @@
 <html lang="en" data-role="customer">
 <head>
   <meta charset="UTF-8">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230066CC'/%3E%3Cpath d='M10 16L14.5 20.5L22 11' stroke='%23ffffff' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round' fill='none'/%3E%3C/svg%3E">
   <meta name="viewport" content="width=device-width,initial-scale=1.0">
   <title>Request Detail — ServiceLink</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -305,7 +306,11 @@ function renderActionPanel(isOwner) {
                     </div>
                     <div>
                       <div style="font-weight:600;font-size:.9rem">${esc(o.provider_name || 'Provider')}</div>
-                      <div style="font-size:.8rem;color:#999">⭐ ${o.provider_rating ? parseFloat(o.provider_rating).toFixed(1) : 'New'}</div>
+                      <div style="font-size:.8rem;color:#777;display:flex;align-items:center;gap:6px;margin-top:2px;line-height:1">
+                        <span style="display:inline-flex;align-items:center;gap:2px">⭐ ${o.provider_rating ? parseFloat(o.provider_rating).toFixed(1) : 'New'}</span>
+                        <span style="color:#ccc">•</span>
+                        <span style="color:var(--color-primary);font-weight:500;display:inline-flex;align-items:center;gap:3px">💼 ${o.provider_completed_jobs || 0} job${o.provider_completed_jobs !== 1 ? 's' : ''}</span>
+                      </div>
                     </div>
                   </div>
                   <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
@@ -385,7 +390,9 @@ function limitOfferActions(panel, renderedOffers, requestStatus) {
     const offer = renderedOffers[index];
     if (!offer) return;
 
-    const canDecide = requestStatus === 'Negotiating' && ['Pending', 'Countered'].includes(offer.status);
+    // Countered = ball is in provider's court → customer cannot act
+    const isCountered = offer.status === 'Countered';
+    const canDecide  = requestStatus === 'Negotiating' && ['Pending'].includes(offer.status);
     const canCounter = requestStatus === 'Negotiating' && offer.status === 'Pending';
     const [acceptBtn, rejectBtn, counterBtn] = card.querySelectorAll('.offer-card__actions button');
 
@@ -398,6 +405,14 @@ function limitOfferActions(panel, renderedOffers, requestStatus) {
 
     const actions = card.querySelector('.offer-card__actions');
     if (actions && !canDecide && !canCounter) actions.hidden = true;
+
+    // Show a waiting message when counter is pending provider response
+    if (isCountered) {
+      const waitMsg = document.createElement('div');
+      waitMsg.style.cssText = 'background:#fff4e0;border-radius:6px;padding:10px;margin-top:8px;font-size:.85rem;text-align:center;color:#b36a00';
+      waitMsg.innerHTML = '⏳ <strong>Waiting for provider to respond</strong> to your counter-offer of ETB ' + parseFloat(offer.counter_price||0).toLocaleString() + '.';
+      card.appendChild(waitMsg);
+    }
   });
 }
 

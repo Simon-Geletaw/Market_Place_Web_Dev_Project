@@ -232,6 +232,91 @@ final class OfferService
     }
 
     // ------------------------------------------------------------------
+    // Provider: Accept a customer's counter-offer
+    // ------------------------------------------------------------------
+
+    public function providerAcceptCounter(string $offerId, string $providerId): array
+    {
+        $offer = $this->offers->findById($offerId);
+        if (!$offer) {
+            return ['success' => false, 'message' => 'Offer not found.', 'http_code' => 404];
+        }
+
+        if ($offer['PROVIDER_ID'] !== $providerId) {
+            return ['success' => false, 'message' => 'Access denied.', 'http_code' => 403];
+        }
+
+        if ($offer['STATUS'] !== 'Countered') {
+            return ['success' => false, 'message' => 'This offer has no counter to accept.', 'http_code' => 422];
+        }
+
+        $counterPrice = (float) ($offer['COUNTER_PRICE'] ?? 0);
+        if ($counterPrice <= 0) {
+            return ['success' => false, 'message' => 'Invalid counter price.', 'http_code' => 422];
+        }
+
+        $this->offers->acceptCounter($offerId);
+        $this->audit->log($providerId, 'counter_accepted', 'offer', $offerId, "Accepted counter: $counterPrice");
+
+        // Notify the customer that the provider agreed to their price
+        $request = $this->requests->findById($offer['REQUEST_ID']);
+        if ($request) {
+            $this->notify(
+                $request['CUSTOMER_ID'],
+                'The provider accepted your counter-offer of ETB ' . number_format($counterPrice, 2) . '. You can now accept to finalize.',
+                'counter_accepted',
+                "../request-detail.html?id={$offer['REQUEST_ID']}",
+                'request',
+                $offer['REQUEST_ID']
+            );
+        }
+
+        return ['success' => true, 'message' => 'Counter-offer accepted. The customer can now finalize.'];
+    }
+
+    // ------------------------------------------------------------------
+    // Provider: Revise offer price (respond to counter with a new price)
+    // ------------------------------------------------------------------
+
+    public function providerReviseOffer(string $offerId, string $providerId, array $data): array
+    {
+        $offer = $this->offers->findById($offerId);
+        if (!$offer) {
+            return ['success' => false, 'message' => 'Offer not found.', 'http_code' => 404];
+        }
+
+        if ($offer['PROVIDER_ID'] !== $providerId) {
+            return ['success' => false, 'message' => 'Access denied.', 'http_code' => 403];
+        }
+
+        if ($offer['STATUS'] !== 'Countered') {
+            return ['success' => false, 'message' => 'You can only revise after a counter-offer.', 'http_code' => 422];
+        }
+
+        $newPrice = (float) ($data['price'] ?? 0);
+        if ($newPrice <= 0) {
+            return ['success' => false, 'message' => 'Price must be greater than zero.', 'http_code' => 422];
+        }
+
+        $this->offers->revisePrice($offerId, $newPrice);
+        $this->audit->log($providerId, 'offer_revised', 'offer', $offerId, "New price: $newPrice");
+
+        $request = $this->requests->findById($offer['REQUEST_ID']);
+        if ($request) {
+            $this->notify(
+                $request['CUSTOMER_ID'],
+                'The provider proposed a new price of ETB ' . number_format($newPrice, 2) . '.',
+                'offer_revised',
+                "../request-detail.html?id={$offer['REQUEST_ID']}",
+                'request',
+                $offer['REQUEST_ID']
+            );
+        }
+
+        return ['success' => true, 'message' => 'Offer revised with new price.'];
+    }
+
+    // ------------------------------------------------------------------
     // List offers
     // ------------------------------------------------------------------
 
@@ -280,6 +365,7 @@ final class OfferService
             'request_status'      => $row['REQUEST_STATUS']      ?? null,
             'category_name'       => $row['CATEGORY_NAME']       ?? null,
             'customer_name'       => $row['CUSTOMER_NAME']       ?? null,
+            'provider_completed_jobs' => isset($row['COMPLETED_JOBS']) ? (int) $row['COMPLETED_JOBS'] : 0,
             'created_at'       => $row['CREATED_AT'],
         ];
     }

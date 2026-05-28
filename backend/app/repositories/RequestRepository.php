@@ -147,6 +147,23 @@ final class RequestRepository
         return $this->updateStatus($requestId, 'Reviewed');
     }
 
+    /**
+     * Delete a pending request — only succeeds if STATUS = 'Requested'
+     * AND the row belongs to the given customer.
+     * Returns true when a row was actually deleted, false otherwise.
+     */
+    public function deleteIfRequested(string $requestId, string $customerId): bool
+    {
+        $stmt = $this->db->prepare(
+            "DELETE FROM SERVICE_REQUESTS
+             WHERE REQUEST_ID = :id
+               AND CUSTOMER_ID = :cid
+               AND STATUS = 'Requested'"
+        );
+        $stmt->execute([':id' => $requestId, ':cid' => $customerId]);
+        return $stmt->rowCount() > 0;
+    }
+
     // ------------------------------------------------------------------
     // Read operations
     // ------------------------------------------------------------------

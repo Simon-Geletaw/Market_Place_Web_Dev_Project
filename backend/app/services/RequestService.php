@@ -136,6 +136,42 @@ final class RequestService
         return array_map([$this, 'normalizeRequest'], $this->requests->findAssignedByProvider($providerId, $status));
     }
 
+    public function cancelRequest(string $requestId, string $customerId): array
+    {
+        $row = $this->requests->findById($requestId);
+
+        if (!$row) {
+            return ['success' => false, 'message' => 'Request not found.', 'http_code' => 404];
+        }
+
+        if ($row['CUSTOMER_ID'] !== $customerId) {
+            return ['success' => false, 'message' => 'You do not own this request.', 'http_code' => 403];
+        }
+
+        if ($row['STATUS'] !== 'Requested') {
+            return [
+                'success'   => false,
+                'message'   => 'Only requests with status "Requested" can be cancelled.',
+                'http_code' => 422,
+            ];
+        }
+
+        try {
+            $deleted = $this->requests->deleteIfRequested($requestId, $customerId);
+
+            if (!$deleted) {
+                return ['success' => false, 'message' => 'Could not cancel request.', 'http_code' => 500];
+            }
+
+            $this->audit->log($customerId, 'request_cancelled', 'service_request', $requestId);
+
+            return ['success' => true, 'message' => 'Request cancelled successfully.'];
+        } catch (Throwable $e) {
+            error_log('[RequestService] cancelRequest failed: ' . $e->getMessage());
+            return ['success' => false, 'message' => 'Could not cancel request. Please try again.', 'http_code' => 500];
+        }
+    }
+
     private function isAssignedProvider(array $request, string $providerId): bool
     {
         if (empty($request['REQUEST_ID']) || $this->offers === null) {

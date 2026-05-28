@@ -88,6 +88,31 @@ final class OfferRepository
         $stmt->execute([':status' => 'Rejected', ':rid' => $requestId, ':aid' => $acceptedOfferId, ':s1' => 'Pending', ':s2' => 'Countered']);
     }
 
+    /** Provider accepts counter: set PRICE = COUNTER_PRICE, clear counter fields, status → Pending. */
+    public function acceptCounter(string $offerId): bool
+    {
+        $sql  = 'UPDATE OFFERS
+                 SET PRICE = COUNTER_PRICE, STATUS = :status,
+                     COUNTER_PRICE = NULL, COUNTER_MESSAGE = NULL
+                 WHERE OFFER_ID = :id AND STATUS = :cur';
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([':status' => 'Pending', ':id' => $offerId, ':cur' => 'Countered']);
+        return $stmt->rowCount() > 0;
+    }
+
+    /** Provider revises their price: update PRICE, clear counter fields, status → Pending. */
+    public function revisePrice(string $offerId, float $newPrice): bool
+    {
+        $sql  = 'UPDATE OFFERS
+                 SET PRICE = :price, STATUS = :status,
+                     COUNTER_PRICE = NULL, COUNTER_MESSAGE = NULL
+                 WHERE OFFER_ID = :id AND STATUS = :cur';
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([':price' => $newPrice, ':status' => 'Pending', ':id' => $offerId, ':cur' => 'Countered']);
+        return $stmt->rowCount() > 0;
+    }
+
+
     // ------------------------------------------------------------------
     // Read operations
     // ------------------------------------------------------------------
@@ -122,9 +147,10 @@ final class OfferRepository
 
     public function findByRequest(string $requestId): array
     {
-        $sql  = 'SELECT o.*, u.NAME AS PROVIDER_NAME, u.RATING_AVERAGE, u.IS_VERIFIED
+        $sql  = "SELECT o.*, u.NAME AS PROVIDER_NAME, u.RATING_AVERAGE, u.IS_VERIFIED,
+                        (SELECT COUNT(*) FROM OFFERS jo WHERE jo.PROVIDER_ID = o.PROVIDER_ID AND jo.STATUS = 'Accepted') AS COMPLETED_JOBS
                  FROM OFFERS o JOIN USERS u ON o.PROVIDER_ID = u.USER_ID
-                 WHERE o.REQUEST_ID = :id ORDER BY o.CREATED_AT ASC';
+                 WHERE o.REQUEST_ID = :id ORDER BY o.CREATED_AT ASC";
         $stmt = $this->db->prepare($sql);
         $stmt->execute([':id' => $requestId]);
         return $stmt->fetchAll();
